@@ -7,11 +7,6 @@ parameters:
   paths:
     - src
   tmpDir: .cache/phpstan
-  checkGenericClassInNonGenericObjectType: true
-  checkMissingTypehints: true
-  treatPhpDocTypesAsCertain: true
-  reportUnmatchedIgnoredErrors: true
-  checkUninitializedProperties: true
   phpVersion: 80500
   disallowedFunctionCalls:
     - function: "eval"
