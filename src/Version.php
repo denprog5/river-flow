@@ -11,5 +11,7 @@ final class Version
 {
     public const string STRING = '0.1.0-dev';
 
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 }

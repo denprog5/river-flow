@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Strings;
 
-use Stringable;
 use InvalidArgumentException;
+use Stringable;
 
 /**
  * Trim characters from both ends of a string.
@@ -13,7 +13,7 @@ use InvalidArgumentException;
 function trim(string $data, string $characters = " \t\n\r\0\x0B"): string
 {
     // Call global trim to avoid recursion into this function
-    return \trim($data, $characters);
+    return trim($data, $characters);
 }
 
 /**
@@ -27,6 +27,7 @@ function lines(string $data): array
     if ($parts === false) {
         // Fallback if PCRE fails for some reason
         $normalized = str_replace(["\r\n", "\r"], "\n", $data);
+
         return explode("\n", $normalized);
     }
 
@@ -82,14 +83,14 @@ function length(string $data): int
  */
 function join(iterable $data, string $separator = ''): string
 {
-    if (is_array($data)) {
+    if (\is_array($data)) {
         // Cast elements to string explicitly
-        return implode($separator, array_map(static fn(int|float|string|bool|Stringable $v): string => (string) $v, $data));
+        return implode($separator, array_map(static fn (int|float|string|bool|Stringable $v): string => (string) $v, $data));
     }
 
     $parts = [];
     foreach ($data as $v) {
-        if (is_scalar($v)) {
+        if (\is_scalar($v)) {
             $parts[] = (string) $v;
         } elseif ($v instanceof Stringable) {
             $parts[] = (string) $v;
