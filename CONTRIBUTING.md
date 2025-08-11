@@ -33,6 +33,12 @@ composer test:coverage
 - PHPStan at max level with strict rules and disallowed calls
 - Run: `composer analyse`
 
+## Automated Refactoring (Rector)
+- Dry-run (no changes): `composer rector:check`
+- Apply fixes: `composer rector:fix`
+
+Note: The project targets PHP 8.5. If your local PHP is older, you can still run Rector by installing it with Composer using `--ignore-platform-req=php`, or upgrade your local PHP to 8.5. CI always runs on PHP 8.5.
+
 ## Testing
 - Pest is the test framework
 - Run: `composer test`

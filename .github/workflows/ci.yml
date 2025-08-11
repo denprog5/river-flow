@@ -44,6 +44,9 @@ jobs:
       - name: Lint code style
         run: composer cs:lint
 
+      - name: Rector (dry-run)
+        run: composer rector:check
+
       - name: Static analysis
         run: composer analyse -c phpstan.neon.dist
 
