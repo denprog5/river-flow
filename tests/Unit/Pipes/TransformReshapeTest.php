@@ -39,8 +39,8 @@ describe('transform and reshaping (filter, reject, map, pluck, toList/toArray, v
 
     it('pluck reads array keys or object public props; preserves original keys; uses default when missing', function (): void {
         $obj = new class () {
-            public int $id         = 2;
-            public string $name    = 'bob';
+            public int $id      = 2;
+            public string $name = 'bob';
         };
         $in  = [10 => ['id' => 1], 20 => $obj, 30 => ['foo' => 'bar']];
         $ids = toArray(pluck($in, 'id', -1));
