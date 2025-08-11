@@ -25,7 +25,12 @@
     "autoload": {
         "psr-4": {
             "Denprog\\RiverFlow\\": "src/"
-        }
+        },
+        "files": [
+            "src/Pipes/functions.php",
+            "src/Strings/functions.php",
+            "src/Utils/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
