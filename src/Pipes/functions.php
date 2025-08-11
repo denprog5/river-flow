@@ -152,6 +152,24 @@ function toList(iterable $data): array
 }
 
 /**
+ * Convert iterable to an array preserving keys.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param  iterable<TKey, TValue> $data
+ * @return array<TKey, TValue>
+ */
+function toArray(iterable $data): array
+{
+    $out = [];
+    foreach ($data as $k => $v) {
+        $out[$k] = $v;
+    }
+
+    return $out;
+}
+
+/**
  * Reject elements for which predicate returns true.
  *
  * @template TKey of array-key
@@ -189,4 +207,145 @@ function sortBy(iterable $data, callable $getComparable): array
     uasort($pairs, static fn (array $a, array $b): int => $a[1] <=> $b[1]);
 
     return array_map(fn (array $pair): mixed => $pair[0], $pairs);
+}
+
+/**
+ * Yield values (discard keys) lazily.
+ *
+ * @template T
+ * @param  iterable<array-key, T> $data
+ * @return Generator<int, T>
+ */
+function values(iterable $data): Generator
+{
+    foreach ($data as $value) {
+        yield $value;
+    }
+}
+
+/**
+ * Yield keys lazily.
+ *
+ * @template TKey of array-key
+ * @param  iterable<TKey, mixed> $data
+ * @return Generator<int, TKey>
+ */
+function keys(iterable $data): Generator
+{
+    foreach ($data as $key => $unused) {
+        yield $key;
+    }
+}
+
+/**
+ * Get the first element of an iterable, or $default if empty.
+ *
+ * @template T
+ * @param  iterable<array-key, T> $data
+ * @param  T|null                 $default
+ * @return T|null
+ */
+function first(iterable $data, mixed $default = null): mixed
+{
+    foreach ($data as $value) {
+        return $value;
+    }
+
+    return $default;
+}
+
+/**
+ * Get the last element of an iterable, or $default if empty.
+ * Eager by necessity.
+ *
+ * @template T
+ * @param  iterable<array-key, T> $data
+ * @param  T|null                 $default
+ * @return T|null
+ */
+function last(iterable $data, mixed $default = null): mixed
+{
+    $found = false;
+    $last  = null;
+    foreach ($data as $value) {
+        $last  = $value;
+        $found = true;
+    }
+
+    return $found ? $last : $default;
+}
+
+/**
+ * Find first element matching predicate, or $default if none found.
+ *
+ * @template TKey of array-key
+ * @template T
+ * @param  iterable<TKey, T>       $data
+ * @param  callable(T, TKey): bool $predicate
+ * @param  T|null                  $default
+ * @return T|null
+ */
+function find(iterable $data, callable $predicate, mixed $default = null): mixed
+{
+    foreach ($data as $key => $value) {
+        if ($predicate($value, $key) === true) {
+            return $value;
+        }
+    }
+
+    return $default;
+}
+
+/**
+ * Count elements in an iterable (eager).
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ */
+function count(iterable $data): int
+{
+    if (\is_array($data)) {
+        return \count($data);
+    }
+    $n = 0;
+    foreach ($data as $_) {
+        $n++;
+    }
+
+    return $n;
+}
+
+/**
+ * Whether iterable has no elements.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ */
+function isEmpty(iterable $data): bool
+{
+    foreach ($data as $_) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Check whether iterable contains a value (strict comparison).
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ */
+function contains(iterable $data, mixed $needle): bool
+{
+    foreach ($data as $value) {
+        if ($value === $needle) {
+            return true;
+        }
+    }
+
+    return false;
 }

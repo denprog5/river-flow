@@ -6,6 +6,7 @@ namespace Denprog\RiverFlow\Strings;
 
 use InvalidArgumentException;
 use Stringable;
+use function trim as php_trim;
 
 /**
  * Trim characters from both ends of a string.
@@ -13,7 +14,7 @@ use Stringable;
 function trim(string $data, string $characters = " \t\n\r\0\x0B"): string
 {
     // Call global trim to avoid recursion into this function
-    return trim($data, $characters);
+    return php_trim($data, $characters);
 }
 
 /**
@@ -63,6 +64,18 @@ function toLowerCase(string $data): string
 }
 
 /**
+ * Convert string to uppercase (UTF-8 aware if mbstring is available).
+ */
+function toUpperCase(string $data): string
+{
+    if (\function_exists('mb_strtoupper')) {
+        return mb_strtoupper($data, 'UTF-8');
+    }
+
+    return strtoupper($data);
+}
+
+/**
  * Get string length (UTF-8 aware if mbstring is available).
  */
 function length(string $data): int
@@ -100,4 +113,35 @@ function join(iterable $data, string $separator = ''): string
     }
 
     return implode($separator, $parts);
+}
+
+/**
+ * Split a string by a delimiter. Similar to explode() with adjusted limit semantics.
+ * Limit of 0 is treated as 1. Negative limit drops that many elements from the end.
+ *
+ * @return array<int, string>
+ */
+function split(string $data, string $delimiter, int $limit = PHP_INT_MAX): array
+{
+    if ($delimiter === '') {
+        throw new InvalidArgumentException('split() delimiter cannot be empty');
+    }
+
+    if ($limit === 0) {
+        $limit = 1;
+    }
+
+    if ($limit > 0) {
+        return explode($delimiter, $data, $limit);
+    }
+
+    // Negative limit: return all but the last -$limit elements
+    $parts = explode($delimiter, $data);
+    $drop  = -$limit;
+    $count = \count($parts);
+    if ($drop >= $count) {
+        return [];
+    }
+
+    return \array_slice($parts, 0, $count - $drop);
 }
