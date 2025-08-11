@@ -346,6 +346,124 @@ function contains(iterable $data, mixed $needle): bool
             return true;
         }
     }
+    return false;
+}
+
+/**
+ * Sort values using natural ascending order, preserving original keys.
+ * Eager.
+ *
+ * @template TKey of array-key
+ * @template TValue of (int|float|string)
+ * @param iterable<TKey, TValue> $data
+ * @return array<TKey, TValue>
+ */
+function sort(iterable $data): array
+{
+    $arr = toArray($data);
+    uasort($arr, static fn (int|float|string $a, int|float|string $b): int => $a <=> $b);
+
+    return $arr;
+}
+
+/**
+ * Group items by a key derived from each element. Eager.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @template TGroupKey of array-key
+ * @param iterable<TKey, TValue>              $data
+ * @param callable(TValue, TKey): TGroupKey   $grouper
+ * @return array<TGroupKey, array<TKey, TValue>>
+ */
+function groupBy(iterable $data, callable $grouper): array
+{
+    $out = [];
+    foreach ($data as $key => $value) {
+        $group = $grouper($value, $key);
+        if (!\array_key_exists($group, $out)) {
+            $out[$group] = [];
+        }
+        $out[$group][$key] = $value;
+    }
+
+    return $out;
+}
+
+/**
+ * Re-key items by a key derived from each element. Eager. Later keys overwrite earlier ones.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @template TNewKey of array-key
+ * @param iterable<TKey, TValue>             $data
+ * @param callable(TValue, TKey): TNewKey    $keyer
+ * @return array<TNewKey, TValue>
+ */
+function keyBy(iterable $data, callable $keyer): array
+{
+    $out = [];
+    foreach ($data as $key => $value) {
+        $out[$keyer($value, $key)] = $value;
+    }
+
+    return $out;
+}
+
+/**
+ * Average of numeric values. Non-numeric values are handled like in sum().
+ * Returns 0.0 when iterable is empty.
+ * Eager.
+ *
+ * @param iterable<int|float|string|bool|null> $data
+ */
+function average(iterable $data): float
+{
+    $total = sum($data);
+    $n = count($data);
+    if ($n === 0) {
+        return 0.0;
+    }
+
+    return (float) ($total / $n);
+}
+
+/**
+ * Whether all elements satisfy the predicate. Lazy short-circuit, eager result.
+ * For empty iterables returns true.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue>           $data
+ * @param callable(TValue, TKey): bool     $predicate
+ */
+function every(iterable $data, callable $predicate): bool
+{
+    foreach ($data as $key => $value) {
+        if ($predicate($value, $key) !== true) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Whether any element satisfies the predicate. Lazy short-circuit, eager result.
+ * For empty iterables returns false.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue>           $data
+ * @param callable(TValue, TKey): bool     $predicate
+ */
+function some(iterable $data, callable $predicate): bool
+{
+    foreach ($data as $key => $value) {
+        if ($predicate($value, $key) === true) {
+            return true;
+        }
+    }
 
     return false;
 }
