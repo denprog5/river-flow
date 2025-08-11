@@ -14,7 +14,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     // Use up-to PHP 8.3 ruleset for compatibility; bump to 8.4/8.5 when available
     $rectorConfig->sets([
-        LevelSetList::UP_TO_PHP_83,
+        LevelSetList::UP_TO_PHP_85,
         SetList::CODE_QUALITY,
         SetList::TYPE_DECLARATION,
         SetList::DEAD_CODE,
