@@ -23,7 +23,8 @@ composer require denprog/river-flow
 ```
 
 ## Usage
-See full documentation in [docs/RiverFlow EN.md](docs/RiverFlow%20EN.md). Quick examples:
+See full documentation in [docs/canonical/index.md](docs/canonical/index.md). Quick examples:
+Module references: [Pipes](docs/canonical/pipes.md), [Strings](docs/canonical/strings.md), [Utils](docs/canonical/utils.md)
 
 ```php
 <?php
