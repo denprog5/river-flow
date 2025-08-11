@@ -66,3 +66,4 @@ composer cs:lint        # PHP-CS-Fixer (dry-run)
 composer rector:check   # Rector (dry-run)
 composer test:coverage  # Clover coverage
 ```
+
