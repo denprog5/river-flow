@@ -161,10 +161,6 @@ function take(iterable|int $data_or_count, ?int $count = null): Generator|callab
 function take_gen(iterable $data, int $count): Generator
 {
     if ($count <= 0) {
-        if (false) {
-            yield null;
-        } // empty generator
-
         return;
     }
 
