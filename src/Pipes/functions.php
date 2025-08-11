@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Denprog\RiverFlow\Pipes;
 
 use ArrayIterator;
+use Generator;
+use InvalidArgumentException;
 use Iterator;
 use IteratorIterator;
-use InvalidArgumentException;
 use Throwable;
-use Generator;
 
 /**
  * @template TKey of array-key
@@ -425,13 +425,29 @@ function keyBy(iterable $data, callable $keyer): array
  */
 function average(iterable $data): float
 {
-    $total = sum($data);
-    $n     = count($data);
+    $total = 0.0;
+    $n     = 0;
+    foreach ($data as $value) {
+        $n++;
+        if ($value === true) {
+            $total += 1;
+            continue;
+        }
+        if ($value === false || $value === null) {
+            continue; // add 0
+        }
+        if (\is_int($value) || \is_float($value)) {
+            $total += $value;
+        } elseif (is_numeric($value)) {
+            $total += $value + 0; // numeric string to number
+        }
+    }
+
     if ($n === 0) {
         return 0.0;
     }
 
-    return (float) ($total / $n);
+    return $total / $n;
 }
 
 /**

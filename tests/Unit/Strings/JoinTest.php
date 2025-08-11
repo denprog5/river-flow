@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Tests\Unit\Strings;
 
-use stdClass;
 use function Denprog\RiverFlow\Strings\join;
 
 use InvalidArgumentException;
+use stdClass;
 use Stringable;
 
 describe('Strings join', function (): void {

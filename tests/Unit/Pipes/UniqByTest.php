@@ -42,7 +42,7 @@ describe('uniqBy function', function (): void {
         'uniq numbers by their integer value' => [
             [1, 2, '2', 3, 1.0, 4, '4.0', 'item'],
             fn ($val): int|string => is_numeric($val) ? (int) $val : (string) $val,
-            [0        => 1, 1 => 2, 3 => 3, 5 => 4, 7 => 'item'],
+            [0                    => 1, 1 => 2, 3 => 3, 5 => 4, 7 => 'item'],
         ],
         'empty collection for uniqBy' => [[], fn ($x) => $x, []],
         'uniqBy object identifier'    => [
