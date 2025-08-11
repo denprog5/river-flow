@@ -21,7 +21,7 @@ General rules
 - `sum(iterable<int|float|string|bool|null> $data): int|float`
   - true => 1; false/null => 0; numeric strings converted; others ignored
 - `average(iterable<int|float|string|bool|null> $data): float`
-  - 0.0 for empty; numeric handling like `sum`
+  - Eager; 0.0 for empty; generator-safe (single pass). Numeric handling like `sum`. The denominator is the total number of elements (including non-numeric and null elements, which contribute 0 to the sum).
 - `first(iterable $data, mixed $default = null): mixed`
 - `last(iterable $data, mixed $default = null): mixed`
 - `find(iterable $data, callable(T, TKey): bool $predicate, mixed $default = null): mixed`

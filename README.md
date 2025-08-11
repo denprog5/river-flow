@@ -83,5 +83,7 @@ This project adheres to the Contributor Covenant. By participating, you are expe
 ## Versioning
 This project follows Semantic Versioning (SemVer). Breaking changes will only occur in a new major version.
 
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ## License
 Licensed under the MIT License. See the LICENSE file for details.
