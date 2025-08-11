@@ -213,7 +213,7 @@ function sortBy(iterable $data, callable $getComparable): array
  * Yield values (discard keys) lazily.
  *
  * @template T
- * @param  iterable<array-key, T> $data
+ * @param  iterable<mixed, T> $data
  * @return Generator<int, T>
  */
 function values(iterable $data): Generator
@@ -415,7 +415,7 @@ function keyBy(iterable $data, callable $keyer): array
  * Returns 0.0 when iterable is empty.
  * Eager.
  *
- * @param iterable<int|float|string|bool|null> $data
+ * @param iterable<array-key, int|float|string|bool|null> $data
  */
 function average(iterable $data): float
 {
@@ -466,4 +466,370 @@ function some(iterable $data, callable $predicate): bool
     }
 
     return false;
+}
+
+/**
+ * Lazily return unique items based on the value itself. Keys of first occurrence are preserved.
+ *
+ * Scalars/bool/null compared by value and type; objects by spl_object_hash; arrays by serialize().
+ * When a value cannot be hashed reliably (e.g., arrays containing closures), the element is skipped.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ * @return Generator<TKey, TValue>
+ */
+function uniq(iterable $data): Generator
+{
+    $seen = [];
+
+    foreach ($data as $key => $value) {
+        [$ok, $hash] = __hash_identifier($value);
+        if (!$ok) {
+            continue; // skip unhashable
+        }
+        if (!isset($seen[$hash])) {
+            $seen[$hash] = true;
+            yield $key => $value;
+        }
+    }
+}
+
+/**
+ * Lazily return unique items based on identifier($value, $key). Keys of first occurrence are preserved.
+ *
+ * Identifier hashing rules follow uniq().
+ * Items with unhashable identifiers are skipped.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @template TIdentifier
+ * @param iterable<TKey, TValue> $data
+ * @param callable(TValue, TKey): TIdentifier $identifier
+ * @return Generator<TKey, TValue>
+ */
+function uniqBy(iterable $data, callable $identifier): Generator
+{
+    $seen = [];
+
+    foreach ($data as $key => $value) {
+        $id = $identifier($value, $key);
+        [$ok, $hash] = __hash_identifier($id);
+        if (!$ok) {
+            continue;
+        }
+        if (!isset($seen[$hash])) {
+            $seen[$hash] = true;
+            yield $key => $value;
+        }
+    }
+}
+
+/**
+ * Flatten nested iterables up to $depth levels. Keys are discarded.
+ * Depth 0 returns a generator over the original elements (keys lost).
+ *
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<int, mixed>
+ */
+function flatten(iterable $data, int $depth = 1): Generator
+{
+    if ($depth <= 0) {
+        foreach (values($data) as $v) {
+            // Re-yield to discard original keys and avoid collisions
+            yield $v;
+        }
+        return;
+    }
+
+    foreach ($data as $item) {
+        if (is_iterable($item)) {
+            // Recurse deeper by one level; re-yield values to discard inner keys
+            foreach (flatten($item, $depth - 1) as $v) {
+                yield $v;
+            }
+        } else {
+            yield $item;
+        }
+    }
+}
+
+/**
+ * Map each element to an iterable and flatten by one level (lazy). Keys are discarded.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @template TNewValue
+ * @param iterable<TKey, TValue> $data
+ * @param callable(TValue, TKey): (iterable<mixed, TNewValue>|TNewValue) $transformer
+ * @return Generator<int, TNewValue>
+ */
+function flatMap(iterable $data, callable $transformer): Generator
+{
+    foreach ($data as $key => $value) {
+        $result = $transformer($value, $key);
+        if (is_iterable($result)) {
+            foreach ($result as $v) {
+                yield $v;
+            }
+        } else {
+            yield $result;
+        }
+    }
+}
+
+/**
+ * Take elements while predicate returns true (lazy).
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ * @param callable(TValue, TKey): bool $predicate
+ * @return Generator<TKey, TValue>
+ */
+function takeWhile(iterable $data, callable $predicate): Generator
+{
+    foreach ($data as $key => $value) {
+        if ($predicate($value, $key) !== true) {
+            break;
+        }
+        yield $key => $value;
+    }
+}
+
+/**
+ * Skip the first $count elements, yielding the rest (lazy).
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ * @return Generator<TKey, TValue>
+ */
+function drop(iterable $data, int $count): Generator
+{
+    if ($count <= 0) {
+        yield from $data;
+        return;
+    }
+
+    $skipped = 0;
+    foreach ($data as $key => $value) {
+        if ($skipped < $count) {
+            $skipped++;
+            continue;
+        }
+        yield $key => $value;
+    }
+}
+
+/**
+ * Skip elements while predicate is true, then yield the rest (lazy).
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ * @param callable(TValue, TKey): bool $predicate
+ * @return Generator<TKey, TValue>
+ */
+function dropWhile(iterable $data, callable $predicate): Generator
+{
+    $dropping = true;
+    foreach ($data as $key => $value) {
+        if ($dropping) {
+            if ($predicate($value, $key) === true) {
+                continue;
+            }
+            $dropping = false;
+        }
+        yield $key => $value;
+    }
+}
+
+/**
+ * Partition into two arrays: [pass, fail] according to predicate. Eager. Keys preserved.
+ *
+ * @template TKey of array-key
+ * @template TValue
+ * @param iterable<TKey, TValue> $data
+ * @param callable(TValue, TKey): bool $predicate
+ * @return array{0: array<TKey, TValue>, 1: array<TKey, TValue>}
+ */
+function partition(iterable $data, callable $predicate): array
+{
+    $pass = [];
+    $fail = [];
+    foreach ($data as $key => $value) {
+        if ($predicate($value, $key) === true) {
+            $pass[$key] = $value;
+        } else {
+            $fail[$key] = $value;
+        }
+    }
+
+    return [$pass, $fail];
+}
+
+/**
+ * Zip multiple iterables together lazily. Stops at the shortest.
+ * Yields numeric-indexed arrays of values, keys discarded.
+ *
+ * @param iterable<mixed, mixed> ...$iterables
+ * @return Generator<int, array<int, mixed>>
+ */
+function zip(iterable ...$iterables): Generator
+{
+    $iters = [];
+    foreach ($iterables as $it) {
+        if (\is_array($it)) {
+            $iters[] = new \ArrayIterator($it);
+        } elseif ($it instanceof \Iterator) {
+            $iters[] = $it;
+        } else {
+            // Remaining case: Traversable (e.g., IteratorAggregate)
+            $iters[] = new \IteratorIterator($it);
+        }
+    }
+
+    // Rewind all
+    foreach ($iters as $it) {
+        $it->rewind();
+    }
+
+    while (true) {
+        foreach ($iters as $it) {
+            if (!$it->valid()) {
+                return;
+            }
+        }
+
+        $row = [];
+        foreach ($iters as $it) {
+            $row[] = $it->current();
+        }
+        yield $row;
+        foreach ($iters as $it) {
+            $it->next();
+        }
+    }
+}
+
+/**
+ * Chunk values into arrays of size $size (last chunk may be smaller). Lazy. Keys discarded.
+ *
+ * @param iterable<array-key, mixed> $data
+ * @return Generator<int, array<int, mixed>>
+ */
+function chunk(iterable $data, int $size): Generator
+{
+    if ($size <= 0) {
+        throw new \InvalidArgumentException('chunk() size must be >= 1');
+    }
+
+    $buf = [];
+    foreach ($data as $value) {
+        $buf[] = $value;
+        if (\count($buf) >= $size) {
+            yield $buf;
+            $buf = [];
+        }
+    }
+    if ($buf !== []) {
+        yield $buf;
+    }
+}
+
+/**
+ * Minimum of comparable values. Returns null for empty input.
+ * Eager.
+ *
+ * @template T of (int|float|string)
+ * @param iterable<array-key, T> $data
+ * @return T|null
+ */
+function min(iterable $data): int|float|string|null
+{
+    $found = false;
+    $min = null;
+    foreach ($data as $value) {
+        if (!$found) {
+            $min = $value;
+            $found = true;
+        } else {
+            if ($value < $min) {
+                $min = $value;
+            }
+        }
+    }
+    return $min;
+}
+
+/**
+ * Maximum of comparable values. Returns null for empty input.
+ * Eager.
+ *
+ * @template T of (int|float|string)
+ * @param iterable<array-key, T> $data
+ * @return T|null
+ */
+function max(iterable $data): int|float|string|null
+{
+    $found = false;
+    $max = null;
+    foreach ($data as $value) {
+        if (!$found) {
+            $max = $value;
+            $found = true;
+        } else {
+            if ($value > $max) {
+                $max = $value;
+            }
+        }
+    }
+    return $max;
+}
+
+/**
+ * Internal: normalize an identifier to a stable hash string.
+ * Returns [true, hash] on success, [false, ''] if the value cannot be reliably hashed.
+ *
+ * @return array{0: bool, 1: string}
+ */
+function __hash_identifier(mixed $value): array
+{
+    if ($value === null) {
+        return [true, 'n'];
+    }
+    if (\is_bool($value)) {
+        return [true, 'b:' . ($value ? '1' : '0')];
+    }
+    if (\is_int($value)) {
+        return [true, 'i:' . $value];
+    }
+    if (\is_float($value)) {
+        if (\is_nan($value)) {
+            return [true, 'f:nan'];
+        }
+        if (\is_infinite($value)) {
+            return [true, 'f:' . ($value > 0 ? 'inf' : '-inf')];
+        }
+        return [true, 'f:' . \rtrim(sprintf('%.17F', $value), '0')];
+    }
+    if (\is_string($value)) {
+        return [true, 's:' . $value];
+    }
+    if (\is_object($value)) {
+        // Generators/Closures are not serializable but have object hashes
+        return [true, 'o:' . spl_object_hash($value)];
+    }
+    if (\is_array($value)) {
+        // Try serialize safely; skip if it fails
+        try {
+            return [true, 'a:' . serialize($value)];
+        } catch (\Throwable) {
+            return [false, ''];
+        }
+    }
+
+    // Resources, etc.
+    return [false, ''];
 }
