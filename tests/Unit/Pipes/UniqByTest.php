@@ -9,7 +9,7 @@ use function Denprog\RiverFlow\Pipes\uniqBy;
 
 use Generator;
 
-describe('uniqBy function', function () {
+describe('uniqBy function', function (): void {
     $users = [
         'u1' => ['id' => 1, 'name' => 'Alice',   'city' => 'London'],
         'u2' => ['id' => 2, 'name' => 'Bob',     'city' => 'Paris'],
@@ -18,7 +18,7 @@ describe('uniqBy function', function () {
         'u5' => ['id' => 2, 'name' => 'Bobby',   'city' => 'Berlin'], // duplicate by id
     ];
 
-    $usersGeneratorFactory = static fn () => (static fn () => yield from $users)();
+    $usersGeneratorFactory = static fn (): Generator => (static fn () => yield from $users)();
 
     dataset('uniqByData', [
         'uniq users by id' => [
@@ -41,7 +41,7 @@ describe('uniqBy function', function () {
         ],
         'uniq numbers by their integer value' => [
             [1, 2, '2', 3, 1.0, 4, '4.0', 'item'],
-            fn ($val) => is_numeric($val) ? (int) $val : (string) $val,
+            fn ($val): int|string => is_numeric($val) ? (int) $val : (string) $val,
             [0        => 1, 1 => 2, 3 => 3, 5 => 4, 7 => 'item'],
         ],
         'empty collection for uniqBy' => [[], fn ($x) => $x, []],
@@ -59,14 +59,14 @@ describe('uniqBy function', function () {
      * @template TKey of array-key
      * @template TValue
      */
-    it('returns unique items based on the identifier callback result', function (iterable $inputIterable, callable $identifier, array $expectedArray) {
+    it('returns unique items based on the identifier callback result', function (iterable $inputIterable, callable $identifier, array $expectedArray): void {
         /** @var iterable<TKey, TValue> $inputIterable */
         $generator = uniqBy($inputIterable, $identifier);
         expect($generator)->toBeInstanceOf(Generator::class);
         expect(toArray($generator))->toEqual($expectedArray);
     })->with('uniqByData');
 
-    it('is lazy', function () {
+    it('is lazy', function (): void {
         $iterations = 0;
         $sourceData = [
             ['id' => 1, 'val' => 'a'], ['id' => 2, 'val' => 'b'], ['id' => 1, 'val' => 'c'],
@@ -79,13 +79,13 @@ describe('uniqBy function', function () {
             }
         })();
 
-        $uniqueById = uniqBy($source, fn (array $item) => $item['id']);
+        $uniqueById = uniqBy($source, fn (array $item): int => $item['id']);
         expect($iterations)->toBe(0);
 
         $result = [];
         $count  = 0;
-        foreach ($uniqueById as $item) {
-            $result[] = $item;
+        foreach ($uniqueById as $unique) {
+            $result[] = $unique;
             $count++;
             if ($count >= 2) {
                 break;

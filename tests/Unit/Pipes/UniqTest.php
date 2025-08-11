@@ -9,7 +9,7 @@ use function Denprog\RiverFlow\Pipes\uniq;
 
 use Generator;
 
-describe('uniq function (strict, lazy)', function () {
+describe('uniq function (strict, lazy)', function (): void {
     dataset('uniqSimpleData', [
         'empty array'                             => [[], []],
         'numbers with duplicates strict detailed' => [
@@ -36,13 +36,13 @@ describe('uniq function (strict, lazy)', function () {
         ],
     ]);
 
-    it('returns only unique values preserving first occurrence keys (strict comparison)', function (iterable $inputIterable, array $expectedArray) {
+    it('returns only unique values preserving first occurrence keys (strict comparison)', function (iterable $inputIterable, array $expectedArray): void {
         $generator = uniq($inputIterable);
         expect($generator)->toBeInstanceOf(Generator::class);
         expect(toArray($generator))->toBe($expectedArray);
     })->with('uniqSimpleData');
 
-    it('is lazy and iterates source only as needed', function () {
+    it('is lazy and iterates source only as needed', function (): void {
         $iterations = 0;
         $sourceData = [1, 2, 2, 3, 3, 3, 1, 4]; // Unique: 1,2,3,4
         $source     = (function () use (&$iterations, $sourceData): Generator {
@@ -81,9 +81,9 @@ describe('uniq function (strict, lazy)', function () {
         expect($iterations)->toBe(\count($sourceData));
     });
 
-    it('handles arrays with non-serializable (closures) by skipping them', function () {
-        $closure1 = fn () => 'closure1';
-        $closure2 = fn () => 'closure2';
+    it('handles arrays with non-serializable (closures) by skipping them', function (): void {
+        $closure1 = fn (): string => 'closure1';
+        $closure2 = fn (): string => 'closure2';
         $data     = [
             ['a' => 1, 'c' => $closure1], // not serializable
             ['a' => 1, 'b' => 2],         // serializable
@@ -94,7 +94,7 @@ describe('uniq function (strict, lazy)', function () {
         expect($result)->toBe([1 => ['a' => 1, 'b' => 2]]);
     });
 
-    it('objects are unique by identity (spl_object_hash)', function () {
+    it('objects are unique by identity (spl_object_hash)', function (): void {
         $obj1      = (object)['id' => 1];
         $obj1Alias = $obj1; // same instance
         $obj2      = (object)['id' => 1]; // different instance

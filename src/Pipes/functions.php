@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Pipes;
 
+use ArrayIterator;
+use Iterator;
+use IteratorIterator;
+use InvalidArgumentException;
+use Throwable;
 use Generator;
 
 /**
@@ -684,12 +689,12 @@ function zip(iterable ...$iterables): Generator
     $iters = [];
     foreach ($iterables as $it) {
         if (\is_array($it)) {
-            $iters[] = new \ArrayIterator($it);
-        } elseif ($it instanceof \Iterator) {
+            $iters[] = new ArrayIterator($it);
+        } elseif ($it instanceof Iterator) {
             $iters[] = $it;
         } else {
             // Remaining case: Traversable (e.g., IteratorAggregate)
-            $iters[] = new \IteratorIterator($it);
+            $iters[] = new IteratorIterator($it);
         }
     }
 
@@ -710,8 +715,8 @@ function zip(iterable ...$iterables): Generator
             $row[] = $it->current();
         }
         yield $row;
-        foreach ($iters as $it) {
-            $it->next();
+        foreach ($iters as $iter) {
+            $iter->next();
         }
     }
 }
@@ -725,7 +730,7 @@ function zip(iterable ...$iterables): Generator
 function chunk(iterable $data, int $size): Generator
 {
     if ($size <= 0) {
-        throw new \InvalidArgumentException('chunk() size must be >= 1');
+        throw new InvalidArgumentException('chunk() size must be >= 1');
     }
 
     $buf = [];
@@ -757,10 +762,8 @@ function min(iterable $data): int|float|string|null
         if (!$found) {
             $min   = $value;
             $found = true;
-        } else {
-            if ($value < $min) {
-                $min = $value;
-            }
+        } elseif ($value < $min) {
+            $min = $value;
         }
     }
 
@@ -783,10 +786,8 @@ function max(iterable $data): int|float|string|null
         if (!$found) {
             $max   = $value;
             $found = true;
-        } else {
-            if ($value > $max) {
-                $max = $value;
-            }
+        } elseif ($value > $max) {
+            $max = $value;
         }
     }
 
@@ -831,7 +832,7 @@ function __hash_identifier(mixed $value): array
         // Try serialize safely; skip if it fails
         try {
             return [true, 'a:' . serialize($value)];
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return [false, ''];
         }
     }

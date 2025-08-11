@@ -73,9 +73,8 @@ function compose(callable ...$functions): callable
 function pipe(mixed $value, callable ...$functions): mixed
 {
     $result = $value;
-    foreach ($functions as $fn) {
-        /** @var callable(mixed): mixed $fn */
-        $result = $fn($result);
+    foreach ($functions as $function) {
+        $result = $function($result);
     }
 
     return $result;

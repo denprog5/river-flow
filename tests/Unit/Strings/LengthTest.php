@@ -6,8 +6,8 @@ namespace Denprog\RiverFlow\Tests\Unit\Strings;
 
 use function Denprog\RiverFlow\Strings\length;
 
-describe('Strings length', function () {
-    it('returns length for ASCII strings', function () {
+describe('Strings length', function (): void {
+    it('returns length for ASCII strings', function (): void {
         expect(length(''))
             ->toBe(0);
         expect(length('Hello'))
@@ -16,7 +16,7 @@ describe('Strings length', function () {
             ->toBe(13);
     });
 
-    it('is mbstring-aware for multibyte strings when available', function () {
+    it('is mbstring-aware for multibyte strings when available', function (): void {
         if (!\function_exists('mb_strlen')) {
             $this->markTestSkipped('mbstring is not available');
         }

@@ -8,8 +8,8 @@ use function Denprog\RiverFlow\Utils\tap;
 
 use stdClass;
 
-describe('Utils tap', function () {
-    it('returns the original scalar value and invokes callback', function () {
+describe('Utils tap', function (): void {
+    it('returns the original scalar value and invokes callback', function (): void {
         $called = 0;
         $seen   = null;
         $v      = 42;
@@ -22,7 +22,7 @@ describe('Utils tap', function () {
         expect($seen)->toBe(42);
     });
 
-    it('returns the same object instance (identity) and invokes callback with it', function () {
+    it('returns the same object instance (identity) and invokes callback with it', function (): void {
         $obj      = new stdClass();
         $obj->n   = 1;
         $received = null;
@@ -31,7 +31,7 @@ describe('Utils tap', function () {
         expect($received)->toBe($obj);      // callback saw the same instance
     });
 
-    it('does not modify arrays unless callback mutates them explicitly', function () {
+    it('does not modify arrays unless callback mutates them explicitly', function (): void {
         $arr = [1, 2, 3];
         $out = tap($arr, function ($x): void { /* no-op */ });
         expect($out)->toBe($arr);
