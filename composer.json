@@ -4,7 +4,8 @@
         "phpstan/phpstan": "^2.1.22",
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpstan/phpstan-strict-rules": "^2.0",
-        "spaze/phpstan-disallowed-calls": "^v4.6.0"
+        "spaze/phpstan-disallowed-calls": "^v4.6.0",
+        "rector/rector": "^2.1.2"
     },
     "config": {
         "allow-plugins": {
@@ -37,6 +38,8 @@
         "analyse": "vendor/bin/phpstan analyse -c phpstan.neon.dist",
         "cs:lint": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "cs:fix": "vendor/bin/php-cs-fixer fix",
-        "ci:dump-autoload-classmap": "composer dump-autoload --classmap-authoritative"
+        "ci:dump-autoload-classmap": "composer dump-autoload --classmap-authoritative",
+        "rector:check": "vendor/bin/rector process --dry-run",
+        "rector:fix": "vendor/bin/rector process"
     }
 }
