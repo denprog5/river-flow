@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        php: ['8.5']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Install dependencies (with cache)
+        uses: ramsey/composer-install@v3
+        with:
+          composer-options: --no-interaction --prefer-dist
+
+      - name: Dump classmap (authoritative)
+        run: composer ci:dump-autoload-classmap
+
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+
+      - name: Security audit
+        run: composer audit --no-interaction --locked
+
+      - name: Lint code style
+        run: composer cs:lint
+
+      - name: Static analysis
+        run: composer analyse -c phpstan.neon.dist
+
+      - name: Run tests
+        run: composer test

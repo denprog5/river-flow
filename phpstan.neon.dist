@@ -1,0 +1,34 @@
+includes:
+  - vendor/phpstan/phpstan-strict-rules/rules.neon
+  - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+  - vendor/spaze/phpstan-disallowed-calls/extension.neon
+parameters:
+  level: max
+  paths:
+    - src
+  tmpDir: .cache/phpstan
+  checkGenericClassInNonGenericObjectType: true
+  checkMissingTypehints: true
+  treatPhpDocTypesAsCertain: true
+  reportUnmatchedIgnoredErrors: true
+  checkUninitializedProperties: true
+  phpVersion: 80500
+  disallowedFunctionCalls:
+    - function: "eval"
+      message: "eval() is forbidden."
+    - function: "unserialize"
+      message: "unserialize() is forbidden; use safe formats (JSON) or vetted serializers."
+    - function: "exec"
+      message: "exec() is forbidden."
+    - function: "system"
+      message: "system() is forbidden."
+    - function: "shell_exec"
+      message: "shell_exec() is forbidden."
+    - function: "passthru"
+      message: "passthru() is forbidden."
+    - function: "proc_open"
+      message: "proc_open() is forbidden."
+    - function: "popen"
+      message: "popen() is forbidden."
+    - function: "assert"
+      message: "assert() is forbidden."

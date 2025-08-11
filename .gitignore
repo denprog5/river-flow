@@ -1,4 +1,13 @@
-/docs/
 /vendor/
 /.idea/
+/.vscode/
 /.windsurf/
+/build/
+/coverage/
+/.cache/
+/.php-cs-fixer.cache
+/.phpunit.result.cache
+composer.lock
+.DS_Store
+Thumbs.db
+/docs/
