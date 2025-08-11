@@ -9,11 +9,11 @@ use function Denprog\RiverFlow\Utils\pipe;
 
 describe('Utils compose and pipe', function () {
     it('compose applies functions right-to-left and supports multiple args for the innermost function', function () {
-        $sum = fn(int $a, int $b): int => $a + $b; // innermost (right-most)
-        $inc = fn(int $x): int => $x + 1;
-        $dbl = fn(int $x): int => $x * 2;
+        $sum = fn (int $a, int $b): int => $a + $b; // innermost (right-most)
+        $inc = fn (int $x): int => $x + 1;
+        $dbl = fn (int $x): int => $x * 2;
 
-        $fn = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
+        $fn  = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
         $res = $fn(3, 4); // sum=7 -> inc=8 -> dbl=16
         expect($res)->toBe(16);
     });
@@ -27,8 +27,8 @@ describe('Utils compose and pipe', function () {
     it('pipe applies functions left-to-right starting from initial value', function () {
         $res = pipe(
             5,
-            fn(int $x): int => $x + 3, // 8
-            fn(int $x): int => $x * 2, // 16
+            fn (int $x): int => $x + 3, // 8
+            fn (int $x): int => $x * 2, // 16
             'strval',                   // "16"
         );
         expect($res)->toBe('16');

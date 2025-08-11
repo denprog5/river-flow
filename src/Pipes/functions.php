@@ -346,6 +346,7 @@ function contains(iterable $data, mixed $needle): bool
             return true;
         }
     }
+
     return false;
 }
 
@@ -355,7 +356,7 @@ function contains(iterable $data, mixed $needle): bool
  *
  * @template TKey of array-key
  * @template TValue of (int|float|string)
- * @param iterable<TKey, TValue> $data
+ * @param  iterable<TKey, TValue> $data
  * @return array<TKey, TValue>
  */
 function sort(iterable $data): array
@@ -372,8 +373,8 @@ function sort(iterable $data): array
  * @template TKey of array-key
  * @template TValue
  * @template TGroupKey of array-key
- * @param iterable<TKey, TValue>              $data
- * @param callable(TValue, TKey): TGroupKey   $grouper
+ * @param  iterable<TKey, TValue>                $data
+ * @param  callable(TValue, TKey): TGroupKey     $grouper
  * @return array<TGroupKey, array<TKey, TValue>>
  */
 function groupBy(iterable $data, callable $grouper): array
@@ -396,8 +397,8 @@ function groupBy(iterable $data, callable $grouper): array
  * @template TKey of array-key
  * @template TValue
  * @template TNewKey of array-key
- * @param iterable<TKey, TValue>             $data
- * @param callable(TValue, TKey): TNewKey    $keyer
+ * @param  iterable<TKey, TValue>          $data
+ * @param  callable(TValue, TKey): TNewKey $keyer
  * @return array<TNewKey, TValue>
  */
 function keyBy(iterable $data, callable $keyer): array
@@ -420,7 +421,7 @@ function keyBy(iterable $data, callable $keyer): array
 function average(iterable $data): float
 {
     $total = sum($data);
-    $n = count($data);
+    $n     = count($data);
     if ($n === 0) {
         return 0.0;
     }
@@ -434,8 +435,8 @@ function average(iterable $data): float
  *
  * @template TKey of array-key
  * @template TValue
- * @param iterable<TKey, TValue>           $data
- * @param callable(TValue, TKey): bool     $predicate
+ * @param iterable<TKey, TValue>       $data
+ * @param callable(TValue, TKey): bool $predicate
  */
 function every(iterable $data, callable $predicate): bool
 {
@@ -454,8 +455,8 @@ function every(iterable $data, callable $predicate): bool
  *
  * @template TKey of array-key
  * @template TValue
- * @param iterable<TKey, TValue>           $data
- * @param callable(TValue, TKey): bool     $predicate
+ * @param iterable<TKey, TValue>       $data
+ * @param callable(TValue, TKey): bool $predicate
  */
 function some(iterable $data, callable $predicate): bool
 {
@@ -476,7 +477,7 @@ function some(iterable $data, callable $predicate): bool
  *
  * @template TKey of array-key
  * @template TValue
- * @param iterable<TKey, TValue> $data
+ * @param  iterable<TKey, TValue>  $data
  * @return Generator<TKey, TValue>
  */
 function uniq(iterable $data): Generator
@@ -504,8 +505,8 @@ function uniq(iterable $data): Generator
  * @template TKey of array-key
  * @template TValue
  * @template TIdentifier
- * @param iterable<TKey, TValue> $data
- * @param callable(TValue, TKey): TIdentifier $identifier
+ * @param  iterable<TKey, TValue>              $data
+ * @param  callable(TValue, TKey): TIdentifier $identifier
  * @return Generator<TKey, TValue>
  */
 function uniqBy(iterable $data, callable $identifier): Generator
@@ -513,7 +514,7 @@ function uniqBy(iterable $data, callable $identifier): Generator
     $seen = [];
 
     foreach ($data as $key => $value) {
-        $id = $identifier($value, $key);
+        $id          = $identifier($value, $key);
         [$ok, $hash] = __hash_identifier($id);
         if (!$ok) {
             continue;
@@ -529,7 +530,7 @@ function uniqBy(iterable $data, callable $identifier): Generator
  * Flatten nested iterables up to $depth levels. Keys are discarded.
  * Depth 0 returns a generator over the original elements (keys lost).
  *
- * @param iterable<mixed, mixed> $data
+ * @param  iterable<mixed, mixed> $data
  * @return Generator<int, mixed>
  */
 function flatten(iterable $data, int $depth = 1): Generator
@@ -539,6 +540,7 @@ function flatten(iterable $data, int $depth = 1): Generator
             // Re-yield to discard original keys and avoid collisions
             yield $v;
         }
+
         return;
     }
 
@@ -560,8 +562,8 @@ function flatten(iterable $data, int $depth = 1): Generator
  * @template TKey of array-key
  * @template TValue
  * @template TNewValue
- * @param iterable<TKey, TValue> $data
- * @param callable(TValue, TKey): (iterable<mixed, TNewValue>|TNewValue) $transformer
+ * @param  iterable<TKey, TValue>                                         $data
+ * @param  callable(TValue, TKey): (iterable<mixed, TNewValue>|TNewValue) $transformer
  * @return Generator<int, TNewValue>
  */
 function flatMap(iterable $data, callable $transformer): Generator
@@ -583,8 +585,8 @@ function flatMap(iterable $data, callable $transformer): Generator
  *
  * @template TKey of array-key
  * @template TValue
- * @param iterable<TKey, TValue> $data
- * @param callable(TValue, TKey): bool $predicate
+ * @param  iterable<TKey, TValue>       $data
+ * @param  callable(TValue, TKey): bool $predicate
  * @return Generator<TKey, TValue>
  */
 function takeWhile(iterable $data, callable $predicate): Generator
@@ -602,13 +604,14 @@ function takeWhile(iterable $data, callable $predicate): Generator
  *
  * @template TKey of array-key
  * @template TValue
- * @param iterable<TKey, TValue> $data
+ * @param  iterable<TKey, TValue>  $data
  * @return Generator<TKey, TValue>
  */
 function drop(iterable $data, int $count): Generator
 {
     if ($count <= 0) {
         yield from $data;
+
         return;
     }
 
@@ -627,8 +630,8 @@ function drop(iterable $data, int $count): Generator
  *
  * @template TKey of array-key
  * @template TValue
- * @param iterable<TKey, TValue> $data
- * @param callable(TValue, TKey): bool $predicate
+ * @param  iterable<TKey, TValue>       $data
+ * @param  callable(TValue, TKey): bool $predicate
  * @return Generator<TKey, TValue>
  */
 function dropWhile(iterable $data, callable $predicate): Generator
@@ -650,8 +653,8 @@ function dropWhile(iterable $data, callable $predicate): Generator
  *
  * @template TKey of array-key
  * @template TValue
- * @param iterable<TKey, TValue> $data
- * @param callable(TValue, TKey): bool $predicate
+ * @param  iterable<TKey, TValue>                                $data
+ * @param  callable(TValue, TKey): bool                          $predicate
  * @return array{0: array<TKey, TValue>, 1: array<TKey, TValue>}
  */
 function partition(iterable $data, callable $predicate): array
@@ -673,7 +676,7 @@ function partition(iterable $data, callable $predicate): array
  * Zip multiple iterables together lazily. Stops at the shortest.
  * Yields numeric-indexed arrays of values, keys discarded.
  *
- * @param iterable<mixed, mixed> ...$iterables
+ * @param  iterable<mixed, mixed>            ...$iterables
  * @return Generator<int, array<int, mixed>>
  */
 function zip(iterable ...$iterables): Generator
@@ -716,7 +719,7 @@ function zip(iterable ...$iterables): Generator
 /**
  * Chunk values into arrays of size $size (last chunk may be smaller). Lazy. Keys discarded.
  *
- * @param iterable<array-key, mixed> $data
+ * @param  iterable<array-key, mixed>        $data
  * @return Generator<int, array<int, mixed>>
  */
 function chunk(iterable $data, int $size): Generator
@@ -743,16 +746,16 @@ function chunk(iterable $data, int $size): Generator
  * Eager.
  *
  * @template T of (int|float|string)
- * @param iterable<array-key, T> $data
+ * @param  iterable<array-key, T> $data
  * @return T|null
  */
 function min(iterable $data): int|float|string|null
 {
     $found = false;
-    $min = null;
+    $min   = null;
     foreach ($data as $value) {
         if (!$found) {
-            $min = $value;
+            $min   = $value;
             $found = true;
         } else {
             if ($value < $min) {
@@ -760,6 +763,7 @@ function min(iterable $data): int|float|string|null
             }
         }
     }
+
     return $min;
 }
 
@@ -768,16 +772,16 @@ function min(iterable $data): int|float|string|null
  * Eager.
  *
  * @template T of (int|float|string)
- * @param iterable<array-key, T> $data
+ * @param  iterable<array-key, T> $data
  * @return T|null
  */
 function max(iterable $data): int|float|string|null
 {
     $found = false;
-    $max = null;
+    $max   = null;
     foreach ($data as $value) {
         if (!$found) {
-            $max = $value;
+            $max   = $value;
             $found = true;
         } else {
             if ($value > $max) {
@@ -785,6 +789,7 @@ function max(iterable $data): int|float|string|null
             }
         }
     }
+
     return $max;
 }
 
@@ -806,13 +811,14 @@ function __hash_identifier(mixed $value): array
         return [true, 'i:' . $value];
     }
     if (\is_float($value)) {
-        if (\is_nan($value)) {
+        if (is_nan($value)) {
             return [true, 'f:nan'];
         }
-        if (\is_infinite($value)) {
+        if (is_infinite($value)) {
             return [true, 'f:' . ($value > 0 ? 'inf' : '-inf')];
         }
-        return [true, 'f:' . \rtrim(sprintf('%.17F', $value), '0')];
+
+        return [true, 'f:' . rtrim(\sprintf('%.17F', $value), '0')];
     }
     if (\is_string($value)) {
         return [true, 's:' . $value];

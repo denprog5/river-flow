@@ -6,6 +6,7 @@ namespace Denprog\RiverFlow\Strings;
 
 use InvalidArgumentException;
 use Stringable;
+
 use function trim as php_trim;
 
 /**

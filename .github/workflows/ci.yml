@@ -52,3 +52,18 @@ jobs:
 
       - name: Run tests
         run: composer test
+
+      - name: Prepare coverage directory
+        if: matrix.os == 'ubuntu-latest'
+        run: php -r "mkdir('build/logs', 0777, true);"
+
+      - name: Run tests with coverage (Clover)
+        if: matrix.os == 'ubuntu-latest'
+        run: composer test:coverage
+
+      - name: Upload Clover coverage artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: clover-${{ matrix.php }}-${{ matrix.os }}
+          path: build/logs/clover.xml

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Tests\Unit\Utils;
 
-use stdClass;
 use function Denprog\RiverFlow\Utils\identity;
+
+use stdClass;
 
 describe('Utils identity', function () {
     it('returns the same scalar value', function () {
@@ -22,9 +23,9 @@ describe('Utils identity', function () {
     });
 
     it('returns the identical object instance', function () {
-        $obj = new stdClass();
+        $obj      = new stdClass();
         $obj->foo = 'bar';
-        $out = identity($obj);
+        $out      = identity($obj);
         expect($out)->toBe($obj);
     });
 });

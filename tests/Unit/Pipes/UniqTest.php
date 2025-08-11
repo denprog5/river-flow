@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 
-use Generator;
 use function Denprog\RiverFlow\Pipes\toArray;
 use function Denprog\RiverFlow\Pipes\uniq;
 
+use Generator;
+
 describe('uniq function (strict, lazy)', function () {
     dataset('uniqSimpleData', [
-        'empty array' => [[], []],
+        'empty array'                             => [[], []],
         'numbers with duplicates strict detailed' => [
-            [0=>1, 1=>2, 2=>'2', 3=>3, 4=>1, 5=>4, 6=>'4.0', 7=>4, 8=>'2'],
+            [0 => 1, 1 => 2, 2 => '2', 3 => 3, 4 => 1, 5 => 4, 6 => '4.0', 7 => 4, 8 => '2'],
             // Expect: 1 (0), 2 (1), '2' (2), 3 (3), 4 (5), '4.0' (6)
-            [0=>1, 1=>2, 2=>'2', 3=>3, 5=>4, 6=>'4.0'],
+            [0 => 1, 1 => 2, 2 => '2', 3 => 3, 5 => 4, 6 => '4.0'],
         ],
         'strings with duplicates strict' => [
             ['a' => 'apple', 'b' => 'banana', 'c' => 'apple', 'd' => 'orange', 'e' => 'Banana'],
@@ -26,7 +27,10 @@ describe('uniq function (strict, lazy)', function () {
         ],
         'generator with strict duplicates' => [
             (static function (): Generator {
-                yield 'k1' => 100; yield 'k2' => 200; yield 'k3' => 100; yield 'k4' => '100';
+                yield 'k1' => 100;
+                yield 'k2' => 200;
+                yield 'k3' => 100;
+                yield 'k4' => '100';
             })(),
             ['k1' => 100, 'k2' => 200, 'k4' => '100'],
         ],
@@ -41,7 +45,7 @@ describe('uniq function (strict, lazy)', function () {
     it('is lazy and iterates source only as needed', function () {
         $iterations = 0;
         $sourceData = [1, 2, 2, 3, 3, 3, 1, 4]; // Unique: 1,2,3,4
-        $source = (function () use (&$iterations, $sourceData): Generator {
+        $source     = (function () use (&$iterations, $sourceData): Generator {
             foreach ($sourceData as $item) {
                 $iterations++;
                 yield $item;
@@ -52,7 +56,7 @@ describe('uniq function (strict, lazy)', function () {
         expect($iterations)->toBe(0);
 
         $result = [];
-        $count = 0;
+        $count  = 0;
         foreach ($uniqueStream as $value) {
             $result[] = $value;
             $count++;
@@ -74,13 +78,13 @@ describe('uniq function (strict, lazy)', function () {
             $uniqueStream->next();
         }
         expect($result)->toBe([1, 2, 3, 4]);
-        expect($iterations)->toBe(count($sourceData));
+        expect($iterations)->toBe(\count($sourceData));
     });
 
     it('handles arrays with non-serializable (closures) by skipping them', function () {
-        $closure1 = fn() => 'closure1';
-        $closure2 = fn() => 'closure2';
-        $data = [
+        $closure1 = fn () => 'closure1';
+        $closure2 = fn () => 'closure2';
+        $data     = [
             ['a' => 1, 'c' => $closure1], // not serializable
             ['a' => 1, 'b' => 2],         // serializable
             ['a' => 1, 'c' => $closure2], // not serializable
@@ -91,12 +95,12 @@ describe('uniq function (strict, lazy)', function () {
     });
 
     it('objects are unique by identity (spl_object_hash)', function () {
-        $obj1 = (object)['id' => 1];
+        $obj1      = (object)['id' => 1];
         $obj1Alias = $obj1; // same instance
-        $obj2 = (object)['id' => 1]; // different instance
-        $obj3 = (object)['id' => 2];
-        $input = [$obj1, $obj2, $obj1Alias, $obj3];
-        $expected = [0 => $obj1, 1 => $obj2, 3 => $obj3];
+        $obj2      = (object)['id' => 1]; // different instance
+        $obj3      = (object)['id' => 2];
+        $input     = [$obj1, $obj2, $obj1Alias, $obj3];
+        $expected  = [0 => $obj1, 1 => $obj2, 3 => $obj3];
         expect(toArray(uniq($input)))->toEqual($expected);
     });
 });

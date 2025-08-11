@@ -37,7 +37,7 @@ function tap(mixed $value, callable $callback): mixed
  * compose(f, g, h)($x) === f(g(h($x))).
  * The innermost callable (right-most) may accept any number of arguments; the rest are treated as unary.
  *
- * @param callable(mixed ...$args): mixed ...$functions
+ * @param  callable(mixed ...$args): mixed ...$functions
  * @return callable(mixed ...$args): mixed
  */
 function compose(callable ...$functions): callable
@@ -48,13 +48,13 @@ function compose(callable ...$functions): callable
 
     return static function (mixed ...$args) use ($functions): mixed {
         $result = null;
-        $first = true;
+        $first  = true;
         // Execute right-to-left
         for ($i = \count($functions) - 1; $i >= 0; $i--) {
             $fn = $functions[$i];
             if ($first) {
                 $result = $fn(...$args);
-                $first = false;
+                $first  = false;
             } else {
                 $result = $fn($result);
             }
@@ -77,5 +77,6 @@ function pipe(mixed $value, callable ...$functions): mixed
         /** @var callable(mixed): mixed $fn */
         $result = $fn($result);
     }
+
     return $result;
 }

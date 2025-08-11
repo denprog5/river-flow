@@ -3,7 +3,15 @@
 [![CI](https://github.com/denprog/river-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/denprog/river-flow/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Modern, strictly-typed PHP 8.5 library scaffold with testing, static analysis, and CI/CD baked in.
+Modern, strictly-typed PHP 8.5 functional utilities with a focus on lazy pipelines (Pipes), mbstring-aware string helpers (Strings), and small utilities (Utils). Built for the PHP 8.5 pipe operator and rigorous quality gates (Pest, PHPStan, Rector, CS).
+
+## Features
+- PHP 8.5-ready; idiomatic use of the pipe operator (|>)
+- Lazy/eager operations with predictable key behavior
+- Strong typing and generics via PHPDoc; PHPStan at max level
+- Mbstring-aware string helpers
+- Utilities for composition: tap, identity, compose, pipe
+- Cross-platform CI (Linux/macOS/Windows)
 
 ## Requirements
 - PHP >= 8.5
@@ -15,7 +23,37 @@ composer require denprog/river-flow
 ```
 
 ## Usage
-The public API will be documented here. For now, this package is being scaffolded for PHP 8.5 with Pest and PHPStan. Check back soon for API details.
+See full documentation in [docs/RiverFlow EN.md](docs/RiverFlow%20EN.md). Quick examples:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use function Denprog\RiverFlow\Pipes\{map, filter, toList};
+use function Denprog\RiverFlow\Strings\{trim, toUpperCase};
+use function Denprog\RiverFlow\Utils\{tap, compose, pipe};
+
+$result = [10, 15, 20, 25, 30]
+    |> filter(fn(int $n) => $n % 2 === 0)  // [10, 20, 30] (lazy)
+    |> map(fn(int $n) => $n / 10)          // [1, 2, 3] (lazy)
+    |> toList();                            // [1, 2, 3] (eager)
+
+$text = "  river flow  "
+    |> trim()
+    |> toUpperCase(); // "RIVER FLOW"
+
+// Utils: compose/pipe
+$sum = fn(int $a, int $b): int => $a + $b;   // right-most may be variadic
+$inc = fn(int $x): int => $x + 1;
+$dbl = fn(int $x): int => $x * 2;
+
+$f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
+assert($f(3, 4) === 16);
+
+$out = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
+assert($out === '16');
+```
 
 ## Development
 Clone the repository and install dependencies:

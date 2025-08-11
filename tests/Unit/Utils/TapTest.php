@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Tests\Unit\Utils;
 
-use stdClass;
 use function Denprog\RiverFlow\Utils\tap;
+
+use stdClass;
 
 describe('Utils tap', function () {
     it('returns the original scalar value and invokes callback', function () {
         $called = 0;
-        $seen = null;
-        $v = 42;
-        $out = tap($v, function ($x) use (&$called, &$seen): void {
+        $seen   = null;
+        $v      = 42;
+        $out    = tap($v, function ($x) use (&$called, &$seen): void {
             $called++;
             $seen = $x;
         });
@@ -22,10 +23,10 @@ describe('Utils tap', function () {
     });
 
     it('returns the same object instance (identity) and invokes callback with it', function () {
-        $obj = new stdClass();
-        $obj->n = 1;
+        $obj      = new stdClass();
+        $obj->n   = 1;
         $received = null;
-        $out = tap($obj, function ($x) use (&$received): void { $received = $x; });
+        $out      = tap($obj, function ($x) use (&$received): void { $received = $x; });
         expect($out)->toBe($obj);           // identical instance
         expect($received)->toBe($obj);      // callback saw the same instance
     });
