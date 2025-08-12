@@ -3,10 +3,10 @@
 Namespace: `Denprog\RiverFlow\Utils`
 
 ## API
-- `tap(mixed $data, callable(mixed): void $callback): mixed`
-  - Calls `$callback($data)` for side effects and returns `$data` unchanged
-- `identity(mixed $data): mixed`
-  - Returns the value as-is
+- `tap(mixed $data, callable(mixed): void $callback): mixed` and `tap(callable(mixed): void $callback): callable(mixed $data): mixed`
+  - Calls the callback with the value for side effects and returns the value unchanged. The curried form is pipe-friendly.
+- `identity(mixed $data): mixed` and `identity(): callable(mixed): mixed`
+  - Returns the value as-is. The curried form is pipe-friendly.
 - `compose(callable ...$functions): callable`
   - Right-to-left composition; `compose(f, g, h)` returns a function equivalent to `fn(...$args) => f(g(h(...$args)))`
   - The right-most callable may accept multiple arguments; others are unary
@@ -30,4 +30,11 @@ assert($f(3, 4) === 16);
 
 $res = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
 assert($res === '16');
+
+// Pipe-friendly usage (curried forms)
+$val = 42 |> identity(); // 42
+
+$log = [];
+$after = [1,2,3] |> tap(function(array $xs) use (&$log) { $log[] = array_sum($xs); });
+// $after === [1,2,3]; $log === [6]
 ```

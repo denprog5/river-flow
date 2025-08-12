@@ -1022,6 +1022,17 @@ function partition(iterable|callable $data_or_predicate, ?callable $predicate = 
 }
 
 /**
+ * Pipe-friendly zip: returns a callable that zips with the provided iterables.
+ * Example: [1,2,3] |> zipWith(['a','b']) |> toList()
+ *
+ * @return callable(iterable<mixed, mixed>): Generator<int, array<int, mixed>>
+ */
+function zipWith(iterable ...$others): callable
+{
+    return static fn (iterable $data): Generator => zip($data, ...$others);
+}
+
+/**
  * Zip multiple iterables together lazily. Stops at the shortest.
  * Yields numeric-indexed arrays of values, keys discarded.
  *

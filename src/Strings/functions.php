@@ -11,6 +11,8 @@ use function trim as php_trim;
 
 /**
  * Trim characters from both ends of a string.
+ * Direct mode: trim($data, $characters = default): string
+ * For pipe-friendly usage without PipeOps, use trimWith($characters) which returns a callable.
  */
 function trim(string $data, string $characters = " \t\n\r\0\x0B"): string
 {
@@ -19,12 +21,27 @@ function trim(string $data, string $characters = " \t\n\r\0\x0B"): string
 }
 
 /**
- * Split string into lines. Handles CRLF/CR/LF.
- *
- * @return array<int, string>
+ * Pipe-friendly version of trim: returns a callable expecting the data.
+ * Example: " -- Hello -- " |> trimWith(" -")
  */
-function lines(string $data): array
+function trimWith(string $characters = " \t\n\r\0\x0B"): callable
 {
+    return static fn (string $data): string => trim($data, $characters);
+}
+
+/**
+ * Split string into lines. Handles CRLF/CR/LF.
+ * Direct:  lines($data): array
+ * Curried: lines(): callable(string $data): array
+ *
+ * @return array<int, string>|callable(string): array<int, string>
+ */
+function lines(?string $data = null): array|callable
+{
+    if ($data === null) {
+        return static fn (string $d): array => lines($d);
+    }
+
     $parts = preg_split('/\R/u', $data);
     if ($parts === false) {
         // Fallback if PCRE fails for some reason
@@ -38,9 +55,21 @@ function lines(string $data): array
 
 /**
  * Replace a prefix if present.
+ * Direct:  replacePrefix($data, $prefix, $replacement): string
+ * Curried: replacePrefix($prefix, $replacement): callable(string $data): string
  */
-function replacePrefix(string $data, string $prefix, string $replacement): string
+function replacePrefix(string $data_or_prefix, string $prefix_or_replacement, ?string $replacement = null): string|callable
 {
+    if ($replacement === null) {
+        // Curried usage: replacePrefix($prefix, $replacement)
+        $prefix = $data_or_prefix;
+        $repl   = $prefix_or_replacement;
+        return static fn (string $data): string => replacePrefix($data, $prefix, $repl);
+    }
+
+    $data    = $data_or_prefix;
+    $prefix  = $prefix_or_replacement;
+
     if ($prefix === '') {
         return $replacement . $data;
     }
@@ -54,9 +83,15 @@ function replacePrefix(string $data, string $prefix, string $replacement): strin
 
 /**
  * Convert string to lowercase (UTF-8 aware if mbstring is available).
+ * Direct:  toLowerCase($data): string
+ * Curried: toLowerCase(): callable(string $data): string
  */
-function toLowerCase(string $data): string
+function toLowerCase(?string $data = null): string|callable
 {
+    if ($data === null) {
+        return static fn (string $d): string => toLowerCase($d);
+    }
+
     if (\function_exists('mb_strtolower')) {
         return mb_strtolower($data, 'UTF-8');
     }
@@ -66,9 +101,15 @@ function toLowerCase(string $data): string
 
 /**
  * Convert string to uppercase (UTF-8 aware if mbstring is available).
+ * Direct:  toUpperCase($data): string
+ * Curried: toUpperCase(): callable(string $data): string
  */
-function toUpperCase(string $data): string
+function toUpperCase(?string $data = null): string|callable
 {
+    if ($data === null) {
+        return static fn (string $d): string => toUpperCase($d);
+    }
+
     if (\function_exists('mb_strtoupper')) {
         return mb_strtoupper($data, 'UTF-8');
     }
@@ -78,9 +119,15 @@ function toUpperCase(string $data): string
 
 /**
  * Get string length (UTF-8 aware if mbstring is available).
+ * Direct:  length($data): int
+ * Curried: length(): callable(string $data): int
  */
-function length(string $data): int
+function length(?string $data = null): int|callable
 {
+    if ($data === null) {
+        return static fn (string $d): int => length($d);
+    }
+
     if (\function_exists('mb_strlen')) {
         return mb_strlen($data, 'UTF-8');
     }
@@ -92,11 +139,20 @@ function length(string $data): int
  * Join elements into a string, casting each to string.
  * Elements must be scalar or Stringable.
  * Analogous to implode().
+ * Direct:  join(iterable $data, string $separator = ''): string
+ * Curried: join(string $separator): callable(iterable $data): string
  *
- * @param iterable<array-key, int|float|string|bool|Stringable> $data
+ * @param iterable<array-key, int|float|string|bool|Stringable>|string $data_or_separator
  */
-function join(iterable $data, string $separator = ''): string
+function join(iterable|string $data_or_separator, string $separator = ''): string|callable
 {
+    if (!\is_iterable($data_or_separator)) {
+        // Curried usage: join($separator)
+        $sep = (string) $data_or_separator;
+        return static fn (iterable $data): string => join($data, $sep);
+    }
+
+    $data = $data_or_separator;
     if (\is_array($data)) {
         // Cast elements to string explicitly
         return implode($separator, array_map(static fn (int|float|string|bool|Stringable $v): string => (string) $v, $data));
@@ -119,26 +175,43 @@ function join(iterable $data, string $separator = ''): string
 /**
  * Split a string by a delimiter. Similar to explode() with adjusted limit semantics.
  * Limit of 0 is treated as 1. Negative limit drops that many elements from the end.
+ * Direct:  split($data, $delimiter, $limit = PHP_INT_MAX): array
+ * Curried: split($delimiter, $limit = PHP_INT_MAX): callable(string $data): array
  *
- * @return array<int, string>
+ * @return array<int, string>|callable(string): array<int, string>
  */
-function split(string $data, string $delimiter, int $limit = PHP_INT_MAX): array
+function split(string $data_or_delimiter, mixed $delimiter_or_limit = null, ?int $limit = PHP_INT_MAX): array|callable
 {
+    // Curried usage when second arg is omitted or is an int (limit)
+    if ($delimiter_or_limit === null || \is_int($delimiter_or_limit)) {
+        $delim = $data_or_delimiter;
+        $lim   = \is_int($delimiter_or_limit) ? $delimiter_or_limit : PHP_INT_MAX;
+        if ($delim === '') {
+            throw new InvalidArgumentException('split() delimiter cannot be empty');
+        }
+        return static fn (string $data): array => split($data, (string) $delim, $lim);
+    }
+
+    // Direct path
+    $data      = $data_or_delimiter;
+    $delimiter = (string) $delimiter_or_limit;
+    $lim       = $limit ?? PHP_INT_MAX;
+
     if ($delimiter === '') {
         throw new InvalidArgumentException('split() delimiter cannot be empty');
     }
 
-    if ($limit === 0) {
-        $limit = 1;
+    if ($lim === 0) {
+        $lim = 1;
     }
 
-    if ($limit > 0) {
-        return explode($delimiter, $data, $limit);
+    if ($lim > 0) {
+        return explode($delimiter, $data, $lim);
     }
 
-    // Negative limit: return all but the last -$limit elements
+    // Negative limit: return all but the last -$lim elements
     $parts = explode($delimiter, $data);
-    $drop  = -$limit;
+    $drop  = -$lim;
     $count = \count($parts);
     if ($drop >= $count) {
         return [];

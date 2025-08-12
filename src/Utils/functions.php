@@ -5,28 +5,46 @@ declare(strict_types=1);
 namespace Denprog\RiverFlow\Utils;
 
 /**
- * Identity function: returns the value unchanged.
+ * Identity function.
+ * Direct:  identity($value): mixed
+ * Curried: identity(): callable(mixed): mixed
  *
  * @template T
- * @param  T $value
- * @return T
+ * @param  T ...$valueOrNothing
+ * @return T|callable(mixed): mixed
  */
-function identity(mixed $value): mixed
+function identity(mixed ...$valueOrNothing): mixed
 {
-    return $value;
+    if ($valueOrNothing === []) {
+        return static fn (mixed $v): mixed => $v;
+    }
+
+    return $valueOrNothing[0];
 }
 
 /**
  * Tap into a value: call $callback with the value, then return the original value.
  * Useful for logging or side-effects in a pipeline.
+ * Direct:  tap($value, $callback): mixed
+ * Curried: tap($callback): callable(mixed $value): mixed
  *
  * @template T
- * @param  T                 $value
- * @param  callable(T): void $callback
- * @return T
+ * @param  T|callable(T): void $value_or_callback
+ * @param  callable(T): void|null $callback
+ * @return T|callable(mixed): mixed
  */
-function tap(mixed $value, callable $callback): mixed
+function tap($value_or_callback, ?callable $callback = null): mixed
 {
+    if (\is_callable($value_or_callback) && $callback === null) {
+        $cb = $value_or_callback;
+
+        return static fn (mixed $value): mixed => tap($value, $cb);
+    }
+
+    $value = $value_or_callback;
+    if ($callback === null) {
+        throw new \InvalidArgumentException('tap(): callback must not be null in direct invocation');
+    }
     $callback($value);
 
     return $value;

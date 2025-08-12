@@ -154,3 +154,51 @@ function flatMap(callable $transformer): callable
 {
     return static fn (iterable $data): Generator|callable => P\flatMap($data, $transformer);
 }
+
+// ===== Strings wrappers (pipe-friendly) =====
+use Denprog\RiverFlow\Strings as S;
+
+function trim(string $characters = " \t\n\r\0\x0B"): callable
+{
+    return static fn (string $data): string => S\trim($data, $characters);
+}
+function lines(): callable
+{
+    return static fn (string $data): array => S\lines($data);
+}
+function replacePrefix(string $prefix, string $replacement): callable
+{
+    return static fn (string $data): string => S\replacePrefix($data, $prefix, $replacement);
+}
+function toLowerCase(): callable
+{
+    return static fn (string $data): string => S\toLowerCase($data);
+}
+function toUpperCase(): callable
+{
+    return static fn (string $data): string => S\toUpperCase($data);
+}
+function length(): callable
+{
+    return static fn (string $data): int => S\length($data);
+}
+function join(string $separator = ''): callable
+{
+    return static fn (iterable $data): string => S\join($data, $separator);
+}
+function split(string $delimiter, int $limit = PHP_INT_MAX): callable
+{
+    return static fn (string $data): array => S\split($data, $delimiter, $limit);
+}
+
+// ===== Utils wrappers (pipe-friendly) =====
+use Denprog\RiverFlow\Utils as U;
+
+function identity(): callable
+{
+    return static fn (mixed $value): mixed => U\identity($value);
+}
+function tap(callable $callback): callable
+{
+    return static fn (mixed $value): mixed => U\tap($value, $callback);
+}

@@ -56,8 +56,10 @@ General rules
   - Lazy; hashing rules like `uniq`
 
 ## Combining / Windowing
-- `zip(iterable ...$iterables): Generator<int, array<int, mixed>>`
+- `zip(iterable $data, iterable ...$others): Generator<int, array<int, mixed>>`
   - Lazy; stops at shortest; keys discarded; yields numeric-indexed tuples
+- `zipWith(iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
+  - Pipe-friendly curried form of `zip`. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
 - `chunk(iterable $data, int $size): Generator<int, array<int, mixed>>`
   - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0
 - `partition(iterable $data, callable(TValue, TKey): bool $predicate): array{0: array<TKey, TValue>, 1: array<TKey, TValue>}`
@@ -77,7 +79,7 @@ General rules
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, uniq, partition};
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, uniq, partition};
 
 $evens = [1,2,3,4,5,6]
     |> filter(fn(int $n) => $n % 2 === 0)
@@ -87,7 +89,8 @@ $flat = [[1,2], [3, [4]], 5]
     |> flatten(depth: 2)
     |> toList(); // [1,2,3,4,5]
 
-$z = zip([1,2], ['a','b','c'])
+$z = [1,2]
+    |> zipWith(['a','b','c'])
     |> toList(); // [[1,'a'], [2,'b']]
 
 $uniq = [1,1,'1',2]
