@@ -47,6 +47,21 @@ $out = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
 assert($out === '16');
 ```
 
+## Dual-mode usage
+- Direct: pass data as the first argument, e.g. `toList([1,2,3])`
+- Curried / pipe-friendly: call a function without the data argument to get a callable and chain with PHP 8.5 `|>`
+
+```php
+use function Denprog\RiverFlow\Pipes\{map, filter, toList};
+
+$res1 = toList(map(filter([1,2,3,4], fn($x)=>$x%2===0), fn($x)=>$x*10))); // [20, 40]
+
+$res2 = [1,2,3,4]
+    |> filter(fn($x) => $x % 2 === 0)
+    |> map(fn($x) => $x * 10)
+    |> toList(); // [20, 40]
+```
+
 ## Module Guides
 - Pipes: see [pipes.md](./pipes.md)
 - Strings: see [strings.md](./strings.md)

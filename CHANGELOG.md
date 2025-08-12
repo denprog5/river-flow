@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Docs
+- Add "Dual-mode usage" section to docs/index.md (direct vs curried/pipe-friendly) with examples
+- Expand playground scripts for Pipes/Strings/Utils to mirror canonical multi-step pipelines
+
+### Chore
+- Remove development-only `technical/` directory from the repository
+
 ## [0.1.0] - 2025-08-11
 
 - Initial public release for PHP 8.5 (alpha-compatible)
@@ -14,4 +23,5 @@ All notable changes to this project will be documented in this file.
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
+[Unreleased]: https://github.com/denprog/river-flow/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/denprog/river-flow/releases/tag/v0.1.0
