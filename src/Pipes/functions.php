@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Pipes;
 
+use Traversable;
 use ArrayIterator;
 use Generator;
 use InvalidArgumentException;
@@ -25,10 +26,9 @@ function filter(iterable|callable $data_or_predicate, ?callable $predicate = nul
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static function (iterable $data) use ($pred): Generator {
+        return static fn(iterable $data): Generator =>
             /** @var iterable<mixed, mixed> $data */
-            return filter_gen($data, $pred);
-        };
+            filter_gen($data, $pred);
     }
 
     if (!is_iterable($data_or_predicate)) {
@@ -72,10 +72,9 @@ function map(iterable|callable $data_or_transformer, ?callable $transformer = nu
     if (\is_callable($data_or_transformer) && $transformer === null) {
         $xf = $data_or_transformer;
 
-        return static function (iterable $data) use ($xf): Generator {
+        return static fn(iterable $data): Generator =>
             /** @var iterable<mixed, mixed> $data */
-            return map_gen($data, $xf);
-        };
+            map_gen($data, $xf);
     }
 
     if (!is_iterable($data_or_transformer)) {
@@ -273,10 +272,9 @@ function pluck_gen(iterable $data, string|int $key, mixed $default = null): Gene
 function toList(?iterable $data = null): array|callable
 {
     if ($data === null) {
-        return static function (iterable $d): array {
+        return static fn(iterable $d): array =>
             /** @var iterable<mixed, mixed> $d */
-            return toList_impl($d);
-        };
+            toList_impl($d);
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -306,10 +304,9 @@ function toList_impl(iterable $data): array
 function toArray(?iterable $data = null): array|callable
 {
     if ($data === null) {
-        return static function (iterable $d): array {
+        return static fn(iterable $d): array =>
             /** @var iterable<mixed, mixed> $d */
-            return toArray_impl($d);
-        };
+            toArray_impl($d);
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -343,17 +340,16 @@ function reject(iterable|callable $data_or_predicate, ?callable $predicate = nul
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static function (iterable $data) use ($pred): Generator {
+        return static fn(iterable $data): Generator =>
             /** @var iterable<mixed, mixed> $data */
-            return reject_gen($data, $pred);
-        };
+            reject_gen($data, $pred);
     }
 
     if (!is_iterable($data_or_predicate)) {
-        throw new \InvalidArgumentException('reject(): first argument must be iterable in direct invocation');
+        throw new InvalidArgumentException('reject(): first argument must be iterable in direct invocation');
     }
     if (!\is_callable($predicate)) {
-        throw new \InvalidArgumentException('reject(): predicate must be callable');
+        throw new InvalidArgumentException('reject(): predicate must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -392,18 +388,17 @@ function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null
     if (\is_callable($data_or_getComparable) && $maybe_data === null) {
         $xf = $data_or_getComparable;
 
-        return static function (iterable $data) use ($xf): array {
+        return static fn(iterable $data): array =>
             /** @var iterable<mixed, mixed> $data */
-            return sortBy_impl($data, $xf);
-        };
+            sortBy_impl($data, $xf);
     }
 
     // Flexible order: (callable, iterable)
     if (\is_callable($data_or_getComparable)) {
         $xf   = $data_or_getComparable;
         $data = $maybe_data; // expected iterable
-        if (!($data instanceof \Traversable) && !\is_array($data)) {
-            throw new \InvalidArgumentException('sortBy(): data must be iterable');
+        if (!($data instanceof Traversable) && !\is_array($data)) {
+            throw new InvalidArgumentException('sortBy(): data must be iterable');
         }
 
         /** @var iterable<mixed, mixed> $data */
@@ -416,7 +411,7 @@ function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null
 
     // $data is known to be iterable here due to branching above
     if (!\is_callable($getComparable)) {
-        throw new \InvalidArgumentException('sortBy(): getComparable must be callable');
+        throw new InvalidArgumentException('sortBy(): getComparable must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -435,11 +430,10 @@ function sortBy_impl(iterable $data, callable $getComparable): array
         $pairs[$key] = [$value, $getComparable($value, $key)];
     }
 
-    uasort($pairs, static function (mixed $a, mixed $b): int {
+    uasort($pairs, static fn(mixed $a, mixed $b): int =>
         /** @var array{0:mixed,1:int|float|string} $a */
         /** @var array{0:mixed,1:int|float|string} $b */
-        return $a[1] <=> $b[1];
-    });
+        $a[1] <=> $b[1]);
 
     /** @var array<int|string, mixed> $out */
     $out = array_map(static fn (array $pair): mixed => $pair[0], $pairs);
@@ -456,10 +450,9 @@ function sortBy_impl(iterable $data, callable $getComparable): array
 function values(?iterable $data = null): Generator|callable
 {
     if ($data === null) {
-        return static function (iterable $d): Generator {
+        return static fn(iterable $d): Generator =>
             /** @var iterable<mixed, mixed> $d */
-            return values_gen($d);
-        };
+            values_gen($d);
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -486,10 +479,9 @@ function values_gen(iterable $data): Generator
 function keys(?iterable $data = null): Generator|callable
 {
     if ($data === null) {
-        return static function (iterable $d): Generator {
+        return static fn(iterable $d): Generator =>
             /** @var iterable<mixed, mixed> $d */
-            return keys_gen($d);
-        };
+            keys_gen($d);
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -571,17 +563,16 @@ function find(iterable|callable $data_or_predicate, ?callable $predicate = null,
         $pred = $data_or_predicate;
         $def  = $default; // allow find($pred, $default) -> callable
 
-        return static function (iterable $data) use ($pred, $def): mixed {
+        return static fn(iterable $data): mixed =>
             /** @var iterable<mixed, mixed> $data */
-            return find_impl($data, $pred, $def);
-        };
+            find_impl($data, $pred, $def);
     }
 
     if (!is_iterable($data_or_predicate)) {
-        throw new \InvalidArgumentException('find(): first argument must be iterable in direct invocation');
+        throw new InvalidArgumentException('find(): first argument must be iterable in direct invocation');
     }
     if (!\is_callable($predicate)) {
-        throw new \InvalidArgumentException('find(): predicate must be callable');
+        throw new InvalidArgumentException('find(): predicate must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -614,10 +605,9 @@ function find_impl(iterable $data, callable $predicate, mixed $default = null): 
 function count(?iterable $data = null): int|callable
 {
     if ($data === null) {
-        return static function (iterable $d): int {
+        return static fn(iterable $d): int =>
             /** @var iterable<mixed, mixed> $d */
-            return count_impl($d);
-        };
+            count_impl($d);
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -649,10 +639,9 @@ function count_impl(iterable $data): int
 function isEmpty(?iterable $data = null): bool|callable
 {
     if ($data === null) {
-        return static function (iterable $d): bool {
+        return static fn(iterable $d): bool =>
             /** @var iterable<mixed, mixed> $d */
-            return isEmpty_impl($d);
-        };
+            isEmpty_impl($d);
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -683,10 +672,9 @@ function contains(mixed $data_or_needle, mixed $needle = null): bool|callable
     if (!is_iterable($data_or_needle)) {
         $nd = $data_or_needle;
 
-        return static function (iterable $data) use ($nd): bool {
+        return static fn(iterable $data): bool =>
             /** @var iterable<mixed, mixed> $data */
-            return contains_impl($data, $nd);
-        };
+            contains_impl($data, $nd);
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -760,18 +748,17 @@ function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $may
     if (\is_callable($data_or_grouper) && $maybe_data === null) {
         $g = $data_or_grouper;
 
-        return static function (iterable $data) use ($g): array {
+        return static fn(iterable $data): array =>
             /** @var iterable<mixed, mixed> $data */
-            return groupBy_impl($data, $g);
-        };
+            groupBy_impl($data, $g);
     }
 
     // Flexible order: (callable, iterable)
     if (\is_callable($data_or_grouper)) {
         $g    = $data_or_grouper;
         $data = $maybe_data; // expected iterable
-        if (!($data instanceof \Traversable) && !\is_array($data)) {
-            throw new \InvalidArgumentException('groupBy(): data must be iterable');
+        if (!($data instanceof Traversable) && !\is_array($data)) {
+            throw new InvalidArgumentException('groupBy(): data must be iterable');
         }
 
         /** @var iterable<mixed, mixed> $data */
@@ -784,7 +771,7 @@ function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $may
 
     // $data is known to be iterable here due to branching above
     if (!\is_callable($grouper)) {
-        throw new \InvalidArgumentException('groupBy(): grouper must be callable');
+        throw new InvalidArgumentException('groupBy(): grouper must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -802,7 +789,7 @@ function groupBy_impl(iterable $data, callable $grouper): array
     foreach ($data as $key => $value) {
         $group = $grouper($value, $key);
         if (!\is_int($group) && !\is_string($group)) {
-            throw new \InvalidArgumentException('groupBy(): grouper must return array-key');
+            throw new InvalidArgumentException('groupBy(): grouper must return array-key');
         }
         if (!\array_key_exists($group, $out)) {
             $out[$group] = [];
@@ -830,18 +817,17 @@ function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_d
     if (\is_callable($data_or_keyer) && $maybe_data === null) {
         $k = $data_or_keyer;
 
-        return static function (iterable $data) use ($k): array {
+        return static fn(iterable $data): array =>
             /** @var iterable<mixed, mixed> $data */
-            return keyBy_impl($data, $k);
-        };
+            keyBy_impl($data, $k);
     }
 
     // Flexible order: (callable, iterable)
     if (\is_callable($data_or_keyer)) {
         $k    = $data_or_keyer;
         $data = $maybe_data; // expected iterable
-        if (!($data instanceof \Traversable) && !\is_array($data)) {
-            throw new \InvalidArgumentException('keyBy(): data must be iterable');
+        if (!($data instanceof Traversable) && !\is_array($data)) {
+            throw new InvalidArgumentException('keyBy(): data must be iterable');
         }
 
         /** @var iterable<mixed, mixed> $data */
@@ -854,7 +840,7 @@ function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_d
 
     // $data is known to be iterable here due to branching above
     if (!\is_callable($keyer)) {
-        throw new \InvalidArgumentException('keyBy(): keyer must be callable');
+        throw new InvalidArgumentException('keyBy(): keyer must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -872,7 +858,7 @@ function keyBy_impl(iterable $data, callable $keyer): array
     foreach ($data as $key => $value) {
         $newKey = $keyer($value, $key);
         if (!\is_int($newKey) && !\is_string($newKey)) {
-            throw new \InvalidArgumentException('keyBy(): keyer must return array-key');
+            throw new InvalidArgumentException('keyBy(): keyer must return array-key');
         }
         $out[$newKey] = $value;
     }
@@ -940,18 +926,17 @@ function every(iterable|callable $data_or_predicate, ?callable $predicate = null
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static function (iterable $data) use ($pred): bool {
+        return static fn(iterable $data): bool =>
             /** @var iterable<mixed, mixed> $data */
-            return every_impl($data, $pred);
-        };
+            every_impl($data, $pred);
     }
 
     $data = $data_or_predicate;
     if (!is_iterable($data)) {
-        throw new \InvalidArgumentException('every(): first argument must be iterable in direct invocation');
+        throw new InvalidArgumentException('every(): first argument must be iterable in direct invocation');
     }
     if (!\is_callable($predicate)) {
-        throw new \InvalidArgumentException('every(): predicate must be callable');
+        throw new InvalidArgumentException('every(): predicate must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -986,18 +971,17 @@ function some(iterable|callable $data_or_predicate, ?callable $predicate = null)
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static function (iterable $data) use ($pred): bool {
+        return static fn(iterable $data): bool =>
             /** @var iterable<mixed, mixed> $data */
-            return some_impl($data, $pred);
-        };
+            some_impl($data, $pred);
     }
 
     $data = $data_or_predicate;
     if (!is_iterable($data)) {
-        throw new \InvalidArgumentException('some(): first argument must be iterable in direct invocation');
+        throw new InvalidArgumentException('some(): first argument must be iterable in direct invocation');
     }
     if (!\is_callable($predicate)) {
-        throw new \InvalidArgumentException('some(): predicate must be callable');
+        throw new InvalidArgumentException('some(): predicate must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -1329,10 +1313,10 @@ function dropWhile(iterable|callable $data_or_predicate, ?callable $predicate = 
 
     $data = $data_or_predicate;
     if (!is_iterable($data)) {
-        throw new \InvalidArgumentException('dropWhile(): first argument must be iterable in direct invocation');
+        throw new InvalidArgumentException('dropWhile(): first argument must be iterable in direct invocation');
     }
     if (!\is_callable($predicate)) {
-        throw new \InvalidArgumentException('dropWhile(): predicate must be callable');
+        throw new InvalidArgumentException('dropWhile(): predicate must be callable');
     }
 
     /** @var iterable<mixed, mixed> $data */
@@ -1379,10 +1363,10 @@ function partition(iterable|callable $data_or_predicate, ?callable $predicate = 
 
     $data = $data_or_predicate;
     if (!is_iterable($data)) {
-        throw new \InvalidArgumentException('partition(): first argument must be iterable in direct invocation');
+        throw new InvalidArgumentException('partition(): first argument must be iterable in direct invocation');
     }
     if (!\is_callable($predicate)) {
-        throw new \InvalidArgumentException('partition(): predicate must be callable');
+        throw new InvalidArgumentException('partition(): predicate must be callable');
     }
 
     return partition_impl($data, $predicate);

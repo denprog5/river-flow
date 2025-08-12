@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Utils;
 
+use InvalidArgumentException;
+
 /**
  * Identity function.
  * Direct:  identity($value): mixed
@@ -43,7 +45,7 @@ function tap($value_or_callback, ?callable $callback = null): mixed
 
     $value = $value_or_callback;
     if ($callback === null) {
-        throw new \InvalidArgumentException('tap(): callback must not be null in direct invocation');
+        throw new InvalidArgumentException('tap(): callback must not be null in direct invocation');
     }
     /** @phpstan-var T $value */
     $callback($value);
