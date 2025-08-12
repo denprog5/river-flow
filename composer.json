@@ -29,8 +29,7 @@
         "files": [
             "src/Pipes/functions.php",
             "src/Strings/functions.php",
-            "src/Utils/functions.php",
-            "src/PipeOps/functions.php"
+            "src/Utils/functions.php"
         ]
     },
     "autoload-dev": {

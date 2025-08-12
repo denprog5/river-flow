@@ -38,3 +38,43 @@ $log = [];
 $after = [1,2,3] |> tap(function(array $xs) use (&$log) { $log[] = array_sum($xs); });
 // $after === [1,2,3]; $log === [6]
 ```
+
+### Pipeline chaining (PHP 8.5 `|>`) examples
+```php
+use function Denprog\RiverFlow\Utils\{tap, identity};
+use function Denprog\RiverFlow\Strings\{trimWith, toUpperCase, toLowerCase, split, join};
+
+// 1) Observe intermediate values with tap()
+$result = '  Hello  '
+    |> trimWith()
+    |> tap(fn (string $s) => error_log("after trim: $s"))
+    |> toUpperCase()
+    |> tap(fn (string $s) => error_log("after upper: $s"));
+// $result === 'HELLO'
+
+// 2) Identity in a longer chain (useful when branching/conditional transforms)
+$value = 10
+    |> identity()
+    |> (fn (int $x) => $x + 5)
+    |> (fn (int $x) => $x * 2); // 30
+
+// 3) Strings pipeline with Utils::tap for logging, then join()
+$csv = ' foo | Bar |BAZ '
+    |> trimWith()
+    |> toLowerCase()
+    |> tap(fn (string $s) => error_log("normalized: $s"))
+    |> split('|')
+    |> join(',');
+// "foo , bar ,baz"
+
+// 4) Use tap to capture metrics without breaking the chain
+$sum = 0;
+$out = [1, 2, 3]
+    |> tap(function (array $xs) use (&$sum) { $sum = array_sum($xs); })
+    |> identity();
+// $sum === 6; $out === [1,2,3]
+```
+
+Notes
+- `tap()` and `identity()` both support direct and curried usage; in pipelines, call them with no data argument.
+- The examples mix Utils with Strings to demonstrate real chains; all modules are designed to compose.

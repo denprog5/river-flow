@@ -6,6 +6,9 @@ General rules
 - Lazy vs eager: functions returning `Generator` are lazy; those returning arrays/scalars are eager
 - Key behavior: explicitly stated per function; many lazy transforms preserve keys, some discard
 
+Dual-mode usage
+- Every function supports both direct and curried usage. In pipelines (PHP 8.5 `|>`), call the function without the data argument to get a callable, then chain.
+
 ## Transform
 - `filter(iterable $data, callable(TValue, TKey): bool $predicate): Generator<TKey, TValue>`
   - Lazy; preserves keys; yields items where predicate is true
@@ -99,4 +102,35 @@ $uniq = [1,1,'1',2]
 
 [$pass, $fail] = partition(['a'=>1,'b'=>2,'c'=>3], fn(int $v) => $v > 1);
 // $pass = ['b'=>2,'c'=>3], $fail = ['a'=>1]
+```
+
+### Pipeline chaining (one-liners)
+```php
+use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, flatten, uniq, groupBy, values, sortBy, zipWith};
+
+// 1) Transform → filter → take → materialize
+$topSquares = [1,2,3,4,5,6,7,8,9]
+    |> map(fn(int $n) => $n * $n)
+    |> filter(fn(int $x) => $x % 2 === 0)
+    |> take(3)
+    |> toList(); // [4, 16, 36]
+
+// 2) Flatten nested, uniquify, then toList
+$flatUnique = [[1,2], [2,3, [3,4]], 4]
+    |> flatten(2)
+    |> uniq()
+    |> toList(); // [1,2,3,4]
+
+// 3) Group, then traverse group values and sort by size (eager steps in between)
+$byFirstLetter = ['apple','apricot','banana','blueberry','avocado']
+    |> groupBy(fn(string $s) => $s[0]) // array groups
+    |> values()                         // generator over grouped arrays
+    |> map(fn(array $xs) => $xs)
+    |> toList()                         // materialize to array<list<string>>
+    |> sortBy(fn(array $xs) => \count($xs)); // smallest group first
+
+// 4) Zipping pipelines
+$zipped = [1, 2, 3]
+    |> zipWith(['a','b'], ['X','Y','Z'])
+    |> toList(); // [[1,'a','X'], [2,'b','Y']]
 ```

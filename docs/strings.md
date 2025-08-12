@@ -7,20 +7,27 @@ All functions are UTF-8 aware when mbstring is available.
 ## API
 - `trim(string $data, string $characters = " \t\n\r\0\x0B"): string`
   - Safe wrapper over PHP trim; avoids recursion by calling global trim
+  - Pipe-friendly: use `trimWith($characters = default): callable(string $data): string`
 - `lines(string $data): array<int, string>`
   - Splits by any line break (CRLF/CR/LF) using `/\R/u`
 - `replacePrefix(string $data, string $prefix, string $replacement): string`
   - If `$data` starts with `$prefix`, replace it with `$replacement`; empty prefix prepends `$replacement`
+  - Curried form: `replacePrefix($prefix, $replacement): callable(string $data): string`
 - `toLowerCase(string $data): string`
   - Uses `mb_strtolower($data, 'UTF-8')` when available; fallback to `strtolower`
+  - Curried form: `toLowerCase(): callable(string $data): string`
 - `toUpperCase(string $data): string`
   - Uses `mb_strtoupper($data, 'UTF-8')` when available; fallback to `strtoupper`
+  - Curried form: `toUpperCase(): callable(string $data): string`
 - `length(string $data): int`
   - Uses `mb_strlen($data, 'UTF-8')` when available; fallback to `strlen`
+  - Curried form: `length(): callable(string $data): int`
 - `split(string $data, string $delimiter, int $limit = PHP_INT_MAX): array<int, string>`
   - Positive limit behaves like `explode` with remainder in last element; zero treated as 1; negative drops last `-$limit` parts; empty delimiter throws `InvalidArgumentException`
+  - Curried form: `split($delimiter, $limit = PHP_INT_MAX): callable(string $data): array<int, string>`
 - `join(iterable $data, string $separator = ''): string`
   - Casts each element to string; accepts scalars and `Stringable`; throws `InvalidArgumentException` for non-stringable elements in iterables
+  - Curried form: `join($separator = ''): callable(iterable $data): string`
 
 ## Examples
 ```php
@@ -41,3 +48,33 @@ $parts2 = 'a|b|c|d' |> split('|', -1); // ['a','b','c']
 
 $list = [2024, '01', 15] |> join('-');  // '2024-01-15'
 ```
+
+### Pipeline chaining (one-liners)
+```php
+use function Denprog\RiverFlow\Strings\{trimWith, replacePrefix, toLowerCase, toUpperCase, split, join, length};
+
+// Normalize a title: trim, lowercase, unify prefix
+$title = "  River FLOW: Intro  "
+    |> trimWith()
+    |> toLowerCase()
+    |> replacePrefix('river ', 'river ');
+// "river flow: intro"
+
+// Split, transform by case, and re-join
+$csv = ' foo | Bar |BAZ '
+    |> trimWith()
+    |> toLowerCase()
+    |> split('|')
+    |> join(',');
+// "foo , bar ,baz" (whitespace kept around delimiter; customize trimming as needed)
+
+// Compute length after transformation
+$n = '  Hello  ' |> trimWith() |> toUpperCase() |> length(); // 5
+
+// Replace an optional prefix, then uppercase
+$out = 'foobar' |> replacePrefix('foo', 'bar-') |> toUpperCase(); // 'BAR-bar-'
+```
+
+Notes
+- All functions support direct and curried usage. For trim, use `trimWith()` in pipelines.
+- The examples use PHP 8.5 pipeline operator syntax `|>` for readability.
