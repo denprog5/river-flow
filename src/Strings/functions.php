@@ -39,9 +39,17 @@ function trimWith(string $characters = " \t\n\r\0\x0B"): callable
 function lines(?string $data = null): array|callable
 {
     if ($data === null) {
-        return static fn (string $d): array => lines($d);
+        return static fn (string $d): array => lines_impl($d);
     }
 
+    return lines_impl($data);
+}
+
+/** @internal
+ * @return array<int, string>
+ */
+function lines_impl(string $data): array
+{
     $parts = preg_split('/\R/u', $data);
     if ($parts === false) {
         // Fallback if PCRE fails for some reason
@@ -89,9 +97,15 @@ function replacePrefix(string $data_or_prefix, string $prefix_or_replacement, ?s
 function toLowerCase(?string $data = null): string|callable
 {
     if ($data === null) {
-        return static fn (string $d): string => toLowerCase($d);
+        return static fn (string $d): string => toLowerCase_impl($d);
     }
 
+    return toLowerCase_impl($data);
+}
+
+/** @internal */
+function toLowerCase_impl(string $data): string
+{
     if (\function_exists('mb_strtolower')) {
         return mb_strtolower($data, 'UTF-8');
     }
@@ -107,9 +121,15 @@ function toLowerCase(?string $data = null): string|callable
 function toUpperCase(?string $data = null): string|callable
 {
     if ($data === null) {
-        return static fn (string $d): string => toUpperCase($d);
+        return static fn (string $d): string => toUpperCase_impl($d);
     }
 
+    return toUpperCase_impl($data);
+}
+
+/** @internal */
+function toUpperCase_impl(string $data): string
+{
     if (\function_exists('mb_strtoupper')) {
         return mb_strtoupper($data, 'UTF-8');
     }
@@ -125,9 +145,15 @@ function toUpperCase(?string $data = null): string|callable
 function length(?string $data = null): int|callable
 {
     if ($data === null) {
-        return static fn (string $d): int => length($d);
+        return static fn (string $d): int => length_impl($d);
     }
 
+    return length_impl($data);
+}
+
+/** @internal */
+function length_impl(string $data): int
+{
     if (\function_exists('mb_strlen')) {
         return mb_strlen($data, 'UTF-8');
     }
@@ -149,18 +175,22 @@ function join(iterable|string $data_or_separator, string $separator = ''): strin
     if (!\is_iterable($data_or_separator)) {
         // Curried usage: join($separator)
         $sep = (string) $data_or_separator;
-        return static fn (iterable $data): string => join($data, $sep);
+        return static fn (iterable $data): string => join_impl($data, $sep);
     }
 
-    $data = $data_or_separator;
-    if (\is_array($data)) {
-        // Cast elements to string explicitly
-        return implode($separator, array_map(static fn (int|float|string|bool|Stringable $v): string => (string) $v, $data));
-    }
+    return join_impl($data_or_separator, $separator);
+}
 
+/** @internal
+ * @param iterable<array-key, int|float|string|bool|Stringable> $data
+ */
+function join_impl(iterable $data, string $separator = ''): string
+{
     $parts = [];
     foreach ($data as $v) {
-        if (\is_scalar($v)) {
+        if (\is_string($v)) {
+            $parts[] = $v;
+        } elseif (\is_scalar($v)) {
             $parts[] = (string) $v;
         } elseif ($v instanceof Stringable) {
             $parts[] = (string) $v;
@@ -189,14 +219,25 @@ function split(string $data_or_delimiter, mixed $delimiter_or_limit = null, ?int
         if ($delim === '') {
             throw new InvalidArgumentException('split() delimiter cannot be empty');
         }
-        return static fn (string $data): array => split($data, (string) $delim, $lim);
+        return static fn (string $data): array => split_impl($data, $delim, $lim);
     }
 
     // Direct path
-    $data      = $data_or_delimiter;
-    $delimiter = (string) $delimiter_or_limit;
+    $data = $data_or_delimiter;
+    if (!\is_string($delimiter_or_limit)) {
+        throw new InvalidArgumentException('split() delimiter must be string');
+    }
+    $delimiter = $delimiter_or_limit;
     $lim       = $limit ?? PHP_INT_MAX;
 
+    return split_impl($data, $delimiter, $lim);
+}
+
+/** @internal
+ * @return array<int, string>
+ */
+function split_impl(string $data, string $delimiter, int $lim = PHP_INT_MAX): array
+{
     if ($delimiter === '') {
         throw new InvalidArgumentException('split() delimiter cannot be empty');
     }
