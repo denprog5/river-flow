@@ -10,7 +10,7 @@ namespace Denprog\RiverFlow\Utils;
  * Curried: identity(): callable(mixed): mixed
  *
  * @template T
- * @param  T ...$valueOrNothing
+ * @param  T                        ...$valueOrNothing
  * @return T|callable(mixed): mixed
  */
 function identity(mixed ...$valueOrNothing): mixed
@@ -29,8 +29,8 @@ function identity(mixed ...$valueOrNothing): mixed
  * Curried: tap($callback): callable(mixed $value): mixed
  *
  * @template T
- * @param  T|callable(T): void $value_or_callback
- * @param  callable(T): void|null $callback
+ * @param  T|callable(T): void      $value_or_callback
+ * @param  callable(T): void|null   $callback
  * @return T|callable(mixed): mixed
  */
 function tap($value_or_callback, ?callable $callback = null): mixed

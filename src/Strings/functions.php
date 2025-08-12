@@ -72,11 +72,12 @@ function replacePrefix(string $data_or_prefix, string $prefix_or_replacement, ?s
         // Curried usage: replacePrefix($prefix, $replacement)
         $prefix = $data_or_prefix;
         $repl   = $prefix_or_replacement;
+
         return static fn (string $data): string => replacePrefix_impl($data, $prefix, $repl);
     }
 
-    $data    = $data_or_prefix;
-    $prefix  = $prefix_or_replacement;
+    $data   = $data_or_prefix;
+    $prefix = $prefix_or_replacement;
 
     return replacePrefix_impl($data, $prefix, $replacement);
 }
@@ -178,9 +179,10 @@ function length_impl(string $data): int
  */
 function join(iterable|string $data_or_separator, string $separator = ''): string|callable
 {
-    if (!\is_iterable($data_or_separator)) {
+    if (!is_iterable($data_or_separator)) {
         // Curried usage: join($separator)
         $sep = $data_or_separator;
+
         return static function (iterable $data) use ($sep): string {
             /** @var iterable<mixed, int|float|string|bool|Stringable> $data */
             return join_impl($data, $sep);
@@ -228,6 +230,7 @@ function split(string $data_or_delimiter, mixed $delimiter_or_limit = null, ?int
         if ($delim === '') {
             throw new InvalidArgumentException('split() delimiter cannot be empty');
         }
+
         return static fn (string $data): array => split_impl($data, $delim, $lim);
     }
 
