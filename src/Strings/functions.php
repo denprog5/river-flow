@@ -11,8 +11,8 @@ use function trim as php_trim;
 
 /**
  * Trim characters from both ends of a string.
- * Direct mode: trim($data, $characters = default): string
- * For pipe-friendly usage without PipeOps, use trimWith($characters) which returns a callable.
+ * Direct mode: trim($data, $characters = " \t\n\r\0\x0B"): string
+ * For pipe-friendly usage, use trimWith($characters) which returns a callable.
  */
 function trim(string $data, string $characters = " \t\n\r\0\x0B"): string
 {

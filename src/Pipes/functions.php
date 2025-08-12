@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Pipes;
 
-use Traversable;
 use ArrayIterator;
 use Generator;
 use InvalidArgumentException;
 use Iterator;
 use IteratorIterator;
 use Throwable;
+use Traversable;
 
 /**
  * filter can be used as:
@@ -26,8 +26,7 @@ function filter(iterable|callable $data_or_predicate, ?callable $predicate = nul
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn(iterable $data): Generator =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): Generator => /** @var iterable<mixed, mixed> $data */
             filter_gen($data, $pred);
     }
 
@@ -72,8 +71,7 @@ function map(iterable|callable $data_or_transformer, ?callable $transformer = nu
     if (\is_callable($data_or_transformer) && $transformer === null) {
         $xf = $data_or_transformer;
 
-        return static fn(iterable $data): Generator =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): Generator => /** @var iterable<mixed, mixed> $data */
             map_gen($data, $xf);
     }
 
@@ -272,8 +270,7 @@ function pluck_gen(iterable $data, string|int $key, mixed $default = null): Gene
 function toList(?iterable $data = null): array|callable
 {
     if ($data === null) {
-        return static fn(iterable $d): array =>
-            /** @var iterable<mixed, mixed> $d */
+        return static fn (iterable $d): array => /** @var iterable<mixed, mixed> $d */
             toList_impl($d);
     }
 
@@ -304,8 +301,7 @@ function toList_impl(iterable $data): array
 function toArray(?iterable $data = null): array|callable
 {
     if ($data === null) {
-        return static fn(iterable $d): array =>
-            /** @var iterable<mixed, mixed> $d */
+        return static fn (iterable $d): array => /** @var iterable<mixed, mixed> $d */
             toArray_impl($d);
     }
 
@@ -340,8 +336,7 @@ function reject(iterable|callable $data_or_predicate, ?callable $predicate = nul
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn(iterable $data): Generator =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): Generator => /** @var iterable<mixed, mixed> $data */
             reject_gen($data, $pred);
     }
 
@@ -388,8 +383,7 @@ function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null
     if (\is_callable($data_or_getComparable) && $maybe_data === null) {
         $xf = $data_or_getComparable;
 
-        return static fn(iterable $data): array =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             sortBy_impl($data, $xf);
     }
 
@@ -430,8 +424,7 @@ function sortBy_impl(iterable $data, callable $getComparable): array
         $pairs[$key] = [$value, $getComparable($value, $key)];
     }
 
-    uasort($pairs, static fn(mixed $a, mixed $b): int =>
-        /** @var array{0:mixed,1:int|float|string} $a */
+    uasort($pairs, static fn (mixed $a, mixed $b): int => /** @var array{0:mixed,1:int|float|string} $a */
         /** @var array{0:mixed,1:int|float|string} $b */
         $a[1] <=> $b[1]);
 
@@ -450,8 +443,7 @@ function sortBy_impl(iterable $data, callable $getComparable): array
 function values(?iterable $data = null): Generator|callable
 {
     if ($data === null) {
-        return static fn(iterable $d): Generator =>
-            /** @var iterable<mixed, mixed> $d */
+        return static fn (iterable $d): Generator => /** @var iterable<mixed, mixed> $d */
             values_gen($d);
     }
 
@@ -479,8 +471,7 @@ function values_gen(iterable $data): Generator
 function keys(?iterable $data = null): Generator|callable
 {
     if ($data === null) {
-        return static fn(iterable $d): Generator =>
-            /** @var iterable<mixed, mixed> $d */
+        return static fn (iterable $d): Generator => /** @var iterable<mixed, mixed> $d */
             keys_gen($d);
     }
 
@@ -563,8 +554,7 @@ function find(iterable|callable $data_or_predicate, ?callable $predicate = null,
         $pred = $data_or_predicate;
         $def  = $default; // allow find($pred, $default) -> callable
 
-        return static fn(iterable $data): mixed =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): mixed => /** @var iterable<mixed, mixed> $data */
             find_impl($data, $pred, $def);
     }
 
@@ -605,8 +595,7 @@ function find_impl(iterable $data, callable $predicate, mixed $default = null): 
 function count(?iterable $data = null): int|callable
 {
     if ($data === null) {
-        return static fn(iterable $d): int =>
-            /** @var iterable<mixed, mixed> $d */
+        return static fn (iterable $d): int => /** @var iterable<mixed, mixed> $d */
             count_impl($d);
     }
 
@@ -639,8 +628,7 @@ function count_impl(iterable $data): int
 function isEmpty(?iterable $data = null): bool|callable
 {
     if ($data === null) {
-        return static fn(iterable $d): bool =>
-            /** @var iterable<mixed, mixed> $d */
+        return static fn (iterable $d): bool => /** @var iterable<mixed, mixed> $d */
             isEmpty_impl($d);
     }
 
@@ -672,8 +660,7 @@ function contains(mixed $data_or_needle, mixed $needle = null): bool|callable
     if (!is_iterable($data_or_needle)) {
         $nd = $data_or_needle;
 
-        return static fn(iterable $data): bool =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): bool => /** @var iterable<mixed, mixed> $data */
             contains_impl($data, $nd);
     }
 
@@ -748,8 +735,7 @@ function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $may
     if (\is_callable($data_or_grouper) && $maybe_data === null) {
         $g = $data_or_grouper;
 
-        return static fn(iterable $data): array =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             groupBy_impl($data, $g);
     }
 
@@ -817,8 +803,7 @@ function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_d
     if (\is_callable($data_or_keyer) && $maybe_data === null) {
         $k = $data_or_keyer;
 
-        return static fn(iterable $data): array =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             keyBy_impl($data, $k);
     }
 
@@ -926,8 +911,7 @@ function every(iterable|callable $data_or_predicate, ?callable $predicate = null
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn(iterable $data): bool =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): bool => /** @var iterable<mixed, mixed> $data */
             every_impl($data, $pred);
     }
 
@@ -971,8 +955,7 @@ function some(iterable|callable $data_or_predicate, ?callable $predicate = null)
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn(iterable $data): bool =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): bool => /** @var iterable<mixed, mixed> $data */
             some_impl($data, $pred);
     }
 
