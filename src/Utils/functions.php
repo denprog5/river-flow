@@ -45,6 +45,7 @@ function tap($value_or_callback, ?callable $callback = null): mixed
     if ($callback === null) {
         throw new \InvalidArgumentException('tap(): callback must not be null in direct invocation');
     }
+    /** @phpstan-var T $value */
     $callback($value);
 
     return $value;

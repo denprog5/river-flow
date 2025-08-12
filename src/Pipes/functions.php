@@ -16,26 +16,39 @@ use Throwable;
  *  - filter($data, $predicate): Generator
  *  - filter($predicate): callable(iterable $data): Generator
  *
- * @template TKey of array-key
- * @template TValue
- * @param  iterable<TKey, TValue>|callable(TValue, TKey): bool                               $data_or_predicate
- * @param  (callable(TValue, TKey): bool)|null                                               $predicate
- * @return Generator<TKey, TValue>|callable(iterable<TKey, TValue>): Generator<TKey, TValue>
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                               $data_or_predicate
+ * @param  (callable(mixed, mixed): bool)|null                                               $predicate
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function filter(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
 {
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn (iterable $data): Generator => filter_gen($data, $pred);
+        return static function (iterable $data) use ($pred): Generator {
+            /** @var iterable<mixed, mixed> $data */
+            return filter_gen($data, $pred);
+        };
     }
 
+    if (!\is_iterable($data_or_predicate)) {
+        throw new InvalidArgumentException('filter(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new InvalidArgumentException('filter(): predicate must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
     $data = $data_or_predicate; // iterable
 
     return filter_gen($data, $predicate);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ * @return Generator<mixed, mixed>
+ */
 function filter_gen(iterable $data, callable $predicate): Generator
 {
     foreach ($data as $key => $value) {
@@ -50,27 +63,39 @@ function filter_gen(iterable $data, callable $predicate): Generator
  *  - map($data, $transformer): Generator
  *  - map($transformer): callable(iterable $data): Generator
  *
- * @template TKey of array-key
- * @template TValue
- * @template TNewValue
- * @param  iterable<TKey, TValue>|callable(TValue, TKey): TNewValue                                $data_or_transformer
- * @param  (callable(TValue, TKey): TNewValue)|null                                                $transformer
- * @return Generator<TKey, TNewValue>|callable(iterable<TKey, TValue>): Generator<TKey, TNewValue>
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): mixed                               $data_or_transformer
+ * @param  (callable(mixed, mixed): mixed)|null                                               $transformer
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function map(iterable|callable $data_or_transformer, ?callable $transformer = null): Generator|callable
 {
     if (\is_callable($data_or_transformer) && $transformer === null) {
         $xf = $data_or_transformer;
 
-        return static fn (iterable $data): Generator => map_gen($data, $xf);
+        return static function (iterable $data) use ($xf): Generator {
+            /** @var iterable<mixed, mixed> $data */
+            return map_gen($data, $xf);
+        };
     }
 
+    if (!\is_iterable($data_or_transformer)) {
+        throw new InvalidArgumentException('map(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($transformer)) {
+        throw new InvalidArgumentException('map(): transformer must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
     $data = $data_or_transformer; // iterable
 
     return map_gen($data, $transformer);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $transformer
+ * @return Generator<mixed, mixed>
+ */
 function map_gen(iterable $data, callable $transformer): Generator
 {
     foreach ($data as $key => $value) {
@@ -82,6 +107,10 @@ function map_gen(iterable $data, callable $transformer): Generator
  * reduce supports currying:
  *  - reduce($data, $reducer, $initial = null): mixed
  *  - reduce($reducer, $initial = null): callable(iterable $data): mixed
+ *
+ * @param iterable<mixed, mixed>|callable(mixed, mixed, mixed): mixed $data_or_reducer
+ * @param (callable(mixed, mixed, mixed): mixed)|mixed|null           $reducer_or_initial
+ * @param mixed|null                                                  $initial
  */
 function reduce(iterable|callable $data_or_reducer, mixed $reducer_or_initial = null, mixed $initial = null): mixed
 {
@@ -111,14 +140,27 @@ function reduce(iterable|callable $data_or_reducer, mixed $reducer_or_initial = 
 /**
  * Sum numeric values. Currying supported via sum() -> callable.
  *
- * @param iterable<int|float|string|bool|null>|null $data
+ * @param iterable<bool|float|int|string|null>|null $data
  */
 function sum(?iterable $data = null): int|float|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): int|float => sum($d);
+        return static function (iterable $d): int|float {
+            /** @var iterable<bool|float|int|string|null> $d */
+            return sum_impl($d);
+        };
     }
 
+    /** @var iterable<bool|float|int|string|null> $data */
+    return sum_impl($data);
+}
+
+/** @internal
+ * @param iterable<bool|float|int|string|null> $data
+ * @return int|float
+ */
+function sum_impl(iterable $data): int|float
+{
     $total = 0;
     foreach ($data as $value) {
         if ($value === true) {
@@ -139,9 +181,8 @@ function sum(?iterable $data = null): int|float|callable
 }
 
 /**
- * @template TKey of array-key
- * @template TValue
- * @return Generator<TKey, TValue>|callable(iterable<TKey, TValue>): Generator<TKey, TValue>
+ * @param iterable<mixed, mixed>|int $data_or_count
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function take(iterable|int $data_or_count, ?int $count = null): Generator|callable
 {
@@ -157,7 +198,10 @@ function take(iterable|int $data_or_count, ?int $count = null): Generator|callab
     return take_gen($data, $n);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<mixed, mixed>
+ */
 function take_gen(iterable $data, int $count): Generator
 {
     if ($count <= 0) {
@@ -175,26 +219,41 @@ function take_gen(iterable $data, int $count): Generator
 }
 
 /**
- * @template TKey of array-key
- * @template TValue of array|object
- * @return Generator<TKey, mixed>|callable(iterable<TKey, TValue>): Generator<TKey, mixed>
+ * Pluck property/array key.
+ * Dual-mode.
+ *
+ * @param iterable<mixed, array<mixed, mixed>|object>|string|int $data_or_key
+ * @param mixed                                    $key_or_default
+ * @param mixed                                    $default
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, array<mixed, mixed>|object>): Generator<mixed, mixed>
  */
 function pluck(iterable|string|int $data_or_key, mixed $key_or_default = null, mixed $default = null): Generator|callable
 {
     if (!is_iterable($data_or_key)) {
+        /** @var string|int $key */
         $key = $data_or_key;
         $def = $key_or_default;
 
-        return static fn (iterable $data): Generator => pluck_gen($data, $key, $def);
+        return static function (iterable $data) use ($key, $def): Generator {
+            /** @var iterable<mixed, array<mixed, mixed>|object> $data */
+            return pluck_gen($data, $key, $def);
+        };
     }
 
     $data = $data_or_key;
     $key  = $key_or_default;
+    // Runtime guard retained for direct path
+    if (!\is_string($key) && !\is_int($key)) {
+        throw new InvalidArgumentException('pluck(): key must be string|int');
+    }
 
     return pluck_gen($data, $key, $default);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, array<mixed, mixed>|object> $data
+ * @return Generator<mixed, mixed>
+ */
 function pluck_gen(iterable $data, string|int $key, mixed $default = null): Generator
 {
     $prop = (string) $key;
@@ -202,6 +261,7 @@ function pluck_gen(iterable $data, string|int $key, mixed $default = null): Gene
         if (\is_array($item)) {
             yield $k => (\array_key_exists($key, $item) ? $item[$key] : $default);
         } else {
+            /** @var object $item */
             $public = get_object_vars($item);
             yield $k => (\array_key_exists($prop, $public) ? $public[$prop] : $default);
         }
@@ -210,13 +270,29 @@ function pluck_gen(iterable $data, string|int $key, mixed $default = null): Gene
 
 /**
  * toList($data): array, or toList(): callable
+ *
+ * @param iterable<mixed, mixed>|null $data
+ * @return array<int, mixed>|callable(iterable<mixed, mixed>): array<int, mixed>
  */
 function toList(?iterable $data = null): array|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): array => toList($d);
+        return static function (iterable $d): array {
+            /** @var iterable<mixed, mixed> $d */
+            return toList_impl($d);
+        };
     }
 
+    /** @var iterable<mixed, mixed> $data */
+    return toList_impl($data);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return array<int, mixed>
+ */
+function toList_impl(iterable $data): array
+{
     $out = [];
     foreach ($data as $value) {
         $out[] = $value;
@@ -227,13 +303,29 @@ function toList(?iterable $data = null): array|callable
 
 /**
  * toArray($data): array, or toArray(): callable
+ *
+ * @param iterable<mixed, mixed>|null $data
+ * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function toArray(?iterable $data = null): array|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): array => toArray($d);
+        return static function (iterable $d): array {
+            /** @var iterable<mixed, mixed> $d */
+            return toArray_impl($d);
+        };
     }
 
+    /** @var iterable<mixed, mixed> $data */
+    return toArray_impl($data);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return array<int|string, mixed>
+ */
+function toArray_impl(iterable $data): array
+{
     $out = [];
     foreach ($data as $k => $v) {
         $out[$k] = $v;
@@ -244,26 +336,41 @@ function toArray(?iterable $data = null): array|callable
 
 /**
  * Reject elements for which predicate returns true.
+ * Dual-mode.
  *
- * @template TKey of array-key
- * @template TValue
- * @param  callable(TValue, TKey): bool $predicate
- * @return Generator<TKey, TValue>
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null                  $predicate
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function reject(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
 {
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn (iterable $data): Generator => reject_gen($data, $pred);
+        return static function (iterable $data) use ($pred): Generator {
+            /** @var iterable<mixed, mixed> $data */
+            return reject_gen($data, $pred);
+        };
     }
 
+    if (!\is_iterable($data_or_predicate)) {
+        throw new \InvalidArgumentException('reject(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new \InvalidArgumentException('reject(): predicate must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
     $data = $data_or_predicate; // iterable
 
     return reject_gen($data, $predicate);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ * @return Generator<mixed, mixed>
+ */
 function reject_gen(iterable $data, callable $predicate): Generator
 {
     foreach ($data as $key => $value) {
@@ -279,12 +386,9 @@ function reject_gen(iterable $data, callable $predicate): Generator
  *  - sortBy($getComparable, $data): array  (flexible order)
  *  - sortBy($getComparable): callable(iterable $data): array
  *
- * @template TKey of array-key
- * @template TValue
- * @template TSort of (int|float|string)
- * @param  iterable<TKey, TValue>|callable(TValue, TKey): TSort                      $data_or_getComparable
- * @param  (callable(TValue, TKey): TSort)|iterable<TKey, TValue>|null               $maybe_data
- * @return array<TKey, TValue>|callable(iterable<TKey, TValue>): array<TKey, TValue>
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): (int|float|string)                    $data_or_getComparable
+ * @param  (callable(mixed, mixed): (int|float|string))|iterable<mixed, mixed>|null             $maybe_data
+ * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null $maybe_data = null): array|callable
 {
@@ -292,48 +396,83 @@ function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null
     if (\is_callable($data_or_getComparable) && $maybe_data === null) {
         $xf = $data_or_getComparable;
 
-        return static fn (iterable $data): array => sortBy($data, $xf);
+        return static function (iterable $data) use ($xf): array {
+            /** @var iterable<mixed, mixed> $data */
+            return sortBy_impl($data, $xf);
+        };
     }
 
     // Flexible order: (callable, iterable)
-    if (\is_callable($data_or_getComparable) && $maybe_data !== null) {
+    if (\is_callable($data_or_getComparable)) {
         $xf   = $data_or_getComparable;
-        $data = $maybe_data; // iterable
+        $data = $maybe_data; // expected iterable
+        if (!($data instanceof \Traversable) && !\is_array($data)) {
+            throw new \InvalidArgumentException('sortBy(): data must be iterable');
+        }
 
-        return sortBy($data, $xf);
+        /** @var iterable<mixed, mixed> $data */
+        return sortBy_impl($data, $xf);
     }
 
     // Normal order
     $data          = $data_or_getComparable; // iterable
     $getComparable = $maybe_data;            // callable
 
+    // $data is known to be iterable here due to branching above
+    if (!\is_callable($getComparable)) {
+        throw new \InvalidArgumentException('sortBy(): getComparable must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return sortBy_impl($data, $getComparable);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): (int|float|string) $getComparable
+ * @return array<int|string, mixed>
+ */
+function sortBy_impl(iterable $data, callable $getComparable): array
+{
     $pairs = [];
     foreach ($data as $key => $value) {
         $pairs[$key] = [$value, $getComparable($value, $key)];
     }
 
-    uasort($pairs, static fn (array $a, array $b): int => $a[1] <=> $b[1]);
+    uasort($pairs, static function (mixed $a, mixed $b): int {
+        /** @var array{0:mixed,1:int|float|string} $a */
+        /** @var array{0:mixed,1:int|float|string} $b */
+        return $a[1] <=> $b[1];
+    });
 
-    return array_map(fn (array $pair): mixed => $pair[0], $pairs);
+    /** @var array<int|string, mixed> $out */
+    $out = array_map(static fn (array $pair): mixed => $pair[0], $pairs);
+    return $out;
 }
 
 /**
  * Yield values (discard keys) lazily.
  *
- * @template T
- * @param  iterable<mixed, T>                                                $data
- * @return Generator<int, T>|callable(iterable<mixed, T>): Generator<int, T>
+ * @param  iterable<mixed, mixed>|null                                      $data
+ * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
  */
 function values(?iterable $data = null): Generator|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): Generator => values_gen($d);
+        return static function (iterable $d): Generator {
+            /** @var iterable<mixed, mixed> $d */
+            return values_gen($d);
+        };
     }
 
+    /** @var iterable<mixed, mixed> $data */
     return values_gen($data);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<int, mixed>
+ */
 function values_gen(iterable $data): Generator
 {
     foreach ($data as $value) {
@@ -344,20 +483,26 @@ function values_gen(iterable $data): Generator
 /**
  * Yield keys lazily.
  *
- * @template TKey of array-key
- * @param  iterable<TKey, mixed>                                                      $data
- * @return Generator<int, TKey>|callable(iterable<TKey, mixed>): Generator<int, TKey>
+ * @param  iterable<mixed, mixed>|null                                                $data
+ * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
  */
 function keys(?iterable $data = null): Generator|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): Generator => keys_gen($d);
+        return static function (iterable $d): Generator {
+            /** @var iterable<mixed, mixed> $d */
+            return keys_gen($d);
+        };
     }
 
+    /** @var iterable<mixed, mixed> $data */
     return keys_gen($data);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<int, mixed>
+ */
 function keys_gen(iterable $data): Generator
 {
     foreach ($data as $key => $unused) {
@@ -416,24 +561,46 @@ function last(mixed $data_or_default = null, mixed $default = null): mixed
 }
 
 /**
- * Find first element matching predicate, or $default if none found.
+ * Find first value matching predicate or return $default.
+ * Dual-mode.
  *
- * @template TKey of array-key
- * @template T
- * @param  callable(T, TKey): bool $predicate
- * @param  T|null                  $default
- * @return T|null
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param  (callable(mixed, mixed): bool)|null                 $predicate
+ * @param  mixed|null                                          $default
+ * @return mixed|callable(iterable<mixed, mixed>): mixed
  */
 function find(iterable|callable $data_or_predicate, ?callable $predicate = null, mixed $default = null): mixed
 {
-    if (\is_callable($data_or_predicate)) {
+    if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
-        $def  = $predicate; // allow find($pred, $default) -> callable
+        $def  = $default; // allow find($pred, $default) -> callable
 
-        return static fn (iterable $data): mixed => find($data, $pred, $def);
+        return static function (iterable $data) use ($pred, $def): mixed {
+            /** @var iterable<mixed, mixed> $data */
+            return find_impl($data, $pred, $def);
+        };
     }
 
+    if (!\is_iterable($data_or_predicate)) {
+        throw new \InvalidArgumentException('find(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new \InvalidArgumentException('find(): predicate must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
     $data = $data_or_predicate;
+    return find_impl($data, $predicate, $default);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ * @param mixed|null $default
+ * @return mixed
+ */
+function find_impl(iterable $data, callable $predicate, mixed $default = null): mixed
+{
     foreach ($data as $key => $value) {
         if ($predicate($value, $key) === true) {
             return $value;
@@ -446,16 +613,27 @@ function find(iterable|callable $data_or_predicate, ?callable $predicate = null,
 /**
  * Count elements in an iterable (eager).
  *
- * @template TKey of array-key
- * @template TValue
- * @param iterable<TKey, TValue> $data
+ * @param iterable<mixed, mixed>|null $data
+ * @return int|callable(iterable<mixed, mixed>): int
  */
 function count(?iterable $data = null): int|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): int => count($d);
+        return static function (iterable $d): int {
+            /** @var iterable<mixed, mixed> $d */
+            return count_impl($d);
+        };
     }
 
+    /** @var iterable<mixed, mixed> $data */
+    return count_impl($data);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ */
+function count_impl(iterable $data): int
+{
     if (\is_array($data)) {
         return \count($data);
     }
@@ -470,16 +648,27 @@ function count(?iterable $data = null): int|callable
 /**
  * Whether iterable has no elements.
  *
- * @template TKey of array-key
- * @template TValue
- * @param iterable<TKey, TValue> $data
+ * @param iterable<mixed, mixed>|null $data
+ * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function isEmpty(?iterable $data = null): bool|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): bool => isEmpty($d);
+        return static function (iterable $d): bool {
+            /** @var iterable<mixed, mixed> $d */
+            return isEmpty_impl($d);
+        };
     }
 
+    /** @var iterable<mixed, mixed> $data */
+    return isEmpty_impl($data);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ */
+function isEmpty_impl(iterable $data): bool
+{
     foreach ($data as $_) {
         return false;
     }
@@ -489,19 +678,34 @@ function isEmpty(?iterable $data = null): bool|callable
 
 /**
  * Check whether iterable contains a value (strict comparison).
+ * Dual-mode.
  *
- * @template TKey of array-key
- * @template TValue
+ * @param iterable<mixed, mixed>|mixed $data_or_needle
+ * @param mixed|null                   $needle
+ * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function contains(mixed $data_or_needle, mixed $needle = null): bool|callable
 {
     if (!is_iterable($data_or_needle)) {
         $nd = $data_or_needle;
 
-        return static fn (iterable $data): bool => contains($data, $nd);
+        return static function (iterable $data) use ($nd): bool {
+            /** @var iterable<mixed, mixed> $data */
+            return contains_impl($data, $nd);
+        };
     }
 
+    /** @var iterable<mixed, mixed> $data */
     $data = $data_or_needle;
+    return contains_impl($data, $needle);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param mixed $needle
+ */
+function contains_impl(iterable $data, mixed $needle): bool
+{
     foreach ($data as $value) {
         if ($value === $needle) {
             return true;
@@ -515,20 +719,32 @@ function contains(mixed $data_or_needle, mixed $needle = null): bool|callable
  * Sort values using natural ascending order, preserving original keys.
  * Eager.
  *
- * @template TKey of array-key
- * @template TValue of (int|float|string)
- * @param  iterable<TKey, TValue> $data
- * @return array<TKey, TValue>
+ * @param  iterable<mixed, int|float|string>|null                         $data
+ * @return array<int|string, int|float|string>|callable(iterable<mixed, int|float|string>): array<int|string, int|float|string>
  */
 function sort(?iterable $data = null): array|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): array => sort($d);
+        return static function (iterable $d): array {
+            /** @var iterable<mixed, int|float|string> $d */
+            return sort_impl($d);
+        };
     }
 
-    $arr = toArray($data);
-    uasort($arr, static fn (int|float|string $a, int|float|string $b): int => $a <=> $b);
+    /** @var iterable<mixed, int|float|string> $data */
+    return sort_impl($data);
+}
 
+/** @internal
+ * @param iterable<mixed, int|float|string> $data
+ * @return array<int|string, int|float|string>
+ */
+function sort_impl(iterable $data): array
+{
+    $arr = toArray($data);
+    /** @var array<int|string, int|float|string> $arr */
+    uasort($arr, static fn (mixed $a, mixed $b): int => $a <=> $b);
+    /** @var array<int|string, int|float|string> $arr */
     return $arr;
 }
 
@@ -539,12 +755,9 @@ function sort(?iterable $data = null): array|callable
  *  - groupBy($grouper): callable(iterable $data): array
  * Eager.
  *
- * @template TKey of array-key
- * @template TValue
- * @template TGroupKey of array-key
- * @param  iterable<TKey, TValue>|callable(TValue, TKey): TGroupKey                                                      $data_or_grouper
- * @param  (callable(TValue, TKey): TGroupKey)|iterable<TKey, TValue>|null                                               $maybe_data
- * @return array<TGroupKey, array<TKey, TValue>>|callable(iterable<TKey, TValue>): array<TGroupKey, array<TKey, TValue>>
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): array-key                                                      $data_or_grouper
+ * @param  (callable(mixed, mixed): array-key)|iterable<mixed, mixed>|null                                               $maybe_data
+ * @return array<int|string, array<mixed, mixed>>|callable(iterable<mixed, mixed>): array<int|string, array<mixed, mixed>>
  */
 function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $maybe_data = null): array|callable
 {
@@ -552,24 +765,50 @@ function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $may
     if (\is_callable($data_or_grouper) && $maybe_data === null) {
         $g = $data_or_grouper;
 
-        return static fn (iterable $data): array => groupBy($data, $g);
+        return static function (iterable $data) use ($g): array {
+            /** @var iterable<mixed, mixed> $data */
+            return groupBy_impl($data, $g);
+        };
     }
 
     // Flexible order: (callable, iterable)
-    if (\is_callable($data_or_grouper) && $maybe_data !== null) {
+    if (\is_callable($data_or_grouper)) {
         $g    = $data_or_grouper;
-        $data = $maybe_data; // iterable
+        $data = $maybe_data; // expected iterable
+        if (!($data instanceof \Traversable) && !\is_array($data)) {
+            throw new \InvalidArgumentException('groupBy(): data must be iterable');
+        }
 
-        return groupBy($data, $g);
+        /** @var iterable<mixed, mixed> $data */
+        return groupBy_impl($data, $g);
     }
 
     // Normal order
     $data    = $data_or_grouper; // iterable
     $grouper = $maybe_data;      // callable
 
+    // $data is known to be iterable here due to branching above
+    if (!\is_callable($grouper)) {
+        throw new \InvalidArgumentException('groupBy(): grouper must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return groupBy_impl($data, $grouper);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $grouper
+ * @return array<array-key, array<mixed, mixed>>
+ */
+function groupBy_impl(iterable $data, callable $grouper): array
+{
     $out = [];
     foreach ($data as $key => $value) {
         $group = $grouper($value, $key);
+        if (!\is_int($group) && !\is_string($group)) {
+            throw new \InvalidArgumentException('groupBy(): grouper must return array-key');
+        }
         if (!\array_key_exists($group, $out)) {
             $out[$group] = [];
         }
@@ -586,12 +825,9 @@ function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $may
  *  - keyBy($keyer): callable(iterable $data): array
  * Eager. Later keys overwrite earlier ones.
  *
- * @template TKey of array-key
- * @template TValue
- * @template TNewKey of array-key
- * @param  iterable<TKey, TValue>|callable(TValue, TKey): TNewKey                          $data_or_keyer
- * @param  (callable(TValue, TKey): TNewKey)|iterable<TKey, TValue>|null                   $maybe_data
- * @return array<TNewKey, TValue>|callable(iterable<TKey, TValue>): array<TNewKey, TValue>
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): array-key                          $data_or_keyer
+ * @param  (callable(mixed, mixed): array-key)|iterable<mixed, mixed>|null                   $maybe_data
+ * @return array<array-key, mixed>|callable(iterable<mixed, mixed>): array<array-key, mixed>
  */
 function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_data = null): array|callable
 {
@@ -599,24 +835,51 @@ function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_d
     if (\is_callable($data_or_keyer) && $maybe_data === null) {
         $k = $data_or_keyer;
 
-        return static fn (iterable $data): array => keyBy($data, $k);
+        return static function (iterable $data) use ($k): array {
+            /** @var iterable<mixed, mixed> $data */
+            return keyBy_impl($data, $k);
+        };
     }
 
     // Flexible order: (callable, iterable)
-    if (\is_callable($data_or_keyer) && $maybe_data !== null) {
+    if (\is_callable($data_or_keyer)) {
         $k    = $data_or_keyer;
-        $data = $maybe_data; // iterable
+        $data = $maybe_data; // expected iterable
+        if (!($data instanceof \Traversable) && !\is_array($data)) {
+            throw new \InvalidArgumentException('keyBy(): data must be iterable');
+        }
 
-        return keyBy($data, $k);
+        /** @var iterable<mixed, mixed> $data */
+        return keyBy_impl($data, $k);
     }
 
     // Normal order
     $data  = $data_or_keyer; // iterable
     $keyer = $maybe_data;    // callable
 
+    // $data is known to be iterable here due to branching above
+    if (!\is_callable($keyer)) {
+        throw new \InvalidArgumentException('keyBy(): keyer must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return keyBy_impl($data, $keyer);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $keyer
+ * @return array<array-key, mixed>
+ */
+function keyBy_impl(iterable $data, callable $keyer): array
+{
     $out = [];
     foreach ($data as $key => $value) {
-        $out[$keyer($value, $key)] = $value;
+        $newKey = $keyer($value, $key);
+        if (!\is_int($newKey) && !\is_string($newKey)) {
+            throw new \InvalidArgumentException('keyBy(): keyer must return array-key');
+        }
+        $out[$newKey] = $value;
     }
 
     return $out;
@@ -627,15 +890,27 @@ function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_d
  * Returns 0.0 when iterable is empty.
  * Eager. Supports currying for pipe usage.
  *
- * @param  iterable<array-key, int|float|string|bool|null>|null                   $data
- * @return float|callable(iterable<array-key, int|float|string|bool|null>): float
+ * @param  iterable<mixed, bool|float|int|string|null>|null                   $data
+ * @return float|callable(iterable<mixed, bool|float|int|string|null>): float
  */
 function average(?iterable $data = null): float|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): float => average($d);
+        return static function (iterable $d): float {
+            /** @var iterable<mixed, bool|float|int|string|null> $d */
+            return average_impl($d);
+        };
     }
 
+    /** @var iterable<mixed, bool|float|int|string|null> $data */
+    return average_impl($data);
+}
+
+/** @internal
+ * @param iterable<mixed, bool|float|int|string|null> $data
+ */
+function average_impl(iterable $data): float
+{
     $total = 0.0;
     $n     = 0;
     foreach ($data as $value) {
@@ -661,19 +936,39 @@ function average(?iterable $data = null): float|callable
  * Whether all elements satisfy the predicate. Lazy short-circuit, eager result.
  * For empty iterables returns true.
  *
- * @template TKey of array-key
- * @template TValue
- * @param callable(TValue, TKey): bool $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null                  $predicate
+ * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function every(iterable|callable $data_or_predicate, ?callable $predicate = null): bool|callable
 {
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn (iterable $data): bool => every($data, $pred);
+        return static function (iterable $data) use ($pred): bool {
+            /** @var iterable<mixed, mixed> $data */
+            return every_impl($data, $pred);
+        };
     }
 
     $data = $data_or_predicate;
+    if (!\is_iterable($data)) {
+        throw new \InvalidArgumentException('every(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new \InvalidArgumentException('every(): predicate must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return every_impl($data, $predicate);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ */
+function every_impl(iterable $data, callable $predicate): bool
+{
     foreach ($data as $key => $value) {
         if ($predicate($value, $key) !== true) {
             return false;
@@ -687,19 +982,39 @@ function every(iterable|callable $data_or_predicate, ?callable $predicate = null
  * Whether any element satisfies the predicate. Lazy short-circuit, eager result.
  * For empty iterables returns false.
  *
- * @template TKey of array-key
- * @template TValue
- * @param callable(TValue, TKey): bool $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null                  $predicate
+ * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function some(iterable|callable $data_or_predicate, ?callable $predicate = null): bool|callable
 {
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
-        return static fn (iterable $data): bool => some($data, $pred);
+        return static function (iterable $data) use ($pred): bool {
+            /** @var iterable<mixed, mixed> $data */
+            return some_impl($data, $pred);
+        };
     }
 
     $data = $data_or_predicate;
+    if (!\is_iterable($data)) {
+        throw new \InvalidArgumentException('some(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new \InvalidArgumentException('some(): predicate must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return some_impl($data, $predicate);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ */
+function some_impl(iterable $data, callable $predicate): bool
+{
     foreach ($data as $key => $value) {
         if ($predicate($value, $key) === true) {
             return true;
@@ -717,10 +1032,8 @@ function some(iterable|callable $data_or_predicate, ?callable $predicate = null)
  *
  * Supports currying for pipe usage: uniq() -> callable(iterable): Generator
  *
- * @template TKey of array-key
- * @template TValue
- * @param  iterable<TKey, TValue>|null                                                       $data
- * @return Generator<TKey, TValue>|callable(iterable<TKey, TValue>): Generator<TKey, TValue>
+ * @param  iterable<mixed, mixed>|null                                                       $data
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function uniq(?iterable $data = null): Generator|callable
 {
@@ -731,7 +1044,10 @@ function uniq(?iterable $data = null): Generator|callable
     return uniq_gen($data);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<mixed, mixed>
+ */
 function uniq_gen(iterable $data): Generator
 {
     $seen = [];
@@ -754,11 +1070,9 @@ function uniq_gen(iterable $data): Generator
  *
  * Supports currying for pipe usage: uniqBy($identifier) -> callable(iterable): Generator
  *
- * @template TKey of array-key
- * @template TValue
- * @param  iterable<TKey, TValue>|callable(TValue, TKey): mixed                              $data_or_identifier
- * @param  (callable(TValue, TKey): mixed)|null                                              $identifier
- * @return Generator<TKey, TValue>|callable(iterable<TKey, TValue>): Generator<TKey, TValue>
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): mixed                              $data_or_identifier
+ * @param  (callable(mixed, mixed): mixed)|iterable<mixed, mixed>|null                       $identifier
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function uniqBy(iterable|callable $data_or_identifier, iterable|callable|null $identifier = null): Generator|callable
 {
@@ -769,19 +1083,26 @@ function uniqBy(iterable|callable $data_or_identifier, iterable|callable|null $i
     }
 
     // Flexible order: uniqBy($identifier, $data)
-    if (\is_callable($data_or_identifier) && $identifier !== null && is_iterable($identifier)) {
+    if (\is_callable($data_or_identifier) && \is_iterable($identifier)) {
         $ident = $data_or_identifier;
         $data  = $identifier;
 
         return uniqBy_gen($data, $ident);
     }
 
-    $data = $data_or_identifier; // iterable
+    // Direct order: uniqBy($data, $identifier)
+    if (\is_iterable($data_or_identifier) && \is_callable($identifier)) {
+        return uniqBy_gen($data_or_identifier, $identifier);
+    }
 
-    return uniqBy_gen($data, $identifier);
+    throw new InvalidArgumentException('uniqBy(): expected (iterable, callable) or (callable, iterable)');
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $identifier
+ * @return Generator<mixed, mixed>
+ */
 function uniqBy_gen(iterable $data, callable $identifier): Generator
 {
     $seen = [];
@@ -823,11 +1144,14 @@ function flatten(iterable|int|null $data_or_depth = null, ?int $depth = null): G
     return flatten_gen($data, $d);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<int, mixed>
+ */
 function flatten_gen(iterable $data, int $depth): Generator
 {
     if ($depth <= 0) {
-        foreach (values($data) as $v) {
+        foreach (values_gen($data) as $v) {
             // Re-yield to discard original keys and avoid collisions
             yield $v;
         }
@@ -850,26 +1174,36 @@ function flatten_gen(iterable $data, int $depth): Generator
 /**
  * Map each element to an iterable and flatten by one level (lazy). Keys are discarded.
  *
- * @template TKey of array-key
- * @template TValue
- * @template TNewValue
- * @param  callable(TValue, TKey): (iterable<mixed, TNewValue>|TNewValue) $transformer
- * @return Generator<int, TNewValue>
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): (iterable<mixed, mixed>|mixed) $data_or_transformer
+ * @param  (callable(mixed, mixed): (iterable<mixed, mixed>|mixed))|null                 $transformer
+ * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
  */
 function flatMap(iterable|callable $data_or_transformer, ?callable $transformer = null): Generator|callable
 {
     if (\is_callable($data_or_transformer) && $transformer === null) {
         $xf = $data_or_transformer;
 
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int, mixed>
+         */
         return static fn (iterable $data): Generator => flatMap_gen($data, $xf);
     }
 
     $data = $data_or_transformer; // iterable
+    if (!\is_callable($transformer)) {
+        throw new InvalidArgumentException('flatMap(): transformer must be callable');
+    }
 
+    /** @var iterable<int|string, mixed> $data */
     return flatMap_gen($data, $transformer);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): (iterable<mixed, mixed>|mixed) $transformer
+ * @return Generator<int, mixed>
+ */
 function flatMap_gen(iterable $data, callable $transformer): Generator
 {
     foreach ($data as $key => $value) {
@@ -887,21 +1221,40 @@ function flatMap_gen(iterable $data, callable $transformer): Generator
 /**
  * Take elements while predicate returns true (lazy).
  * Supports currying.
+ *
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function takeWhile(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
 {
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int|string, mixed>
+         */
         return static fn (iterable $data): Generator => takeWhile_gen($data, $pred);
     }
 
     $data = $data_or_predicate;
+    if (!\is_iterable($data)) {
+        throw new InvalidArgumentException('takeWhile(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new InvalidArgumentException('takeWhile(): predicate must be callable');
+    }
 
+    /** @var iterable<int|string, mixed> $data */
     return takeWhile_gen($data, $predicate);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ * @return Generator<mixed, mixed>
+ */
 function takeWhile_gen(iterable $data, callable $predicate): Generator
 {
     foreach ($data as $key => $value) {
@@ -915,25 +1268,32 @@ function takeWhile_gen(iterable $data, callable $predicate): Generator
 /**
  * Skip the first $count elements, yielding the rest (lazy).
  *
- * @template TKey of array-key
- * @template TValue
- * @return Generator<TKey, TValue>|callable(iterable<TKey, TValue>): Generator<TKey, TValue>
+ * @param iterable<mixed, mixed>|int $data_or_count
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function drop(iterable|int $data_or_count, ?int $count = null): Generator|callable
 {
     if (!is_iterable($data_or_count)) {
         $n = $data_or_count;
 
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int|string, mixed>
+         */
         return static fn (iterable $data): Generator => drop_gen($data, $n);
     }
 
     $data = $data_or_count;
     $n    = (int) $count;
 
+    /** @var iterable<mixed, mixed> $data */
     return drop_gen($data, $n);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<mixed, mixed>
+ */
 function drop_gen(iterable $data, int $count): Generator
 {
     if ($count <= 0) {
@@ -955,21 +1315,40 @@ function drop_gen(iterable $data, int $count): Generator
 /**
  * Skip elements while predicate is true, then yield the rest (lazy).
  * Supports currying.
+ *
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param callable(mixed, mixed): bool|null $predicate
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function dropWhile(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
 {
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
 
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int|string, mixed>
+         */
         return static fn (iterable $data): Generator => dropWhile_gen($data, $pred);
     }
 
     $data = $data_or_predicate;
+    if (!\is_iterable($data)) {
+        throw new \InvalidArgumentException('dropWhile(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new \InvalidArgumentException('dropWhile(): predicate must be callable');
+    }
 
+    /** @var iterable<mixed, mixed> $data */
     return dropWhile_gen($data, $predicate);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ * @return Generator<mixed, mixed>
+ */
 function dropWhile_gen(iterable $data, callable $predicate): Generator
 {
     $dropping = true;
@@ -987,28 +1366,41 @@ function dropWhile_gen(iterable $data, callable $predicate): Generator
 /**
  * Partition into two arrays: [pass, fail] according to predicate. Eager. Keys preserved.
  *
- * @template TKey of array-key
- * @template TValue
- * @param  callable(TValue, TKey): bool                          $predicate
- * @return array{0: array<TKey, TValue>, 1: array<TKey, TValue>}
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param callable(mixed, mixed): bool|null $predicate
+ * @return array{0: array<mixed, mixed>, 1: array<mixed, mixed>}|callable(iterable<mixed, mixed>): array{0: array<mixed, mixed>, 1: array<mixed, mixed>}
  */
 function partition(iterable|callable $data_or_predicate, ?callable $predicate = null): array|callable
 {
     if (\is_callable($data_or_predicate) && $predicate === null) {
         $pred = $data_or_predicate;
-
-        return static fn (iterable $data): array => partition($data, $pred);
+        /**
+         * @param iterable<mixed, mixed> $data
+         * @return array{0: array<int|string, mixed>, 1: array<int|string, mixed>}
+         */
+        return static fn (iterable $data): array => partition_impl($data, $pred);
     }
-
-    if (\is_callable($data_or_predicate) && $predicate !== null) {
-        $pred = $data_or_predicate;
-        $data = $predicate; // iterable
-
-        return partition($data, $pred);
-    }
-
+    
     $data = $data_or_predicate;
+    if (!\is_iterable($data)) {
+        throw new \InvalidArgumentException('partition(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new \InvalidArgumentException('partition(): predicate must be callable');
+    }
+    return partition_impl($data, $predicate);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
+ * @return array{0: array<mixed, mixed>, 1: array<mixed, mixed>}
+ */
+function partition_impl(iterable $data, callable $predicate): array
+{
+    /** @var array<int|string, mixed> $pass */
     $pass = [];
+    /** @var array<int|string, mixed> $fail */
     $fail = [];
     foreach ($data as $key => $value) {
         if ($predicate($value, $key) === true) {
@@ -1025,6 +1417,7 @@ function partition(iterable|callable $data_or_predicate, ?callable $predicate = 
  * Pipe-friendly zip: returns a callable that zips with the provided iterables.
  * Example: [1,2,3] |> zipWith(['a','b']) |> toList()
  *
+ * @param iterable<mixed, mixed> ...$others
  * @return callable(iterable<mixed, mixed>): Generator<int, array<int, mixed>>
  */
 function zipWith(iterable ...$others): callable
@@ -1081,6 +1474,7 @@ function zip(iterable $data, iterable ...$others): Generator
 /**
  * Chunk values into arrays of size $size (last chunk may be smaller). Lazy. Keys discarded.
  *
+ * @param iterable<array-key, mixed>|int $data_or_size
  * @return Generator<int, array<int, mixed>>|callable(iterable<array-key, mixed>): Generator<int, array<int, mixed>>
  */
 function chunk(iterable|int $data_or_size, ?int $size = null): Generator|callable
@@ -1097,7 +1491,10 @@ function chunk(iterable|int $data_or_size, ?int $size = null): Generator|callabl
     return chunk_gen($data, $sz);
 }
 
-/** @internal */
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<int, array<int, mixed>>
+ */
 function chunk_gen(iterable $data, int $size): Generator
 {
     if ($size <= 0) {
@@ -1120,14 +1517,30 @@ function chunk_gen(iterable $data, int $size): Generator
 /**
  * Minimum of comparable values. Returns null for empty input.
  * Eager. Supports currying: min() -> callable(iterable): mixed
+ *
+ * @param iterable<array-key, int|float|string>|null $data
  */
 function min(?iterable $data = null): int|float|string|null|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): int|float|string|null => min($d);
+        return static function (iterable $d): int|float|string|null {
+            /** @var iterable<mixed, int|float|string> $d */
+            return min_impl($d);
+        };
     }
 
+    /** @var iterable<array-key, int|float|string> $data */
+    return min_impl($data);
+}
+
+/** @internal
+ * @param iterable<mixed, int|float|string> $data
+ * @return int|float|string|null
+ */
+function min_impl(iterable $data): int|float|string|null
+{
     $found = false;
+    /** @var int|float|string|null $min */
     $min   = null;
     foreach ($data as $value) {
         if (!$found) {
@@ -1144,14 +1557,30 @@ function min(?iterable $data = null): int|float|string|null|callable
 /**
  * Maximum of comparable values. Returns null for empty input.
  * Eager. Supports currying: max() -> callable(iterable): mixed
+ *
+ * @param iterable<array-key, int|float|string>|null $data
  */
 function max(?iterable $data = null): int|float|string|null|callable
 {
     if ($data === null) {
-        return static fn (iterable $d): int|float|string|null => max($d);
+        return static function (iterable $d): int|float|string|null {
+            /** @var iterable<mixed, int|float|string> $d */
+            return max_impl($d);
+        };
     }
 
+    /** @var iterable<array-key, int|float|string> $data */
+    return max_impl($data);
+}
+
+/** @internal
+ * @param iterable<mixed, int|float|string> $data
+ * @return int|float|string|null
+ */
+function max_impl(iterable $data): int|float|string|null
+{
     $found = false;
+    /** @var int|float|string|null $max */
     $max   = null;
     foreach ($data as $value) {
         if (!$found) {

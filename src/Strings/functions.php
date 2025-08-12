@@ -72,12 +72,18 @@ function replacePrefix(string $data_or_prefix, string $prefix_or_replacement, ?s
         // Curried usage: replacePrefix($prefix, $replacement)
         $prefix = $data_or_prefix;
         $repl   = $prefix_or_replacement;
-        return static fn (string $data): string => replacePrefix($data, $prefix, $repl);
+        return static fn (string $data): string => replacePrefix_impl($data, $prefix, $repl);
     }
 
     $data    = $data_or_prefix;
     $prefix  = $prefix_or_replacement;
 
+    return replacePrefix_impl($data, $prefix, $replacement);
+}
+
+/** @internal */
+function replacePrefix_impl(string $data, string $prefix, string $replacement): string
+{
     if ($prefix === '') {
         return $replacement . $data;
     }
@@ -168,21 +174,24 @@ function length_impl(string $data): int
  * Direct:  join(iterable $data, string $separator = ''): string
  * Curried: join(string $separator): callable(iterable $data): string
  *
- * @param iterable<array-key, int|float|string|bool|Stringable>|string $data_or_separator
+ * @param iterable<mixed, int|float|string|bool|Stringable>|string $data_or_separator
  */
 function join(iterable|string $data_or_separator, string $separator = ''): string|callable
 {
     if (!\is_iterable($data_or_separator)) {
         // Curried usage: join($separator)
-        $sep = (string) $data_or_separator;
-        return static fn (iterable $data): string => join_impl($data, $sep);
+        $sep = $data_or_separator;
+        return static function (iterable $data) use ($sep): string {
+            /** @var iterable<mixed, int|float|string|bool|Stringable> $data */
+            return join_impl($data, $sep);
+        };
     }
 
     return join_impl($data_or_separator, $separator);
 }
 
 /** @internal
- * @param iterable<array-key, int|float|string|bool|Stringable> $data
+ * @param iterable<mixed, int|float|string|bool|Stringable> $data
  */
 function join_impl(iterable $data, string $separator = ''): string
 {
