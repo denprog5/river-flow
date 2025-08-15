@@ -11,22 +11,24 @@ use function trim as php_trim;
 
 /**
  * Trim characters from both ends of a string.
- * Direct mode: trim($data, $characters = " \t\n\r\0\x0B"): string
- * For pipe-friendly usage, use trimWith($characters) which returns a callable.
+ * Direct:  trim($data, $characters = " \t\n\r\0\x0B"): string
+ * Curried: trim(): callable(string $data): string
  */
-function trim(string $data, string $characters = " \t\n\r\0\x0B"): string
+function trim(?string $data = null, string $characters = " \t\n\r\0\x0B"): string|callable
+{
+    if ($data === null) {
+        // Pipe-friendly: return a callable expecting the data
+        return static fn (string $d): string => trim_impl($d, $characters);
+    }
+
+    return trim_impl($data, $characters);
+}
+
+/** @internal */
+function trim_impl(string $data, string $characters = " \t\n\r\0\x0B"): string
 {
     // Call global trim to avoid recursion into this function
     return php_trim($data, $characters);
-}
-
-/**
- * Pipe-friendly version of trim: returns a callable expecting the data.
- * Example: " -- Hello -- " |> trimWith(" -")
- */
-function trimWith(string $characters = " \t\n\r\0\x0B"): callable
-{
-    return static fn (string $data): string => trim($data, $characters);
 }
 
 /**

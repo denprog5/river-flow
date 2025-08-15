@@ -5,9 +5,8 @@ Namespace: `Denprog\RiverFlow\Strings`
 All functions are UTF-8 aware when mbstring is available.
 
 ## API
-- `trim(string $data, string $characters = " \t\n\r\0\x0B"): string`
+- `trim(string $data, string $characters = " \t\n\r\0\x0B"): string` and `trim(): callable(string $data): string`
   - Safe wrapper over PHP trim; avoids recursion by calling global trim
-  - Pipe-friendly: use `trimWith($characters = default): callable(string $data): string`
 - `lines(string $data): array<int, string>`
   - Splits by any line break (CRLF/CR/LF) using `/\R/u`
 - `replacePrefix(string $data, string $prefix, string $replacement): string`
@@ -33,7 +32,8 @@ All functions are UTF-8 aware when mbstring is available.
 ```php
 use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join};
 
-$clean = " -- Hello -- " |> trim(" -"); // "Hello"
+$clean = " -- Hello -- " |> trim(); // "-- Hello --" (only spaces removed)
+$cleanCustom = " -- Hello -- " |> trim(characters: " -"); // "Hello"
 $rows  = "a\r\nb\nc" |> lines();     // ["a","b","c"]
 $fix   = 'foobar' |> replacePrefix('foo', 'X'); // 'Xbar'
 
@@ -49,32 +49,47 @@ $parts2 = 'a|b|c|d' |> split('|', -1); // ['a','b','c']
 $list = [2024, '01', 15] |> join('-');  // '2024-01-15'
 ```
 
+### Direct (non-pipe) usage
+```php
+use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join};
+
+$clean = trim("  Hello  ");                          // "Hello"
+$cleanCustom = trim(" -- Hi -- ", characters: " -"); // "Hi"
+$rows  = lines("a\r\nb\nc");                       // ["a","b","c"]
+$fix   = replacePrefix('foobar', 'foo', 'bar-');       // 'bar-bar-'
+$lower = toLowerCase('ПрИвЕт');                       // 'привет'
+$upper = toUpperCase('Привет');                       // 'ПРИВЕТ'
+$len   = length('😀');                                 // 1 (if mbstring)
+$parts = split('a|b|c|d', '|', 2);                     // ['a','b|c|d']
+$list  = join([2024, '01', 15], '-');                  // '2024-01-15'
+```
+
 ### Pipeline chaining (one-liners)
 ```php
-use function Denprog\RiverFlow\Strings\{trimWith, replacePrefix, toLowerCase, toUpperCase, split, join, length};
+use function Denprog\RiverFlow\Strings\{trim, replacePrefix, toLowerCase, toUpperCase, split, join, length};
 
 // Normalize a title: trim, lowercase, unify prefix
 $title = "  River FLOW: Intro  "
-    |> trimWith()
+    |> trim()
     |> toLowerCase()
     |> replacePrefix('river ', 'river ');
 // "river flow: intro"
 
 // Split, transform by case, and re-join
 $csv = ' foo | Bar |BAZ '
-    |> trimWith()
+    |> trim()
     |> toLowerCase()
     |> split('|')
     |> join(',');
 // "foo , bar ,baz" (whitespace kept around delimiter; customize trimming as needed)
 
 // Compute length after transformation
-$n = '  Hello  ' |> trimWith() |> toUpperCase() |> length(); // 5
+$n = '  Hello  ' |> trim() |> toUpperCase() |> length(); // 5
 
 // Replace an optional prefix, then uppercase
 $out = 'foobar' |> replacePrefix('foo', 'bar-') |> toUpperCase(); // 'BAR-bar-'
 ```
 
 Notes
-- All functions support direct and curried usage. For trim, use `trimWith()` in pipelines.
+- All functions support direct and curried usage; in pipelines use `trim()` or `trim(characters: " -")` with named args for custom charlist.
 - The examples use PHP 8.5 pipeline operator syntax `|>` for readability.

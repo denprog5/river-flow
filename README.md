@@ -33,7 +33,6 @@ declare(strict_types=1);
 
 use function Denprog\RiverFlow\Pipes\{map, filter, toList};
 use function Denprog\RiverFlow\Strings\{trim, toUpperCase};
-use function Denprog\RiverFlow\Utils\{compose, pipe};
 
 $result = [10, 15, 20, 25, 30]
     |> filter(fn (int $n) => $n % 2 === 0) // [10, 20, 30]
@@ -43,16 +42,6 @@ $result = [10, 15, 20, 25, 30]
 $text = "  river flow  "
     |> trim()
     |> toUpperCase(); // "RIVER FLOW"
-
-$sum = fn (int $a, int $b): int => $a + $b;
-$inc = fn (int $x): int => $x + 1;
-$dbl = fn (int $x): int => $x * 2;
-
-$f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
-assert($f(3, 4) === 16);
-
-$out = pipe(5, fn ($x) => $x + 3, fn ($x) => $x * 2, 'strval');
-assert($out === '16');
 ```
 
 ## Dual‑mode usage (direct and pipe‑friendly)
@@ -68,6 +57,23 @@ $res2 = [1,2,3,4]
     |> filter(fn($x) => $x % 2 === 0)
     |> map(fn($x) => $x * 10)
     |> toList(); // [20, 40]
+```
+
+## Other composition helpers (non‑pipe)
+In addition to the `|>` operator, RiverFlow provides classic composition utilities in `Utils` which do not require pipes.
+
+```php
+use function Denprog\RiverFlow\Utils\{compose, pipe};
+
+$sum = fn (int $a, int $b): int => $a + $b;   // right‑most may be variadic
+$inc = fn (int $x): int => $x + 1;
+$dbl = fn (int $x): int => $x * 2;
+
+$f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
+assert($f(3, 4) === 16);
+
+$out = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
+assert($out === '16');
 ```
 
 ## Module snapshots
@@ -105,30 +111,30 @@ $zipped = [1, 2, 3]
 
 ### Strings
 ```php
-use function Denprog\RiverFlow\Strings\{trimWith, replacePrefix, toLowerCase, toUpperCase, split, join, length};
+use function Denprog\RiverFlow\Strings\{trim, replacePrefix, toLowerCase, toUpperCase, split, join, length};
 
 $title = "  River FLOW: Intro  "
-    |> trimWith()
+    |> trim()
     |> toLowerCase()
     |> replacePrefix('river ', 'river ');
 // "river flow: intro"
 
 $csv = ' foo | Bar |BAZ '
-    |> trimWith()
+    |> trim()
     |> toLowerCase()
     |> split('|')
     |> join(','); // "foo , bar ,baz"
 
-$n = '  Hello  ' |> trimWith() |> toUpperCase() |> length(); // 5
+$n = '  Hello  ' |> trim() |> toUpperCase() |> length(); // 5
 ```
 
 ### Utils
 ```php
-use function Denprog\RiverFlow\Utils\{tap, identity, compose, pipe};
-use function Denprog\RiverFlow\Strings\{trimWith, toUpperCase};
+use function Denprog\RiverFlow\Utils\{tap, identity};
+use function Denprog\RiverFlow\Strings\{trim, toUpperCase};
 
 $result = '  Hello  '
-    |> trimWith()
+    |> trim()
     |> tap(fn (string $s) => error_log("after trim: $s"))
     |> toUpperCase()
     |> tap(fn (string $s) => error_log("after upper: $s"));

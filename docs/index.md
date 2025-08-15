@@ -25,7 +25,6 @@ declare(strict_types=1);
 
 use function Denprog\RiverFlow\Pipes\{map, filter, toList};
 use function Denprog\RiverFlow\Strings\{trim, toUpperCase};
-use function Denprog\RiverFlow\Utils\{tap, compose, pipe};
 
 $result = [10, 15, 20, 25, 30]
     |> filter(fn(int $n) => $n % 2 === 0)  // [10, 20, 30] (lazy)
@@ -36,15 +35,6 @@ $text = "  river flow  "
     |> trim()
     |> toUpperCase(); // "RIVER FLOW"
 
-$sum = fn(int $a, int $b): int => $a + $b;   // right-most may be variadic
-$inc = fn(int $x): int => $x + 1;
-$dbl = fn(int $x): int => $x * 2;
-
-$f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
-assert($f(3, 4) === 16);
-
-$out = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
-assert($out === '16');
 ```
 
 ## Dual-mode usage
@@ -60,6 +50,23 @@ $res2 = [1,2,3,4]
     |> filter(fn($x) => $x % 2 === 0)
     |> map(fn($x) => $x * 10)
     |> toList(); // [20, 40]
+```
+
+## Other composition helpers (non-pipe)
+RiverFlow also includes traditional composition utilities in `Utils` that work without the `|>` operator.
+
+```php
+use function Denprog\RiverFlow\Utils\{compose, pipe};
+
+$sum = fn (int $a, int $b): int => $a + $b;   // right-most may be variadic
+$inc = fn (int $x): int => $x + 1;
+$dbl = fn (int $x): int => $x * 2;
+
+$f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
+assert($f(3, 4) === 16);
+
+$out = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
+assert($out === '16');
 ```
 
 ## Module Guides

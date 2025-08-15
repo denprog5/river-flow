@@ -104,6 +104,24 @@ $uniq = [1,1,'1',2]
 // $pass = ['b'=>2,'c'=>3], $fail = ['a'=>1]
 ```
 
+### Direct (non-pipe) usage
+```php
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, uniq, groupBy, values, sortBy};
+
+// Filter and materialize
+$evens = toList(filter([1,2,3,4,5,6], fn (int $n) => $n % 2 === 0)); // [2,4,6]
+
+// Flatten nested structure to depth 2
+$flat = toList(flatten([[1,2], [3, [4]], 5], depth: 2)); // [1,2,3,4,5]
+
+// Zip multiple iterables
+$z = toList(zip([1,2], ['a','b','c'])); // [[1,'a'], [2,'b']]
+
+// Group and sort groups by size
+$byFirst = groupBy(['apple','apricot','banana','blueberry','avocado'], fn (string $s) => $s[0]);
+$sorted  = sortBy(values($byFirst), fn (array $xs) => \count($xs));
+```
+
 ### Pipeline chaining (one-liners)
 ```php
 use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, flatten, uniq, groupBy, values, sortBy, zipWith};

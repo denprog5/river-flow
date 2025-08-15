@@ -15,21 +15,11 @@ Namespace: `Denprog\RiverFlow\Utils`
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Utils\{tap, identity, compose, pipe};
+use function Denprog\RiverFlow\Utils\{tap, identity};
 
 $seen = null;
 $out = tap(['a' => 1], function ($x) use (&$seen) { $seen = $x; });
 assert($out === $seen);
-
-$sum = fn(int $a, int $b): int => $a + $b;
-$inc = fn(int $x): int => $x + 1;
-$dbl = fn(int $x): int => $x * 2;
-
-$f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
-assert($f(3, 4) === 16);
-
-$res = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
-assert($res === '16');
 
 // Pipe-friendly usage (curried forms)
 $val = 42 |> identity(); // 42
@@ -42,11 +32,11 @@ $after = [1,2,3] |> tap(function(array $xs) use (&$log) { $log[] = array_sum($xs
 ### Pipeline chaining (PHP 8.5 `|>`) examples
 ```php
 use function Denprog\RiverFlow\Utils\{tap, identity};
-use function Denprog\RiverFlow\Strings\{trimWith, toUpperCase, toLowerCase, split, join};
+use function Denprog\RiverFlow\Strings\{trim, toUpperCase, toLowerCase, split, join};
 
 // 1) Observe intermediate values with tap()
 $result = '  Hello  '
-    |> trimWith()
+    |> trim()
     |> tap(fn (string $s) => error_log("after trim: $s"))
     |> toUpperCase()
     |> tap(fn (string $s) => error_log("after upper: $s"));
@@ -60,7 +50,7 @@ $value = 10
 
 // 3) Strings pipeline with Utils::tap for logging, then join()
 $csv = ' foo | Bar |BAZ '
-    |> trimWith()
+    |> trim()
     |> toLowerCase()
     |> tap(fn (string $s) => error_log("normalized: $s"))
     |> split('|')
@@ -75,6 +65,27 @@ $out = [1, 2, 3]
 // $sum === 6; $out === [1,2,3]
 ```
 
+### Classic composition (non-pipe)
+The `compose()` and `pipe()` helpers provide traditional composition without requiring the PHP 8.5 pipe operator.
+
+```php
+use function Denprog\RiverFlow\Utils\{compose, pipe};
+
+$sum = fn (int $a, int $b): int => $a + $b;   // right-most may be variadic
+$inc = fn (int $x): int => $x + 1;
+$dbl = fn (int $x): int => $x * 2;
+
+// Right-to-left composition
+$f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
+assert($f(3, 4) === 16);
+
+// Left-to-right application starting from an initial value
+$out = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
+assert($out === '16');
+```
+
 Notes
+- Use `compose()` to build reusable functions from right to left.
+- Use `pipe($value, ...)` for one-off flows without `|>`.
 - `tap()` and `identity()` both support direct and curried usage; in pipelines, call them with no data argument.
 - The examples mix Utils with Strings to demonstrate real chains; all modules are designed to compose.
