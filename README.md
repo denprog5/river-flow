@@ -1,31 +1,35 @@
-# River Flow for PHP 8.5
+<div align="center">
 
-[![CI](https://github.com/denprog/river-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/denprog/river-flow/actions/workflows/ci.yml)
+# RiverFlow for PHP 8.5
+
+[![CI](https://github.com/denprog5/river-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/denprog5/river-flow/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![PHP](https://img.shields.io/badge/PHP-8.5%2B-777bb3?logo=php&logoColor=white)
 
-Modern, strictly-typed PHP 8.5 functional utilities with a focus on lazy pipelines (Pipes), mbstring-aware string helpers (Strings), and small utilities (Utils). Built for the PHP 8.5 pipe operator and rigorous quality gates (Pest, PHPStan, Rector, CS).
+Modern, strictly-typed functional utilities for PHP 8.5: lazy collection pipelines (Pipes), mbstring‑aware string helpers (Strings), and ergonomic composition tools (Utils). Designed for the PHP 8.5 pipe operator `|>` and built with rigorous QA (Pest, PHPStan max, Rector, CS).
 
-## Features
-- PHP 8.5-ready; idiomatic use of the pipe operator (|>)
-- Lazy/eager operations with predictable key behavior
-- Strong typing and generics via PHPDoc; PHPStan at max level
-- Mbstring-aware string helpers
-- Utilities for composition: tap, identity, compose, pipe
-- Cross-platform CI (Linux/macOS/Windows)
+</div>
+
+---
+
+## Highlights
+- __Pipe operator first__: idiomatic `|>` pipelines, no external wrappers
+- __Lazy + eager__: predictable key behavior, memory‑friendly where it matters
+- __Strong typing__: precise PHPDoc generics, PHPStan at max level
+- __Unicode aware__: `Strings` use mbstring when available
+- __Ergonomics__: `tap`, `identity`, `compose`, `pipe`
+- __Cross‑platform CI__: Linux/macOS/Windows
 
 ## Requirements
 - PHP >= 8.5
 - Composer 2
 
-## Installation
+## Install
 ```bash
 composer require denprog/river-flow
 ```
 
-## Usage
-See full documentation in [docs/index.md](docs/index.md). Quick examples:
-Module references: [Pipes](docs/pipes.md), [Strings](docs/strings.md), [Utils](docs/utils.md)
-
+## Quickstart
 ```php
 <?php
 
@@ -33,57 +37,139 @@ declare(strict_types=1);
 
 use function Denprog\RiverFlow\Pipes\{map, filter, toList};
 use function Denprog\RiverFlow\Strings\{trim, toUpperCase};
-use function Denprog\RiverFlow\Utils\{tap, compose, pipe};
+use function Denprog\RiverFlow\Utils\{compose, pipe};
 
 $result = [10, 15, 20, 25, 30]
-    |> filter(fn(int $n) => $n % 2 === 0)  // [10, 20, 30] (lazy)
-    |> map(fn(int $n) => $n / 10)          // [1, 2, 3] (lazy)
-    |> toList();                            // [1, 2, 3] (eager)
+    |> filter(fn (int $n) => $n % 2 === 0) // [10, 20, 30]
+    |> map(fn (int $n) => $n / 10)         // [1, 2, 3]
+    |> toList();                           // [1, 2, 3]
 
 $text = "  river flow  "
     |> trim()
     |> toUpperCase(); // "RIVER FLOW"
 
-// Utils: compose/pipe
-$sum = fn(int $a, int $b): int => $a + $b;   // right-most may be variadic
-$inc = fn(int $x): int => $x + 1;
-$dbl = fn(int $x): int => $x * 2;
+$sum = fn (int $a, int $b): int => $a + $b;
+$inc = fn (int $x): int => $x + 1;
+$dbl = fn (int $x): int => $x * 2;
 
 $f = compose($dbl, $inc, $sum); // dbl(inc(sum(a,b)))
 assert($f(3, 4) === 16);
 
-$out = pipe(5, fn($x) => $x + 3, fn($x) => $x * 2, 'strval');
+$out = pipe(5, fn ($x) => $x + 3, fn ($x) => $x * 2, 'strval');
 assert($out === '16');
 ```
 
-## Development
-Clone the repository and install dependencies:
-```bash
-composer install
+## Dual‑mode usage (direct and pipe‑friendly)
+- __Direct__: pass data as the first argument, e.g. `toList([1,2,3])`
+- __Curried / pipe‑friendly__: call a function without the data argument to get a callable, then chain with `|>`
+
+```php
+use function Denprog\RiverFlow\Pipes\{map, filter, toList};
+
+$res1 = toList(map(filter([1,2,3,4], fn($x)=>$x%2===0), fn($x)=>$x*10))); // [20, 40]
+
+$res2 = [1,2,3,4]
+    |> filter(fn($x) => $x % 2 === 0)
+    |> map(fn($x) => $x * 10)
+    |> toList(); // [20, 40]
 ```
 
-Run the checks:
+## Module snapshots
+
+### Pipes
+```php
+use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, flatten, uniq, groupBy, values, sortBy, zipWith};
+
+// Transform → filter → take → materialize
+$topSquares = [1,2,3,4,5,6,7,8,9]
+    |> map(fn (int $n) => $n * $n)
+    |> filter(fn (int $x) => $x % 2 === 0)
+    |> take(3)
+    |> toList(); // [4, 16, 36]
+
+// Flatten nested, uniquify
+$flatUnique = [[1,2], [2,3, [3,4]], 4]
+    |> flatten(2)
+    |> uniq()
+    |> toList(); // [1,2,3,4]
+
+// Group, traverse group values and sort by size
+$byFirstLetter = ['apple','apricot','banana','blueberry','avocado']
+    |> groupBy(fn (string $s) => $s[0])
+    |> values()
+    |> map(fn (array $xs) => $xs)
+    |> toList()
+    |> sortBy(fn (array $xs) => \count($xs));
+
+// Zip in pipelines
+$zipped = [1, 2, 3]
+    |> zipWith(['a','b'], ['X','Y','Z'])
+    |> toList(); // [[1,'a','X'], [2,'b','Y']]
+```
+
+### Strings
+```php
+use function Denprog\RiverFlow\Strings\{trimWith, replacePrefix, toLowerCase, toUpperCase, split, join, length};
+
+$title = "  River FLOW: Intro  "
+    |> trimWith()
+    |> toLowerCase()
+    |> replacePrefix('river ', 'river ');
+// "river flow: intro"
+
+$csv = ' foo | Bar |BAZ '
+    |> trimWith()
+    |> toLowerCase()
+    |> split('|')
+    |> join(','); // "foo , bar ,baz"
+
+$n = '  Hello  ' |> trimWith() |> toUpperCase() |> length(); // 5
+```
+
+### Utils
+```php
+use function Denprog\RiverFlow\Utils\{tap, identity, compose, pipe};
+use function Denprog\RiverFlow\Strings\{trimWith, toUpperCase};
+
+$result = '  Hello  '
+    |> trimWith()
+    |> tap(fn (string $s) => error_log("after trim: $s"))
+    |> toUpperCase()
+    |> tap(fn (string $s) => error_log("after upper: $s"));
+// 'HELLO'
+
+$val = 10
+    |> identity()
+    |> (fn (int $x) => $x + 5)
+    |> (fn (int $x) => $x * 2); // 30
+```
+
+## Documentation
+- Start here: `docs/index.md`
+- Module references: [Pipes](docs/pipes.md), [Strings](docs/strings.md), [Utils](docs/utils.md)
+
+## Development
 ```bash
-composer test           # run tests (Pest)
-composer analyse        # static analysis (PHPStan)
-composer cs:lint        # code style (PHP-CS-Fixer dry-run)
-composer cs:fix         # fix code style issues
-composer test:coverage  # run tests with coverage
+composer install
+
+# QA
+composer test            # Pest
+composer analyse         # PHPStan (max)
+composer cs:lint         # PHP-CS-Fixer (dry-run)
+composer rector:check    # Rector (dry-run)
 ```
 
 ## Security
-Please review SECURITY.md for our vulnerability disclosure policy and how to report issues securely.
+See [SECURITY.md](SECURITY.md) for our vulnerability disclosure policy.
 
 ## Contributing
-See CONTRIBUTING.md for guidelines on setting up the environment, coding standards (PSR-12), commit message conventions, and pull request process.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, standards (PSR-12), and PR process.
 
 ## Code of Conduct
-This project adheres to the Contributor Covenant. By participating, you are expected to uphold this code. See CODE_OF_CONDUCT.md.
+This project adheres to the Contributor Covenant. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-## Versioning
-This project follows Semantic Versioning (SemVer). Breaking changes will only occur in a new major version.
-
-See [CHANGELOG.md](CHANGELOG.md) for release notes.
+## Versioning & Changelog
+We follow SemVer. See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## License
-Licensed under the MIT License. See the LICENSE file for details.
+MIT — see [LICENSE](LICENSE).

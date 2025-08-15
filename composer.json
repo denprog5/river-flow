@@ -14,7 +14,7 @@
         "sort-packages": true
     },
     "name": "denprog/river-flow",
-    "description": "River Flow library for PHP 8.5",
+    "description": "Functional utilities for PHP 8.5: lazy Pipes, mbstring-aware Strings, and composition Utils with pipe operator support.",
     "type": "library",
     "license": ["MIT"],
     "minimum-stability": "stable",
