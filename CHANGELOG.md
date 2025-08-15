@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.1.1] - 2025-08-15
+## [0.1.2] - 2025-08-15
 
 ### Docs
 - Add "Dual-mode usage" section to docs/index.md (direct vs curried/pipe-friendly) with examples
@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/denprog5/river-flow/releases/tag/v0.1.2
 [0.1.1]: https://github.com/denprog5/river-flow/releases/tag/v0.1.1
 [0.1.0]: https://github.com/denprog5/river-flow/releases/tag/v0.1.0
