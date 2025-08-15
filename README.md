@@ -1,5 +1,3 @@
-<div align="center">
-
 # RiverFlow for PHP 8.5
 
 [![CI](https://github.com/denprog5/river-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/denprog5/river-flow/actions/workflows/ci.yml)
@@ -7,8 +5,6 @@
 ![PHP](https://img.shields.io/badge/PHP-8.5%2B-777bb3?logo=php&logoColor=white)
 
 Modern, strictly-typed functional utilities for PHP 8.5: lazy collection pipelines (Pipes), mbstring‑aware string helpers (Strings), and ergonomic composition tools (Utils). Designed for the PHP 8.5 pipe operator `|>` and built with rigorous QA (Pest, PHPStan max, Rector, CS).
-
-</div>
 
 ---
 
