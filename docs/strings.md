@@ -27,10 +27,16 @@ All functions are UTF-8 aware when mbstring is available.
 - `join(iterable $data, string $separator = ''): string`
   - Casts each element to string; accepts scalars and `Stringable`; throws `InvalidArgumentException` for non-stringable elements in iterables
   - Curried form: `join($separator = ''): callable(iterable $data): string`
+- `includes(string $data, string $needle): bool`
+  - Returns true if `$needle` is contained in `$data`; empty needle is true. Curried: `includes($needle): callable(string $data): bool`
+- `startsWith(string $data, string $prefix): bool`
+  - Returns true if `$data` starts with `$prefix`; empty prefix is true. Curried: `startsWith($prefix): callable(string $data): bool`
+- `endsWith(string $data, string $suffix): bool`
+  - Returns true if `$data` ends with `$suffix`; empty suffix is true. Curried: `endsWith($suffix): callable(string $data): bool`
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join};
+use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, includes, startsWith, endsWith};
 
 $clean = " -- Hello -- " |> trim(); // "-- Hello --" (only spaces removed)
 $cleanCustom = " -- Hello -- " |> trim(characters: " -"); // "Hello"
@@ -47,6 +53,11 @@ $parts1 = 'a|b|c|d' |> split('|', 2);  // ['a','b|c|d']
 $parts2 = 'a|b|c|d' |> split('|', -1); // ['a','b','c']
 
 $list = [2024, '01', 15] |> join('-');  // '2024-01-15'
+
+// membership and boundary checks
+$has = 'hello' |> includes('ell');        // true
+$sw  = 'hello' |> startsWith('he');       // true
+$ew  = 'hello' |> endsWith('lo');         // true
 ```
 
 ### Direct (non-pipe) usage

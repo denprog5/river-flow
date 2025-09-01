@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Pipes;
 
-use SplDoublyLinkedList;
 use ArrayIterator;
 use Generator;
 use InvalidArgumentException;
 use Iterator;
 use IteratorIterator;
+use SplDoublyLinkedList;
 use Throwable;
 use Traversable;
 
@@ -18,8 +18,8 @@ use Traversable;
  *  - filter($data, $predicate): Generator
  *  - filter($predicate): callable(iterable $data): Generator
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                               $data_or_predicate
- * @param  (callable(mixed, mixed): bool)|null                                               $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function filter(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
@@ -45,8 +45,8 @@ function filter(iterable|callable $data_or_predicate, ?callable $predicate = nul
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>       $data
- * @param  callable(mixed, mixed): bool $predicate
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
  * @return Generator<mixed, mixed>
  */
 function filter_gen(iterable $data, callable $predicate): Generator
@@ -63,8 +63,8 @@ function filter_gen(iterable $data, callable $predicate): Generator
  *  - map($data, $transformer): Generator
  *  - map($transformer): callable(iterable $data): Generator
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): mixed                              $data_or_transformer
- * @param  (callable(mixed, mixed): mixed)|null                                              $transformer
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): mixed $data_or_transformer
+ * @param (callable(mixed, mixed): mixed)|null $transformer
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function map(iterable|callable $data_or_transformer, ?callable $transformer = null): Generator|callable
@@ -90,8 +90,8 @@ function map(iterable|callable $data_or_transformer, ?callable $transformer = nu
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>        $data
- * @param  callable(mixed, mixed): mixed $transformer
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $transformer
  * @return Generator<mixed, mixed>
  */
 function map_gen(iterable $data, callable $transformer): Generator
@@ -107,7 +107,7 @@ function map_gen(iterable $data, callable $transformer): Generator
  *  - reduce($reducer, $initial = null): callable(iterable $data): mixed
  *
  * @param iterable<mixed, mixed>|callable(mixed, mixed, mixed): mixed $data_or_reducer
- * @param (callable(mixed, mixed, mixed): mixed)|mixed|null           $reducer_or_initial
+ * @param (callable(mixed, mixed, mixed): mixed)|mixed|null $reducer_or_initial
  */
 function reduce(iterable|callable $data_or_reducer, mixed $reducer_or_initial = null, mixed $initial = null): mixed
 {
@@ -177,7 +177,7 @@ function sum_impl(iterable $data): int|float
 }
 
 /**
- * @param  iterable<mixed, mixed>|int                                                        $data_or_count
+ * @param iterable<mixed, mixed>|int $data_or_count
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function take(iterable|int $data_or_count, ?int $count = null): Generator|callable
@@ -195,7 +195,7 @@ function take(iterable|int $data_or_count, ?int $count = null): Generator|callab
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>  $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<mixed, mixed>
  */
 function take_gen(iterable $data, int $count): Generator
@@ -218,7 +218,7 @@ function take_gen(iterable $data, int $count): Generator
  * Pluck property/array key.
  * Dual-mode.
  *
- * @param  iterable<mixed, array<mixed, mixed>|object>|string|int                                                 $data_or_key
+ * @param iterable<mixed, array<mixed, mixed>|object>|string|int $data_or_key
  * @return Generator<mixed, mixed>|callable(iterable<mixed, array<mixed, mixed>|object>): Generator<mixed, mixed>
  */
 function pluck(iterable|string|int $data_or_key, mixed $key_or_default = null, mixed $default = null): Generator|callable
@@ -245,7 +245,7 @@ function pluck(iterable|string|int $data_or_key, mixed $key_or_default = null, m
 }
 
 /** @internal
- * @param  iterable<mixed, array<mixed, mixed>|object> $data
+ * @param iterable<mixed, array<mixed, mixed>|object> $data
  * @return Generator<mixed, mixed>
  */
 function pluck_gen(iterable $data, string|int $key, mixed $default = null): Generator
@@ -265,7 +265,7 @@ function pluck_gen(iterable $data, string|int $key, mixed $default = null): Gene
 /**
  * toList($data): array, or toList(): callable
  *
- * @param  iterable<mixed, mixed>|null                                           $data
+ * @param iterable<mixed, mixed>|null $data
  * @return array<int, mixed>|callable(iterable<mixed, mixed>): array<int, mixed>
  */
 function toList(?iterable $data = null): array|callable
@@ -280,7 +280,7 @@ function toList(?iterable $data = null): array|callable
 }
 
 /** @internal
- * @param  iterable<mixed, mixed> $data
+ * @param iterable<mixed, mixed> $data
  * @return array<int, mixed>
  */
 function toList_impl(iterable $data): array
@@ -296,7 +296,7 @@ function toList_impl(iterable $data): array
 /**
  * toArray($data): array, or toArray(): callable
  *
- * @param  iterable<mixed, mixed>|null                                                         $data
+ * @param iterable<mixed, mixed>|null $data
  * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function toArray(?iterable $data = null): array|callable
@@ -311,7 +311,7 @@ function toArray(?iterable $data = null): array|callable
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>   $data
+ * @param iterable<mixed, mixed> $data
  * @return array<int|string, mixed>
  */
 function toArray_impl(iterable $data): array
@@ -328,8 +328,8 @@ function toArray_impl(iterable $data): array
  * Reject elements for which predicate returns true.
  * Dual-mode.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                               $data_or_predicate
- * @param  (callable(mixed, mixed): bool)|null                                               $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function reject(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
@@ -355,8 +355,8 @@ function reject(iterable|callable $data_or_predicate, ?callable $predicate = nul
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>       $data
- * @param  callable(mixed, mixed): bool $predicate
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
  * @return Generator<mixed, mixed>
  */
 function reject_gen(iterable $data, callable $predicate): Generator
@@ -374,8 +374,8 @@ function reject_gen(iterable $data, callable $predicate): Generator
  *  - sortBy($getComparable, $data): array  (flexible order)
  *  - sortBy($getComparable): callable(iterable $data): array
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): (int|float|string)                   $data_or_getComparable
- * @param  (callable(mixed, mixed): (int|float|string))|iterable<mixed, mixed>|null            $maybe_data
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): (int|float|string) $data_or_getComparable
+ * @param (callable(mixed, mixed): (int|float|string))|iterable<mixed, mixed>|null $maybe_data
  * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null $maybe_data = null): array|callable
@@ -414,8 +414,8 @@ function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>                     $data
- * @param  callable(mixed, mixed): (int|float|string) $getComparable
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): (int|float|string) $getComparable
  * @return array<int|string, mixed>
  */
 function sortBy_impl(iterable $data, callable $getComparable): array
@@ -438,7 +438,7 @@ function sortBy_impl(iterable $data, callable $getComparable): array
 /**
  * Yield values (discard keys) lazily.
  *
- * @param  iterable<mixed, mixed>|null                                                   $data
+ * @param iterable<mixed, mixed>|null $data
  * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
  */
 function values(?iterable $data = null): Generator|callable
@@ -453,7 +453,7 @@ function values(?iterable $data = null): Generator|callable
 }
 
 /** @internal
- * @param  iterable<mixed, mixed> $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<int, mixed>
  */
 function values_gen(iterable $data): Generator
@@ -466,7 +466,7 @@ function values_gen(iterable $data): Generator
 /**
  * Yield keys lazily.
  *
- * @param  iterable<mixed, mixed>|null                                                   $data
+ * @param iterable<mixed, mixed>|null $data
  * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
  */
 function keys(?iterable $data = null): Generator|callable
@@ -481,7 +481,7 @@ function keys(?iterable $data = null): Generator|callable
 }
 
 /** @internal
- * @param  iterable<mixed, mixed> $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<int, mixed>
  */
 function keys_gen(iterable $data): Generator
@@ -545,8 +545,8 @@ function last(mixed $data_or_default = null, mixed $default = null): mixed
  * Find first value matching predicate or return $default.
  * Dual-mode.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
- * @param  (callable(mixed, mixed): bool)|null                 $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
  * @return mixed|callable(iterable<mixed, mixed>): mixed
  */
 function find(iterable|callable $data_or_predicate, ?callable $predicate = null, mixed $default = null): mixed
@@ -573,7 +573,7 @@ function find(iterable|callable $data_or_predicate, ?callable $predicate = null,
 }
 
 /** @internal
- * @param iterable<mixed, mixed>       $data
+ * @param iterable<mixed, mixed> $data
  * @param callable(mixed, mixed): bool $predicate
  */
 function find_impl(iterable $data, callable $predicate, mixed $default = null): mixed
@@ -590,7 +590,7 @@ function find_impl(iterable $data, callable $predicate, mixed $default = null): 
 /**
  * Count elements in an iterable (eager).
  *
- * @param  iterable<mixed, mixed>|null               $data
+ * @param iterable<mixed, mixed>|null $data
  * @return int|callable(iterable<mixed, mixed>): int
  */
 function count(?iterable $data = null): int|callable
@@ -623,7 +623,7 @@ function count_impl(iterable $data): int
 /**
  * Whether iterable has no elements.
  *
- * @param  iterable<mixed, mixed>|null                 $data
+ * @param iterable<mixed, mixed>|null $data
  * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function isEmpty(?iterable $data = null): bool|callable
@@ -653,7 +653,7 @@ function isEmpty_impl(iterable $data): bool
  * Check whether iterable contains a value (strict comparison).
  * Dual-mode.
  *
- * @param  iterable<mixed, mixed>|mixed                $data_or_needle
+ * @param iterable<mixed, mixed>|mixed $data_or_needle
  * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function contains(mixed $data_or_needle, mixed $needle = null): bool|callable
@@ -689,7 +689,7 @@ function contains_impl(iterable $data, mixed $needle): bool
  * Sort values using natural ascending order, preserving original keys.
  * Eager.
  *
- * @param  iterable<mixed, int|float|string>|null                                                                               $data
+ * @param iterable<mixed, int|float|string>|null $data
  * @return array<int|string, int|float|string>|callable(iterable<mixed, int|float|string>): array<int|string, int|float|string>
  */
 function sort(?iterable $data = null): array|callable
@@ -706,7 +706,7 @@ function sort(?iterable $data = null): array|callable
 }
 
 /** @internal
- * @param  iterable<mixed, int|float|string>   $data
+ * @param iterable<mixed, int|float|string> $data
  * @return array<int|string, int|float|string>
  */
 function sort_impl(iterable $data): array
@@ -726,8 +726,8 @@ function sort_impl(iterable $data): array
  *  - groupBy($grouper): callable(iterable $data): array
  * Eager.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): array-key                                                        $data_or_grouper
- * @param  (callable(mixed, mixed): array-key)|iterable<mixed, mixed>|null                                                 $maybe_data
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): array-key $data_or_grouper
+ * @param (callable(mixed, mixed): array-key)|iterable<mixed, mixed>|null $maybe_data
  * @return array<int|string, array<mixed, mixed>>|callable(iterable<mixed, mixed>): array<int|string, array<mixed, mixed>>
  */
 function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $maybe_data = null): array|callable
@@ -766,8 +766,8 @@ function groupBy(iterable|callable $data_or_grouper, iterable|callable|null $may
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>                $data
- * @param  callable(mixed, mixed): mixed         $grouper
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $grouper
  * @return array<array-key, array<mixed, mixed>>
  */
 function groupBy_impl(iterable $data, callable $grouper): array
@@ -794,8 +794,8 @@ function groupBy_impl(iterable $data, callable $grouper): array
  *  - keyBy($keyer): callable(iterable $data): array
  * Eager. Later keys overwrite earlier ones.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): array-key                          $data_or_keyer
- * @param  (callable(mixed, mixed): array-key)|iterable<mixed, mixed>|null                   $maybe_data
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): array-key $data_or_keyer
+ * @param (callable(mixed, mixed): array-key)|iterable<mixed, mixed>|null $maybe_data
  * @return array<array-key, mixed>|callable(iterable<mixed, mixed>): array<array-key, mixed>
  */
 function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_data = null): array|callable
@@ -834,8 +834,8 @@ function keyBy(iterable|callable $data_or_keyer, iterable|callable|null $maybe_d
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>        $data
- * @param  callable(mixed, mixed): mixed $keyer
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $keyer
  * @return array<array-key, mixed>
  */
 function keyBy_impl(iterable $data, callable $keyer): array
@@ -857,7 +857,7 @@ function keyBy_impl(iterable $data, callable $keyer): array
  * Returns 0.0 when iterable is empty.
  * Eager. Supports currying for pipe usage.
  *
- * @param  iterable<mixed, bool|float|int|string|null>|null                   $data
+ * @param iterable<mixed, bool|float|int|string|null>|null $data
  * @return float|callable(iterable<mixed, bool|float|int|string|null>): float
  */
 function average(?iterable $data = null): float|callable
@@ -903,8 +903,8 @@ function average_impl(iterable $data): float
  * Whether all elements satisfy the predicate. Lazy short-circuit, eager result.
  * For empty iterables returns true.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
- * @param  (callable(mixed, mixed): bool)|null                 $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
  * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function every(iterable|callable $data_or_predicate, ?callable $predicate = null): bool|callable
@@ -929,7 +929,7 @@ function every(iterable|callable $data_or_predicate, ?callable $predicate = null
 }
 
 /** @internal
- * @param iterable<mixed, mixed>       $data
+ * @param iterable<mixed, mixed> $data
  * @param callable(mixed, mixed): bool $predicate
  */
 function every_impl(iterable $data, callable $predicate): bool
@@ -947,8 +947,8 @@ function every_impl(iterable $data, callable $predicate): bool
  * Whether any element satisfies the predicate. Lazy short-circuit, eager result.
  * For empty iterables returns false.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
- * @param  (callable(mixed, mixed): bool)|null                 $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
  * @return bool|callable(iterable<mixed, mixed>): bool
  */
 function some(iterable|callable $data_or_predicate, ?callable $predicate = null): bool|callable
@@ -973,7 +973,7 @@ function some(iterable|callable $data_or_predicate, ?callable $predicate = null)
 }
 
 /** @internal
- * @param iterable<mixed, mixed>       $data
+ * @param iterable<mixed, mixed> $data
  * @param callable(mixed, mixed): bool $predicate
  */
 function some_impl(iterable $data, callable $predicate): bool
@@ -995,7 +995,7 @@ function some_impl(iterable $data, callable $predicate): bool
  *
  * Supports currying for pipe usage: uniq() -> callable(iterable): Generator
  *
- * @param  iterable<mixed, mixed>|null                                                       $data
+ * @param iterable<mixed, mixed>|null $data
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function uniq(?iterable $data = null): Generator|callable
@@ -1008,7 +1008,7 @@ function uniq(?iterable $data = null): Generator|callable
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>  $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<mixed, mixed>
  */
 function uniq_gen(iterable $data): Generator
@@ -1033,8 +1033,8 @@ function uniq_gen(iterable $data): Generator
  *
  * Supports currying for pipe usage: uniqBy($identifier) -> callable(iterable): Generator
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): mixed                              $data_or_identifier
- * @param  (callable(mixed, mixed): mixed)|iterable<mixed, mixed>|null                       $identifier
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): mixed $data_or_identifier
+ * @param (callable(mixed, mixed): mixed)|iterable<mixed, mixed>|null $identifier
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function uniqBy(iterable|callable $data_or_identifier, iterable|callable|null $identifier = null): Generator|callable
@@ -1062,8 +1062,8 @@ function uniqBy(iterable|callable $data_or_identifier, iterable|callable|null $i
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>        $data
- * @param  callable(mixed, mixed): mixed $identifier
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $identifier
  * @return Generator<mixed, mixed>
  */
 function uniqBy_gen(iterable $data, callable $identifier): Generator
@@ -1090,7 +1090,7 @@ function uniqBy_gen(iterable $data, callable $identifier): Generator
  * - flatten($iterable, $depth = 1): Generator
  * - flatten($depth = 1): callable(iterable): Generator
  *
- * @param  iterable<mixed, mixed>|int|null                                               $data_or_depth
+ * @param iterable<mixed, mixed>|int|null $data_or_depth
  * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
  */
 function flatten(iterable|int|null $data_or_depth = null, ?int $depth = null): Generator|callable
@@ -1108,7 +1108,7 @@ function flatten(iterable|int|null $data_or_depth = null, ?int $depth = null): G
 }
 
 /** @internal
- * @param  iterable<mixed, mixed> $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<int, mixed>
  */
 function flatten_gen(iterable $data, int $depth): Generator
@@ -1137,8 +1137,8 @@ function flatten_gen(iterable $data, int $depth): Generator
 /**
  * Map each element to an iterable and flatten by one level (lazy). Keys are discarded.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): (iterable<mixed, mixed>|mixed) $data_or_transformer
- * @param  (callable(mixed, mixed): (iterable<mixed, mixed>|mixed))|null                 $transformer
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): (iterable<mixed, mixed>|mixed) $data_or_transformer
+ * @param (callable(mixed, mixed): (iterable<mixed, mixed>|mixed))|null $transformer
  * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
  */
 function flatMap(iterable|callable $data_or_transformer, ?callable $transformer = null): Generator|callable
@@ -1147,7 +1147,7 @@ function flatMap(iterable|callable $data_or_transformer, ?callable $transformer 
         $xf = $data_or_transformer;
 
         /**
-         * @param  iterable<int|string, mixed> $data
+         * @param iterable<int|string, mixed> $data
          * @return Generator<int, mixed>
          */
         return static fn (iterable $data): Generator => flatMap_gen($data, $xf);
@@ -1163,8 +1163,8 @@ function flatMap(iterable|callable $data_or_transformer, ?callable $transformer 
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>                                 $data
- * @param  callable(mixed, mixed): (iterable<mixed, mixed>|mixed) $transformer
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): (iterable<mixed, mixed>|mixed) $transformer
  * @return Generator<int, mixed>
  */
 function flatMap_gen(iterable $data, callable $transformer): Generator
@@ -1185,8 +1185,8 @@ function flatMap_gen(iterable $data, callable $transformer): Generator
  * Take elements while predicate returns true (lazy).
  * Supports currying.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                               $data_or_predicate
- * @param  (callable(mixed, mixed): bool)|null                                               $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function takeWhile(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
@@ -1195,7 +1195,7 @@ function takeWhile(iterable|callable $data_or_predicate, ?callable $predicate = 
         $pred = $data_or_predicate;
 
         /**
-         * @param  iterable<int|string, mixed>  $data
+         * @param iterable<int|string, mixed> $data
          * @return Generator<int|string, mixed>
          */
         return static fn (iterable $data): Generator => takeWhile_gen($data, $pred);
@@ -1214,8 +1214,8 @@ function takeWhile(iterable|callable $data_or_predicate, ?callable $predicate = 
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>       $data
- * @param  callable(mixed, mixed): bool $predicate
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
  * @return Generator<mixed, mixed>
  */
 function takeWhile_gen(iterable $data, callable $predicate): Generator
@@ -1231,7 +1231,7 @@ function takeWhile_gen(iterable $data, callable $predicate): Generator
 /**
  * Skip the first $count elements, yielding the rest (lazy).
  *
- * @param  iterable<mixed, mixed>|int                                                        $data_or_count
+ * @param iterable<mixed, mixed>|int $data_or_count
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function drop(iterable|int $data_or_count, ?int $count = null): Generator|callable
@@ -1240,7 +1240,7 @@ function drop(iterable|int $data_or_count, ?int $count = null): Generator|callab
         $n = $data_or_count;
 
         /**
-         * @param  iterable<int|string, mixed>  $data
+         * @param iterable<int|string, mixed> $data
          * @return Generator<int|string, mixed>
          */
         return static fn (iterable $data): Generator => drop_gen($data, $n);
@@ -1254,7 +1254,7 @@ function drop(iterable|int $data_or_count, ?int $count = null): Generator|callab
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>  $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<mixed, mixed>
  */
 function drop_gen(iterable $data, int $count): Generator
@@ -1279,8 +1279,8 @@ function drop_gen(iterable $data, int $count): Generator
  * Skip elements while predicate is true, then yield the rest (lazy).
  * Supports currying.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                               $data_or_predicate
- * @param  callable(mixed, mixed): bool|null                                                 $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param callable(mixed, mixed): bool|null $predicate
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function dropWhile(iterable|callable $data_or_predicate, ?callable $predicate = null): Generator|callable
@@ -1289,7 +1289,7 @@ function dropWhile(iterable|callable $data_or_predicate, ?callable $predicate = 
         $pred = $data_or_predicate;
 
         /**
-         * @param  iterable<int|string, mixed>  $data
+         * @param iterable<int|string, mixed> $data
          * @return Generator<int|string, mixed>
          */
         return static fn (iterable $data): Generator => dropWhile_gen($data, $pred);
@@ -1308,8 +1308,8 @@ function dropWhile(iterable|callable $data_or_predicate, ?callable $predicate = 
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>       $data
- * @param  callable(mixed, mixed): bool $predicate
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
  * @return Generator<mixed, mixed>
  */
 function dropWhile_gen(iterable $data, callable $predicate): Generator
@@ -1333,7 +1333,7 @@ function dropWhile_gen(iterable $data, callable $predicate): Generator
  * - dropLast($data, $count): Generator
  * - dropLast($count): callable(iterable): Generator
  *
- * @param  iterable<mixed, mixed>|int                                                        $data_or_count
+ * @param iterable<mixed, mixed>|int $data_or_count
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function dropLast(iterable|int $data_or_count, ?int $count = null): Generator|callable
@@ -1342,7 +1342,7 @@ function dropLast(iterable|int $data_or_count, ?int $count = null): Generator|ca
         $n = $data_or_count;
 
         /**
-         * @param  iterable<int|string, mixed>  $data
+         * @param iterable<int|string, mixed> $data
          * @return Generator<int|string, mixed>
          */
         return static fn (iterable $data): Generator => dropLast_gen($data, $n);
@@ -1356,7 +1356,7 @@ function dropLast(iterable|int $data_or_count, ?int $count = null): Generator|ca
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>  $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<mixed, mixed>
  */
 function dropLast_gen(iterable $data, int $count): Generator
@@ -1389,7 +1389,7 @@ function dropLast_gen(iterable $data, int $count): Generator
  * - takeLast($data, $count): Generator
  * - takeLast($count): callable(iterable): Generator
  *
- * @param  iterable<mixed, mixed>|int                                                        $data_or_count
+ * @param iterable<mixed, mixed>|int $data_or_count
  * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
  */
 function takeLast(iterable|int $data_or_count, ?int $count = null): Generator|callable
@@ -1398,7 +1398,7 @@ function takeLast(iterable|int $data_or_count, ?int $count = null): Generator|ca
         $n = $data_or_count;
 
         /**
-         * @param  iterable<int|string, mixed>  $data
+         * @param iterable<int|string, mixed> $data
          * @return Generator<int|string, mixed>
          */
         return static fn (iterable $data): Generator => takeLast_gen($data, $n);
@@ -1412,7 +1412,7 @@ function takeLast(iterable|int $data_or_count, ?int $count = null): Generator|ca
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>  $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<mixed, mixed>
  */
 function takeLast_gen(iterable $data, int $count): Generator
@@ -1441,8 +1441,8 @@ function takeLast_gen(iterable $data, int $count): Generator
 /**
  * Partition into two arrays: [pass, fail] according to predicate. Eager. Keys preserved.
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                                                                                           $data_or_predicate
- * @param  callable(mixed, mixed): bool|null                                                                                                             $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param callable(mixed, mixed): bool|null $predicate
  * @return array{0: array<mixed, mixed>, 1: array<mixed, mixed>}|callable(iterable<mixed, mixed>): array{0: array<mixed, mixed>, 1: array<mixed, mixed>}
  */
 function partition(iterable|callable $data_or_predicate, ?callable $predicate = null): array|callable
@@ -1451,7 +1451,7 @@ function partition(iterable|callable $data_or_predicate, ?callable $predicate = 
         $pred = $data_or_predicate;
 
         /**
-         * @param  iterable<mixed, mixed>                                          $data
+         * @param iterable<mixed, mixed> $data
          * @return array{0: array<int|string, mixed>, 1: array<int|string, mixed>}
          */
         return static fn (iterable $data): array => partition_impl($data, $pred);
@@ -1469,8 +1469,8 @@ function partition(iterable|callable $data_or_predicate, ?callable $predicate = 
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>                                $data
- * @param  callable(mixed, mixed): bool                          $predicate
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
  * @return array{0: array<mixed, mixed>, 1: array<mixed, mixed>}
  */
 function partition_impl(iterable $data, callable $predicate): array
@@ -1497,7 +1497,7 @@ function partition_impl(iterable $data, callable $predicate): array
  * - splitAt($data, $index): array{0: list, 1: list}
  * - splitAt($index): callable(iterable): array{0: list, 1: list}
  *
- * @param  iterable<mixed, mixed>|int                                                                                                            $data_or_index
+ * @param iterable<mixed, mixed>|int $data_or_index
  * @return array{0: array<int, mixed>, 1: array<int, mixed>}|callable(iterable<mixed, mixed>): array{0: array<int, mixed>, 1: array<int, mixed>}
  */
 function splitAt(iterable|int $data_or_index, ?int $index = null): array|callable
@@ -1506,7 +1506,7 @@ function splitAt(iterable|int $data_or_index, ?int $index = null): array|callabl
         $i = $data_or_index;
 
         /**
-         * @param  iterable<mixed, mixed>                            $data
+         * @param iterable<mixed, mixed> $data
          * @return array{0: array<int, mixed>, 1: array<int, mixed>}
          */
         return static fn (iterable $data): array => splitAt_impl($data, $i);
@@ -1519,7 +1519,7 @@ function splitAt(iterable|int $data_or_index, ?int $index = null): array|callabl
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>                            $data
+ * @param iterable<mixed, mixed> $data
  * @return array{0: array<int, mixed>, 1: array<int, mixed>}
  */
 function splitAt_impl(iterable $data, int $index): array
@@ -1555,8 +1555,8 @@ function splitAt_impl(iterable $data, int $index): array
  * - splitWhen($data, $predicate): array{0: list, 1: list}
  * - splitWhen($predicate): callable(iterable): array{0: list, 1: list}
  *
- * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                                                                                   $data_or_predicate
- * @param  (callable(mixed, mixed): bool)|null                                                                                                   $predicate
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate
+ * @param (callable(mixed, mixed): bool)|null $predicate
  * @return array{0: array<int, mixed>, 1: array<int, mixed>}|callable(iterable<mixed, mixed>): array{0: array<int, mixed>, 1: array<int, mixed>}
  */
 function splitWhen(iterable|callable $data_or_predicate, ?callable $predicate = null): array|callable
@@ -1565,7 +1565,7 @@ function splitWhen(iterable|callable $data_or_predicate, ?callable $predicate = 
         $pred = $data_or_predicate;
 
         /**
-         * @param  iterable<mixed, mixed>                            $data
+         * @param iterable<mixed, mixed> $data
          * @return array{0: array<int, mixed>, 1: array<int, mixed>}
          */
         return static fn (iterable $data): array => splitWhen_impl($data, $pred);
@@ -1582,8 +1582,8 @@ function splitWhen(iterable|callable $data_or_predicate, ?callable $predicate = 
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>                            $data
- * @param  callable(mixed, mixed): bool                      $predicate
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): bool $predicate
  * @return array{0: array<int, mixed>, 1: array<int, mixed>}
  */
 function splitWhen_impl(iterable $data, callable $predicate): array
@@ -1614,7 +1614,7 @@ function splitWhen_impl(iterable $data, callable $predicate): array
  * Pipe-friendly zip: returns a callable that zips with the provided iterables.
  * Example: [1,2,3] |> zipWith(['a','b']) |> toList()
  *
- * @param  iterable<mixed, mixed>                                              ...$others
+ * @param iterable<mixed, mixed> ...$others
  * @return callable(iterable<mixed, mixed>): Generator<int, array<int, mixed>>
  */
 function zipWith(iterable ...$others): callable
@@ -1626,8 +1626,8 @@ function zipWith(iterable ...$others): callable
  * Zip multiple iterables together lazily. Stops at the shortest.
  * Yields numeric-indexed arrays of values, keys discarded.
  *
- * @param  iterable<mixed, mixed>            $data      The primary iterable (convenient for pipe usage)
- * @param  iterable<mixed, mixed>            ...$others Other iterables to zip with
+ * @param iterable<mixed, mixed> $data The primary iterable (convenient for pipe usage)
+ * @param iterable<mixed, mixed> ...$others Other iterables to zip with
  * @return Generator<int, array<int, mixed>>
  */
 function zip(iterable $data, iterable ...$others): Generator
@@ -1671,7 +1671,7 @@ function zip(iterable $data, iterable ...$others): Generator
 /**
  * Chunk values into arrays of size $size (last chunk may be smaller). Lazy. Keys discarded.
  *
- * @param  iterable<array-key, mixed>|int                                                                            $data_or_size
+ * @param iterable<array-key, mixed>|int $data_or_size
  * @return Generator<int, array<int, mixed>>|callable(iterable<array-key, mixed>): Generator<int, array<int, mixed>>
  */
 function chunk(iterable|int $data_or_size, ?int $size = null): Generator|callable
@@ -1689,7 +1689,7 @@ function chunk(iterable|int $data_or_size, ?int $size = null): Generator|callabl
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>            $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<int, array<int, mixed>>
  */
 function chunk_gen(iterable $data, int $size): Generator
@@ -1719,7 +1719,7 @@ function chunk_gen(iterable $data, int $size): Generator
  * - aperture($data, $size): Generator<int, array<int, mixed>>
  * - aperture($size): callable(iterable): Generator<int, array<int, mixed>>
  *
- * @param  iterable<array-key, mixed>|int                                                                            $data_or_size
+ * @param iterable<array-key, mixed>|int $data_or_size
  * @return Generator<int, array<int, mixed>>|callable(iterable<array-key, mixed>): Generator<int, array<int, mixed>>
  */
 function aperture(iterable|int $data_or_size, ?int $size = null): Generator|callable
@@ -1737,7 +1737,7 @@ function aperture(iterable|int $data_or_size, ?int $size = null): Generator|call
 }
 
 /** @internal
- * @param  iterable<mixed, mixed>            $data
+ * @param iterable<mixed, mixed> $data
  * @return Generator<int, array<int, mixed>>
  */
 function aperture_gen(iterable $data, int $size): Generator

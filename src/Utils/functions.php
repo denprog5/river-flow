@@ -13,7 +13,7 @@ use Stringable;
  * Curried: identity(): callable(mixed): mixed
  *
  * @template T
- * @param  T                        ...$valueOrNothing
+ * @param T ...$valueOrNothing
  * @return T|callable(mixed): mixed
  */
 function identity(mixed ...$valueOrNothing): mixed
@@ -32,8 +32,8 @@ function identity(mixed ...$valueOrNothing): mixed
  * Curried: tap($callback): callable(mixed $value): mixed
  *
  * @template T
- * @param  T|callable(T): void      $value_or_callback
- * @param  callable(T): void|null   $callback
+ * @param T|callable(T): void $value_or_callback
+ * @param callable(T): void|null $callback
  * @return T|callable(mixed): mixed
  */
 function tap($value_or_callback, ?callable $callback = null): mixed
@@ -59,7 +59,7 @@ function tap($value_or_callback, ?callable $callback = null): mixed
  * compose(f, g, h)($x) === f(g(h($x))).
  * The innermost callable (right-most) may accept any number of arguments; the rest are treated as unary.
  *
- * @param  callable(mixed ...$args): mixed ...$functions
+ * @param callable(mixed ...$args): mixed ...$functions
  * @return callable(mixed ...$args): mixed
  */
 function compose(callable ...$functions): callable
@@ -164,7 +164,7 @@ function anyPass(array $predicates): callable
         }
     }
 
-    return static fn(mixed ...$args): bool => array_any($predicates, fn($p): bool => $p(...$args) === true);
+    return static fn (mixed ...$args): bool => array_any($predicates, fn ($p): bool => $p(...$args) === true);
 }
 
 /**

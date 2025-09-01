@@ -99,6 +99,161 @@ function replacePrefix_impl(string $data, string $prefix, string $replacement): 
 }
 
 /**
+ * Check if a string contains the given substring (case-sensitive).
+ * Direct:  includes($data, $needle): bool
+ * Curried: includes($needle): callable(string $data): bool
+ */
+function includes(string $data_or_needle, ?string $needle = null): bool|callable
+{
+    if ($needle === null) {
+        $n = $data_or_needle;
+
+        return static fn (string $data): bool => includes_impl($data, $n);
+    }
+
+    $data = $data_or_needle;
+
+    return includes_impl($data, $needle);
+}
+
+/** @internal */
+function includes_impl(string $data, string $needle): bool
+{
+    // Follow PHP's str_contains semantics: empty needle is true
+    return $needle === '' || str_contains($data, $needle);
+}
+
+/**
+ * Check if a string starts with the given prefix (case-sensitive).
+ * Direct:  startsWith($data, $prefix): bool
+ * Curried: startsWith($prefix): callable(string $data): bool
+ */
+function startsWith(string $data_or_prefix, ?string $prefix = null): bool|callable
+{
+    if ($prefix === null) {
+        $p = $data_or_prefix;
+
+        return static fn (string $data): bool => startsWith_impl($data, $p);
+    }
+
+    $data = $data_or_prefix;
+
+    return startsWith_impl($data, $prefix);
+}
+
+/** @internal */
+function startsWith_impl(string $data, string $prefix): bool
+{
+    // Empty prefix is considered true
+    return $prefix === '' || str_starts_with($data, $prefix);
+}
+
+/**
+ * Check if a string ends with the given suffix (case-sensitive).
+ * Direct:  endsWith($data, $suffix): bool
+ * Curried: endsWith($suffix): callable(string $data): bool
+ */
+function endsWith(string $data_or_suffix, ?string $suffix = null): bool|callable
+{
+    if ($suffix === null) {
+        $s = $data_or_suffix;
+
+        return static fn (string $data): bool => endsWith_impl($data, $s);
+    }
+
+    $data = $data_or_suffix;
+
+    return endsWith_impl($data, $suffix);
+}
+
+/** @internal */
+function endsWith_impl(string $data, string $suffix): bool
+{
+    // Empty suffix is considered true
+    return $suffix === '' || str_ends_with($data, $suffix);
+}
+
+/**
+ * Replace all occurrences of $search with $replacement (case-sensitive).
+ * Direct:  replace($data, $search, $replacement): string
+ * Curried: replace($search, $replacement): callable(string $data): string
+ */
+function replace(string $data_or_search, ?string $search_or_replacement = null, ?string $replacement = null): string|callable
+{
+    if ($replacement === null) {
+        // Curried path
+        $search = $data_or_search;
+        $repl   = $search_or_replacement ?? '';
+
+        return static fn (string $data): string => replace_impl($data, $search, $repl);
+    }
+
+    // Direct path
+    $data   = $data_or_search;
+    $search = $search_or_replacement ?? '';
+
+    return replace_impl($data, $search, $replacement);
+}
+
+/** @internal */
+function replace_impl(string $data, string $search, string $replacement): string
+{
+    return str_replace($search, $replacement, $data);
+}
+
+/**
+ * Slice a string by start (inclusive) and end (exclusive), supporting negative indices.
+ * Direct:  slice($data, $start, ?$end = null): string
+ * Curried: slice($start, ?$end = null): callable(string $data): string
+ */
+function slice(string|int $data_or_start, ?int $start = null, ?int $end = null): string|callable
+{
+    if (!\is_string($data_or_start)) {
+        // Curried path: slice($start, ?$end)
+        $s = $data_or_start;
+        $e = $start;
+
+        return static fn (string $data): string => slice_impl($data, $s, $e);
+    }
+
+    // Direct path: slice($data, $start, ?$end)
+    $data = $data_or_start;
+    $s    = $start ?? 0;
+
+    return slice_impl($data, $s, $end);
+}
+
+/** @internal */
+function slice_impl(string $data, int $start, ?int $end = null): string
+{
+    $len = length_impl($data);
+
+    // Normalize start
+    $begin = $start >= 0 ? $start : max(0, $len + $start);
+
+    // Normalize end (exclusive)
+    if ($end === null) {
+        $to = $len;
+    } elseif ($end >= 0) {
+        $to = min($len, $end);
+    } else {
+        $to = max(0, $len + $end);
+    }
+
+    if ($begin >= $to) {
+        return '';
+    }
+
+    $length = $to - $begin;
+
+    if (\function_exists('mb_substr')) {
+        return mb_substr($data, $begin, $length, 'UTF-8');
+    }
+
+    return substr($data, $begin, $length);
+}
+
+/**
  * Convert string to lowercase (UTF-8 aware if mbstring is available).
  * Direct:  toLowerCase($data): string
  * Curried: toLowerCase(): callable(string $data): string

@@ -17,7 +17,7 @@ return (new PhpCsFixer\Config())
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
         'no_superfluous_phpdoc_tags' => ['allow_mixed' => true],
         'phpdoc_order' => true,
-        'phpdoc_align' => ['align' => 'vertical'],
+        'phpdoc_align' => ['align' => 'left'],
         'blank_line_before_statement' => ['statements' => ['return']],
         'no_trailing_whitespace' => true,
         'single_quote' => true,
