@@ -61,8 +61,9 @@ Dual-mode usage
 ## Combining / Windowing
 - `zip(iterable $data, iterable ...$others): Generator<int, array<int, mixed>>`
   - Lazy; stops at shortest; keys discarded; yields numeric-indexed tuples
+  - Accepts arrays, Iterator, and any Traversable (IteratorAggregate supported). All iterators are rewound before zipping.
 - `zipWith(iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
-  - Pipe-friendly curried form of `zip`. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
+  - Pipe-friendly curried form of `zip`. Same semantics as `zip` (keys discarded, stops at shortest, iterator inputs are rewound). Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
 - `chunk(iterable $data, int $size): Generator<int, array<int, mixed>>`
   - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0
 - `aperture(iterable $data, int $size): Generator<int, array<int, mixed>>`

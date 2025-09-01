@@ -16,6 +16,8 @@ use function Denprog\RiverFlow\Pipes\zipWith;
 
 use Generator;
 use InvalidArgumentException;
+use IteratorAggregate;
+use Traversable;
 
 describe('partition, zip, chunk, min, max', function (): void {
     it('partitions with keys preserved and returns [pass, fail]', function (): void {
@@ -46,6 +48,31 @@ describe('partition, zip, chunk, min, max', function (): void {
     it('zips a single iterable producing 1-length rows', function (): void {
         $rows = toArray(zip([7, 8]));
         expect($rows)->toBe([[7], [8]]);
+    });
+
+    it('zip rewinds Iterators before zipping (ArrayIterator advanced)', function (): void {
+        $it = new ArrayIterator([1, 2]);
+        $it->next(); // advance to second element
+        $rows = toArray(zip($it, [10, 20]));
+        // Should start from the beginning due to rewind
+        expect($rows)->toBe([[1, 10], [2, 20]]);
+    });
+
+    it('zip supports IteratorAggregate and rewinds its inner iterator', function (): void {
+        $inner = new ArrayIterator([100, 200]);
+        $inner->next(); // advance
+        $agg = new class ($inner) implements IteratorAggregate {
+            public function __construct(private ArrayIterator $inner)
+            {
+            }
+            public function getIterator(): Traversable
+            {
+                return $this->inner; // zip wraps with IteratorIterator and rewinds
+            }
+        };
+
+        $rows = toArray(zip($agg, ['A', 'B', 'C']));
+        expect($rows)->toBe([[100, 'A'], [200, 'B']]);
     });
 
     it('zipWith returns a callable and zips in pipelines; stops at shortest; keys discarded', function (): void {
