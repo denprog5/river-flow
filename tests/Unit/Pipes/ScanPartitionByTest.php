@@ -72,7 +72,7 @@ describe('scan, scanRight, partitionBy', function (): void {
             yield 10;
             yield 20;
         })();
-        $gChunks = toList(partitionBy(fn (int $v): int => $v)($gen));
+        $gChunks = toList(partitionBy($gen, fn (int $v): int => $v));
         expect($gChunks)->toBe([[0 => 10, 1 => 10], [2 => 20]]);
     });
 
