@@ -92,8 +92,19 @@ describe('dropLast, takeLast, aperture', function (): void {
         expect($win1)->toBe([[7], [8]]);
     });
 
+    it('aperture supports currying form', function (): void {
+        $fn   = aperture(2);
+        $wins = toArray($fn([1, 2, 3]));
+        expect($wins)->toBe([[1, 2], [2, 3]]);
+    });
+
     it('aperture throws on non-positive size', function (): void {
         expect(fn (): array => toArray(aperture([1, 2, 3], 0)))->toThrow(InvalidArgumentException::class);
         expect(fn (): array => toArray(aperture([1, 2, 3], -2)))->toThrow(InvalidArgumentException::class);
+    });
+
+    it('aperture currying throws on invalid size', function (): void {
+        expect(fn (): array => toArray(aperture(0)([1, 2, 3])))->toThrow(InvalidArgumentException::class);
+        expect(fn (): array => toArray(aperture(-1)([1, 2, 3])))->toThrow(InvalidArgumentException::class);
     });
 });

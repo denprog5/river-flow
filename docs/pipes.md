@@ -29,7 +29,9 @@ Dual-mode usage
 - `last(iterable $data, mixed $default = null): mixed`
 - `find(iterable $data, callable(T, TKey): bool $predicate, mixed $default = null): mixed`
 - `min(iterable<int|float|string> $data): int|float|string|null`
+  - Eager; returns the smallest value using PHP comparison semantics. Returns the original item (type preserved). Numeric strings are compared numerically against numbers but the original item is returned (e.g., `max([1, '3.5']) === '3.5'`). Returns `null` for empty input.
 - `max(iterable<int|float|string> $data): int|float|string|null`
+  - Eager; returns the largest value using PHP comparison semantics. Returns the original item (type preserved). Numeric strings are compared numerically against numbers but the original item is returned. Returns `null` for empty input.
 - `count(iterable $data): int`
 - `isEmpty(iterable $data): bool`
 - `contains(iterable $data, mixed $needle): bool` (strict comparison)
