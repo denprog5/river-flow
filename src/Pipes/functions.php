@@ -1645,6 +1645,193 @@ function takeLast_gen(iterable $data, int $count): Generator
 }
 
 /**
+ * Accumulate left-to-right, yielding each intermediate accumulator value (inclusive scan).
+ * Lazy; preserves keys.
+ *
+ * Dual-mode:
+ * - scan($data, $reducer, $initial): Generator
+ * - scan($reducer, $initial): callable(iterable): Generator
+ *
+ * @param iterable<mixed, mixed>|callable(mixed|null, mixed, mixed): mixed $data_or_reducer
+ * @param (callable(mixed|null, mixed, mixed): mixed)|mixed|null $reducer_or_initial
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
+ */
+function scan(iterable|callable $data_or_reducer, mixed $reducer_or_initial = null, mixed $initial = null): Generator|callable
+{
+    // Currying form: scan($reducer, $initial?) -> callable(iterable $data): Generator
+    if (\is_callable($data_or_reducer)) {
+        $reducer = $data_or_reducer;
+        $seed    = $reducer_or_initial; // may be null
+
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int|string, mixed>
+         */
+        return static fn (iterable $data): Generator => scan_gen($data, $reducer, $seed);
+    }
+
+    // Direct form: scan($data, $reducer, $initial)
+    if (!\is_callable($reducer_or_initial)) {
+        throw new InvalidArgumentException('scan(): reducer must be callable');
+    }
+
+    /** @var iterable<int|string, mixed> $data_or_reducer */
+    /** @var callable(mixed|null, mixed, mixed): mixed $reducer_or_initial */
+    return scan_gen($data_or_reducer, $reducer_or_initial, $initial);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed|null, mixed, mixed): mixed $reducer
+ * @return Generator<mixed, mixed>
+ */
+function scan_gen(iterable $data, callable $reducer, mixed $initial): Generator
+{
+    $acc = $initial;
+    foreach ($data as $key => $value) {
+        $acc = $reducer($acc, $value, $key);
+        yield $key => $acc;
+    }
+}
+
+/**
+ * Accumulate right-to-left, yielding each intermediate accumulator aligned to original order (inclusive scan from right).
+ * Buffers the input (eager buffering) then yields as a generator. Preserves keys.
+ *
+ * Dual-mode:
+ * - scanRight($data, $reducer, $initial): Generator
+ * - scanRight($reducer, $initial): callable(iterable): Generator
+ *
+ * @param iterable<mixed, mixed>|callable(mixed|null, mixed, mixed): mixed $data_or_reducer
+ * @param (callable(mixed|null, mixed, mixed): mixed)|mixed|null $reducer_or_initial
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
+ */
+function scanRight(iterable|callable $data_or_reducer, mixed $reducer_or_initial = null, mixed $initial = null): Generator|callable
+{
+    // Currying form: scanRight($reducer, $initial?) -> callable(iterable $data): Generator
+    if (\is_callable($data_or_reducer)) {
+        $reducer = $data_or_reducer;
+        $seed    = $reducer_or_initial; // may be null
+
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int|string, mixed>
+         */
+        return static fn (iterable $data): Generator => scanRight_gen($data, $reducer, $seed);
+    }
+
+    // Direct form: scanRight($data, $reducer, $initial)
+    if (!\is_callable($reducer_or_initial)) {
+        throw new InvalidArgumentException('scanRight(): reducer must be callable');
+    }
+
+    /** @var iterable<int|string, mixed> $data_or_reducer */
+    /** @var callable(mixed|null, mixed, mixed): mixed $reducer_or_initial */
+    return scanRight_gen($data_or_reducer, $reducer_or_initial, $initial);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed|null, mixed, mixed): mixed $reducer
+ * @return Generator<mixed, mixed>
+ */
+function scanRight_gen(iterable $data, callable $reducer, mixed $initial): Generator
+{
+    /** @var array<int, array{0: int|string, 1: mixed}> $buf */
+    $buf = [];
+    foreach ($data as $key => $value) {
+        $buf[] = [$key, $value];
+    }
+
+    $n = \count($buf);
+    if ($n === 0) {
+        return;
+    }
+
+    /** @var array<int, mixed> $accs */
+    $accs = [];
+    $acc  = $initial;
+    for ($i = $n - 1; $i >= 0; $i--) {
+        $pair     = $buf[$i];
+        $acc      = $reducer($acc, $pair[1], $pair[0]);
+        $accs[$i] = $acc;
+    }
+
+    for ($i = 0; $i < $n; $i++) {
+        $pair = $buf[$i];
+        yield $pair[0] => $accs[$i];
+    }
+}
+
+/**
+ * Partition into contiguous chunks where discriminator($value, $key) stays equal.
+ * Lazy; yields arrays for each chunk; keys inside chunks are preserved; outer keys are numeric indices.
+ *
+ * Supports currying: partitionBy($discriminator)($data)
+ *
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): mixed $data_or_discriminator
+ * @param (callable(mixed, mixed): mixed)|null $discriminator
+ * @return Generator<int, array<mixed, mixed>>|callable(iterable<mixed, mixed>): Generator<int, array<mixed, mixed>>
+ */
+function partitionBy(iterable|callable $data_or_discriminator, ?callable $discriminator = null): Generator|callable
+{
+    if (\is_callable($data_or_discriminator) && $discriminator === null) {
+        $disc = $data_or_discriminator;
+
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int, array<int|string, mixed>>
+         */
+        return static fn (iterable $data): Generator => partitionBy_gen($data, $disc);
+    }
+
+    if (!is_iterable($data_or_discriminator)) {
+        throw new InvalidArgumentException('partitionBy(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($discriminator)) {
+        throw new InvalidArgumentException('partitionBy(): discriminator must be callable');
+    }
+
+    /** @var iterable<int|string, mixed> $data_or_discriminator */
+    return partitionBy_gen($data_or_discriminator, $discriminator);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $discriminator
+ * @return Generator<int, array<mixed, mixed>>
+ */
+function partitionBy_gen(iterable $data, callable $discriminator): Generator
+{
+    $started = false;
+    $curId   = null;
+    /** @var array<int|string, mixed> $chunk */
+    $chunk = [];
+
+    foreach ($data as $key => $value) {
+        $id = $discriminator($value, $key);
+        if ($started === false) {
+            $started = true;
+            $curId   = $id;
+            $chunk   = [$key => $value];
+            continue;
+        }
+        if ($id === $curId) {
+            $chunk[$key] = $value;
+            continue;
+        }
+        // flush current chunk
+        yield $chunk;
+        $curId = $id;
+        $chunk = [$key => $value];
+    }
+
+    if ($started) {
+        yield $chunk;
+    }
+}
+
+/**
  * Partition into two arrays: [pass, fail] according to predicate. Eager. Keys preserved.
  *
  * @param iterable<mixed, mixed>|callable(mixed, mixed): bool $data_or_predicate

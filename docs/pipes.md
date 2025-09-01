@@ -38,6 +38,12 @@ Dual-mode usage
 - `every(iterable $data, callable(TValue, TKey): bool $predicate): bool` — true if all elements satisfy the predicate; true for empty iterables
 - `some(iterable $data, callable(TValue, TKey): bool $predicate): bool` — true if any element satisfies the predicate; false for empty iterables
 
+## Accumulation
+- `scan(iterable $data, callable(TCarry|null, TValue, TKey): TCarry $reducer, TCarry|null $initial = null): Generator<TKey, TCarry>`
+  - Lazy; inclusive left-to-right accumulation; yields each intermediate accumulated value; preserves keys. Supports currying: `scan($reducer, $initial)($data)`.
+- `scanRight(iterable $data, callable(TCarry|null, TValue, TKey): TCarry $reducer, TCarry|null $initial = null): Generator<TKey, TCarry>`
+  - Lazy; inclusive right-to-left accumulation; buffers input then yields results in original order; preserves keys. Supports currying: `scanRight($reducer, $initial)($data)`.
+
 ## Conversions
 - `toList(iterable $data): array<int, mixed>` — eager; discards keys
 - `toArray(iterable $data): array<array-key, mixed>` — eager; preserves keys
@@ -92,6 +98,8 @@ Dual-mode usage
   - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0. Supports currying: `chunk($size)($data)`. For `$size = 1` yields singleton chunks; empty input yields no chunks.
 - `aperture(iterable $data, int $size): Generator<int, array<int, mixed>>`
   - Lazy; keys discarded; sliding windows of exact length `$size`; throws if size <= 0
+- `partitionBy(iterable $data, callable(TValue, TKey): array-key $discriminator): Generator<int, array<TKey, TValue>>`
+  - Lazy; splits the sequence into contiguous chunks where the discriminator value stays the same. Preserves original keys inside chunks; outer result is numerically indexed. Supports currying: `partitionBy($discriminator)($data)` or direct-call.
 - `partition(iterable $data, callable(TValue, TKey): bool $predicate): array{0: array<TKey, TValue>, 1: array<TKey, TValue>}`
   - Eager; keys preserved; returns [pass, fail]
   - Direct-call requires an iterable first argument and a callable predicate. A non-iterable first argument will throw `InvalidArgumentException`. A non-callable predicate in direct invocation will result in a PHP `TypeError` due to parameter typing.
@@ -212,6 +220,27 @@ $chunks = ['x'=>1,'y'=>2,'z'=>3]
 [$before, $after] = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
     |> splitWhen(fn (int $v) => $v >= 3);
 // $before = [1,2], $after = [3,4]
+```
+
+### More examples: scans and partitionBy
+```php
+use function Denprog\RiverFlow\Pipes\{scan, scanRight, partitionBy, toList, toArray};
+
+// Prefix sums (lazy, keys preserved)
+$prefix = [1, 2, 3, 4]
+    |> scan(fn (?int $c, int $v) => ($c ?? 0) + $v, 0)
+    |> toList(); // [1, 3, 6, 10]
+
+// Suffix sums (lazy, yields in original order)
+$suffix = [1, 2, 3]
+    |> scanRight(fn (?int $c, int $v) => ($c ?? 0) + $v, 0)
+    |> toList(); // [6, 5, 3]
+
+// Partition contiguous groups by first letter (lazy)
+$groups = ['ant', 'apple', 'bear', 'bob', 'cat']
+    |> partitionBy(fn (string $s) => $s[0])
+    |> toList();
+// $groups === [[0=>'ant',1=>'apple'], [2=>'bear',3=>'bob'], [4=>'cat']]
 ```
 
 ### Direct (non-pipe) usage
