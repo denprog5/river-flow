@@ -37,6 +37,8 @@ Dual-mode usage
 - `contains(iterable $data, mixed $needle): bool` (strict comparison)
 - `every(iterable $data, callable(TValue, TKey): bool $predicate): bool` — true if all elements satisfy the predicate; true for empty iterables
 - `some(iterable $data, callable(TValue, TKey): bool $predicate): bool` — true if any element satisfies the predicate; false for empty iterables
+- `countBy(iterable $data, callable(TValue, TKey): array-key $classifier): array<array-key, int>`
+  - Eager; returns a map from classifier value to count. Supports flexible order and currying: `countBy($classifier, $data)` or `countBy($classifier)($data)`.
 
 ## Accumulation
 - `scan(iterable $data, callable(TCarry|null, TValue, TKey): TCarry $reducer, TCarry|null $initial = null): Generator<TKey, TCarry>`
@@ -136,7 +138,7 @@ Dual-mode usage
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Pipes\{map, filter, toList, toArray, flatten, zip, zipWith, transpose, unzip, uniq, partition, aperture, dropLast, takeLast, tail, init, range, chunk, union, intersection, difference, symmetricDifference, sortWith};
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, toArray, flatten, zip, zipWith, transpose, unzip, uniq, partition, aperture, dropLast, takeLast, tail, init, range, chunk, union, intersection, difference, symmetricDifference, sortWith, countBy};
 use function Denprog\RiverFlow\Utils\{ascend, descend};
 
 $evens = [1,2,3,4,5,6]
@@ -242,6 +244,11 @@ $chunks = ['x'=>1,'y'=>2,'z'=>3]
 [$before, $after] = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
     |> splitWhen(fn (int $v) => $v >= 3);
 // $before = [1,2], $after = [3,4]
+
+// Count by classifier (eager)
+$counts = ['apple','apricot','banana','blueberry','avocado']
+    |> countBy(fn (string $s) => $s[0]);
+// $counts === ['a' => 3, 'b' => 2]
 ```
 
 ### More examples: scans and partitionBy

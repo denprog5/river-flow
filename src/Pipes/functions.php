@@ -1060,6 +1060,74 @@ function keyBy_impl(iterable $data, callable $keyer): array
 }
 
 /**
+ * countBy can be used as:
+ *  - countBy($data, $classifier): array
+ *  - countBy($classifier, $data): array (flexible order)
+ *  - countBy($classifier): callable(iterable $data): array
+ * Eager.
+ *
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): array-key $data_or_classifier
+ * @param (callable(mixed, mixed): array-key)|iterable<mixed, mixed>|null $maybe_data
+ * @return array<array-key, int>|callable(iterable<mixed, mixed>): array<array-key, int>
+ */
+function countBy(iterable|callable $data_or_classifier, iterable|callable|null $maybe_data = null): array|callable
+{
+    // Curried
+    if (\is_callable($data_or_classifier) && $maybe_data === null) {
+        $c = $data_or_classifier;
+
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
+            countBy_impl($data, $c);
+    }
+
+    // Flexible order: (callable, iterable)
+    if (\is_callable($data_or_classifier)) {
+        $c    = $data_or_classifier;
+        $data = $maybe_data; // expected iterable
+        if (!($data instanceof Traversable) && !\is_array($data)) {
+            throw new InvalidArgumentException('countBy(): data must be iterable');
+        }
+
+        /** @var iterable<mixed, mixed> $data */
+        return countBy_impl($data, $c);
+    }
+
+    // Normal order
+    $data       = $data_or_classifier; // iterable
+    $classifier = $maybe_data;         // callable
+
+    // $data is known to be iterable here due to branching above
+    if (!\is_callable($classifier)) {
+        throw new InvalidArgumentException('countBy(): classifier must be callable');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return countBy_impl($data, $classifier);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): mixed $classifier
+ * @return array<array-key, int>
+ */
+function countBy_impl(iterable $data, callable $classifier): array
+{
+    $out = [];
+    foreach ($data as $key => $value) {
+        $group = $classifier($value, $key);
+        if (!\is_int($group) && !\is_string($group)) {
+            throw new InvalidArgumentException('countBy(): classifier must return array-key');
+        }
+        if (!\array_key_exists($group, $out)) {
+            $out[$group] = 0;
+        }
+        $out[$group]++;
+    }
+
+    return $out;
+}
+
+/**
  * Average of numeric values. Non-numeric values are handled like in sum().
  * Returns 0.0 when iterable is empty.
  * Eager. Supports currying for pipe usage.

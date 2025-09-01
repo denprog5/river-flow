@@ -80,7 +80,7 @@ assert($out === '16');
 
 ### Pipes
 ```php
-use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init, scan, scanRight, partitionBy, distinctUntilChanged, intersperse, pairwise};
+use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init, scan, scanRight, partitionBy, distinctUntilChanged, intersperse, pairwise, countBy};
 
 // Transform → filter → take → materialize
 $topSquares = [1,2,3,4,5,6,7,8,9]
@@ -148,6 +148,10 @@ $withPipes = ['a','b','c']
 $pairs = [1,2,3]
     |> pairwise()
     |> toList(); // [[1,2],[2,3]]
+
+// Count by classifier (eager)
+$counts = ['apple','apricot','banana','blueberry','avocado']
+    |> countBy(fn (string $s) => $s[0]); // ['a' => 3, 'b' => 2]
 ```
 
 ### Strings

@@ -6,6 +6,21 @@ All notable changes to this project will be documented in this file.
 
 _Nothing yet._
 
+## [0.2.5] - 2025-09-01
+
+### Added
+- Pipes: add eager dual-mode `countBy()` with flexible argument order and currying. Returns a map of classifier value to count. Classifier must return an `array-key` (int|string).
+
+### Tests
+- Add `tests/Unit/Pipes/CountByTest.php` covering arrays and generators, flexible order, currying, empty input, and invalid classifier return type.
+
+### Docs
+- `docs/pipes.md`: document `countBy()` under Aggregation/Terminal, add example and imports.
+- `README.md`: include `countBy` in the Pipes snapshot and add a brief example.
+
+### QA
+- To run locally: `composer test`, `composer analyse`, `composer cs:lint`, `composer rector:check`.
+
 ## [0.2.4] - 2025-09-01
 
 ### Added
@@ -101,7 +116,8 @@ _Nothing yet._
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/denprog5/river-flow/releases/tag/v0.2.5
 [0.2.4]: https://github.com/denprog5/river-flow/releases/tag/v0.2.4
 [0.2.3]: https://github.com/denprog5/river-flow/releases/tag/v0.2.3
 [0.2.2]: https://github.com/denprog5/river-flow/releases/tag/v0.2.2
