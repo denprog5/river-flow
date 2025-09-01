@@ -57,6 +57,16 @@ Dual-mode usage
   - Lazy; end-exclusive; supports positive and negative steps; validates parameters eagerly
   - Examples: `range(0, 5)` yields 0,1,2,3,4; `range(5, 0, -2)` yields 5,3,1
 
+- `repeat(mixed $value, ?int $count = null): Generator<int, mixed>`
+  - Lazy; repeats `$value` `$count` times; when `$count` is `null`, yields indefinitely (use control-flow like `take()` to cap)
+  - Keys discarded
+  - Examples: `repeat('x', 3)` yields 'x','x','x'; `repeat(1) |> take(4)` yields 1,1,1,1
+
+- `times(int $count, ?callable(int): mixed $producer = null): Generator<int, mixed>`
+  - Lazy; yields indices 0..`$count-1` if `$producer` is null; otherwise yields `$producer($i)` for each index
+  - Keys discarded; validates `$count >= 0`
+  - Examples: `times(4)` yields 0,1,2,3; `times(3, fn($i) => $i*$i)` yields 0,1,4
+
 ## Reshaping / Ordering
 - `groupBy(iterable $data, callable(TValue, TKey): array-key $grouper): array<array-key, array<TKey, TValue>>`
   - Eager; preserves original keys inside each group. Supports flexible order and currying: `groupBy($grouper, $data)` or `groupBy($grouper)($data)`.
@@ -86,12 +96,35 @@ Dual-mode usage
   - Eager; strict symmetric difference (values present in exactly one of the inputs); left-only values first then right-only; preserves original keys; unhashable items skipped
 
 ## Combining / Windowing
+- `concat(iterable $data, iterable ...$others): Generator<int, mixed>`
+  - Lazy; concatenates multiple iterables; keys discarded; iterators are rewound
+- `concatWith(iterable ...$others): callable(iterable $data): Generator<int, mixed>`
+  - Pipe-friendly curried form of `concat`
+
+- `append(iterable|mixed $data_or_value, mixed ...$moreValues): Generator<int, mixed>|callable(iterable): Generator<int, mixed>`
+  - Lazy; appends one or more values to the end; keys discarded
+  - Dual-mode: direct `append($data, ...$values)` or curried `append(...$values)($data)`
+
+- `prepend(iterable|mixed $data_or_value, mixed ...$moreValues): Generator<int, mixed>|callable(iterable): Generator<int, mixed>`
+  - Lazy; prepends one or more values to the beginning; keys discarded
+  - Dual-mode: direct `prepend($data, ...$values)` or curried `prepend(...$values)($data)`
+
+- `interleave(iterable $data, iterable ...$others): Generator<int, mixed>`
+  - Lazy; round-robin interleaving across inputs; stops at the shortest; keys discarded; iterators are rewound
+- `interleaveWith(iterable ...$others): callable(iterable $data): Generator<int, mixed>`
+  - Pipe-friendly curried form of `interleave`
+
 - `zip(iterable $data, iterable ...$others): Generator<int, array<int, mixed>>`
   - Lazy; stops at shortest; keys discarded; yields numeric-indexed tuples
   - Accepts arrays, Iterator, and any Traversable (IteratorAggregate supported). All iterators are rewound before zipping.
   - If only one iterable is provided, yields 1-length rows. If any iterable is empty, the result is empty.
 - `zipWith(iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
   - Pipe-friendly curried form of `zip`. Same semantics as `zip` (keys discarded, stops at shortest, iterator inputs are rewound). If no other iterables are provided, behaves like `zip($data)` producing 1-length rows. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
+
+- `zipLongest(iterable $data, mixed $fill = null, iterable ...$others): Generator<int, array<int, mixed>>`
+  - Lazy; continues to the longest iterable; uses `$fill` for missing values; keys discarded; iterators are rewound
+- `zipLongestWith(mixed $fill, iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
+  - Pipe-friendly curried form of `zipLongest`
 - `transpose(iterable<int, iterable> $rows): array<int, array<int, mixed>>`
   - Eager; keys discarded; aligns to the shortest row (extra elements in longer rows are ignored)
 - `unzip(iterable<int, iterable> $rows): array<int, array<int, mixed>>`

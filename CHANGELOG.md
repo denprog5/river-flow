@@ -6,6 +6,23 @@ All notable changes to this project will be documented in this file.
 
 _Nothing yet._
 
+## [0.2.6] - 2025-09-02
+
+### Added
+- Pipes: add lazy sequence generators `repeat(mixed $value, ?int $count = null)` and `times(int $count, ?callable $producer = null)`.
+  - Eager parameter validation (throws immediately on negative counts), keys discarded; `repeat()` supports infinite mode with `null` count.
+
+### Tests
+- Add `tests/Unit/Pipes/RepeatTimesTest.php` covering finite and infinite repetition (via `take()`), producer callback mapping in `times()`, zero count yielding empty sequence, and eager exceptions for negative counts.
+
+### Docs
+- `docs/pipes.md`: document `repeat()` and `times()` in Sequence/Generation with examples and notes on laziness and key discarding.
+- `README.md`: include `repeat` and `times` in the Pipes snapshot and add examples.
+
+### QA
+- Fixed PHPStan list type for `prepend()` direct path by passing `array_values($moreValues)` to `prepend_gen()`.
+- Ran Composer scripts: `composer analyse`, `composer rector:fix`, `composer cs:fix`, and `composer test` — all green.
+
 ## [0.2.5] - 2025-09-01
 
 ### Added
@@ -116,7 +133,8 @@ _Nothing yet._
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/denprog5/river-flow/releases/tag/v0.2.6
 [0.2.5]: https://github.com/denprog5/river-flow/releases/tag/v0.2.5
 [0.2.4]: https://github.com/denprog5/river-flow/releases/tag/v0.2.4
 [0.2.3]: https://github.com/denprog5/river-flow/releases/tag/v0.2.3

@@ -80,7 +80,7 @@ assert($out === '16');
 
 ### Pipes
 ```php
-use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init, scan, scanRight, partitionBy, distinctUntilChanged, intersperse, pairwise, countBy};
+use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, repeat, times, tail, init, scan, scanRight, partitionBy, distinctUntilChanged, intersperse, pairwise, countBy};
 
 // Transform → filter → take → materialize
 $topSquares = [1,2,3,4,5,6,7,8,9]
@@ -108,8 +108,14 @@ $zipped = [1, 2, 3]
     |> zipWith(['a','b'], ['X','Y','Z'])
     |> toList(); // [[1,'a','X'], [2,'b','Y']]
 
-// Numeric ranges and slicing
+// Numeric ranges and generation
 $nums = range(0, 5) |> toList(); // [0,1,2,3,4]
+
+// Infinite repetition capped with take
+$threes = repeat(3) |> take(4) |> toList(); // [3,3,3,3]
+
+// Produce values by index
+$squares = times(5, fn (int $i): int => $i * $i) |> toList(); // [0,1,4,9,16]
 
 $rest = ['a'=>1,'b'=>2,'c'=>3]
     |> tail()
@@ -204,6 +210,8 @@ composer test            # Pest
 composer analyse         # PHPStan (max)
 composer cs:lint         # PHP-CS-Fixer (dry-run)
 composer rector:check    # Rector (dry-run)
+composer cs:fix          # Apply PHP-CS-Fixer fixes
+composer rector:fix      # Apply Rector refactors
 ```
 
 ## Security

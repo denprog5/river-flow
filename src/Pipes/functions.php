@@ -358,6 +358,82 @@ function range_gen(int|float $start, int|float $end, int|float $step): Generator
 }
 
 /**
+ * Repeat a value lazily. If $count is null, yields the value indefinitely (infinite sequence).
+ * Keys are discarded (numeric reindexing).
+ *
+ * Examples:
+ * - repeat('x', 3) => 'x','x','x'
+ * - repeat(1) |> take(5) => 1,1,1,1,1
+ *
+ * @param int|null $count Number of repetitions; null for infinite
+ * @return Generator<int, mixed>
+ */
+function repeat(mixed $value, ?int $count = null): Generator
+{
+    if ($count !== null && $count < 0) {
+        throw new InvalidArgumentException('repeat(): count must be >= 0 or null');
+    }
+
+    return repeat_gen($value, $count);
+}
+
+/** @internal
+ * @return Generator<int, mixed>
+ */
+function repeat_gen(mixed $value, ?int $count): Generator
+{
+    if ($count === null) {
+        // @phpstan-ignore-next-line intentional infinite loop for repeat()
+        while (true) {
+            yield $value;
+        }
+    }
+
+    for ($i = 0; $i < $count; $i++) {
+        yield $value;
+    }
+}
+
+/**
+ * Generate a lazy sequence of indices 0..$count-1, or map indices through $producer.
+ * Keys are discarded (numeric reindexing). Eagerly validates that $count >= 0.
+ *
+ * Examples:
+ * - times(4) => 0,1,2,3
+ * - times(3, fn(int $i) => $i * $i) => 0,1,4
+ *
+ * @param (callable(int): mixed)|null $producer Optional mapper from index to value
+ * @return Generator<int, mixed>
+ */
+function times(int $count, ?callable $producer = null): Generator
+{
+    if ($count < 0) {
+        throw new InvalidArgumentException('times(): count must be >= 0');
+    }
+
+    return times_gen($count, $producer);
+}
+
+/** @internal
+ * @param (callable(int): mixed)|null $producer
+ * @return Generator<int, mixed>
+ */
+function times_gen(int $count, ?callable $producer): Generator
+{
+    if ($producer === null) {
+        for ($i = 0; $i < $count; $i++) {
+            yield $i;
+        }
+
+        return;
+    }
+
+    for ($i = 0; $i < $count; $i++) {
+        yield $producer($i);
+    }
+}
+
+/**
  * toArray($data): array, or toArray(): callable
  *
  * @param iterable<mixed, mixed>|null $data
@@ -2070,6 +2146,287 @@ function splitWhen_impl(iterable $data, callable $predicate): array
     }
 
     return [$before, $after];
+}
+
+/**
+ * Pipe-friendly concat: returns a callable that concatenates with the provided iterables.
+ * Example: [1,2] |> concatWith(['a','b']) |> toList() // [1,2,'a','b']
+ *
+ * Keys are discarded (numeric reindexing). Iterators are rewound.
+ *
+ * @param iterable<mixed, mixed> ...$others
+ * @return callable(iterable<mixed, mixed>): Generator<int, mixed>
+ */
+function concatWith(iterable ...$others): callable
+{
+    return static fn (iterable $data): Generator => concat($data, ...$others);
+}
+
+/**
+ * Concatenate multiple iterables lazily. Keys discarded. Iterators are rewound.
+ *
+ * @param iterable<mixed, mixed> $data
+ * @param iterable<mixed, mixed> ...$others
+ * @return Generator<int, mixed>
+ */
+function concat(iterable $data, iterable ...$others): Generator
+{
+    $iterables = [$data, ...$others];
+    foreach ($iterables as $iterable) {
+        if (\is_array($iterable)) {
+            $iter = new ArrayIterator($iterable);
+        } elseif ($iterable instanceof Iterator) {
+            $iter = $iterable;
+        } else {
+            $iter = new IteratorIterator($iterable);
+        }
+
+        $iter->rewind();
+        while ($iter->valid()) {
+            yield $iter->current();
+            $iter->next();
+        }
+    }
+}
+
+/**
+ * Append one or more values to the end (lazy). Keys discarded.
+ * Dual-mode:
+ * - append($data, ...$values): Generator
+ * - append(...$values): callable(iterable): Generator
+ *
+ * @param iterable<mixed, mixed>|mixed $data_or_value
+ * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
+ */
+function append(mixed $data_or_value, mixed ...$moreValues): Generator|callable
+{
+    if (!is_iterable($data_or_value)) {
+        $vals = array_values([$data_or_value, ...$moreValues]);
+
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int, mixed>
+         */
+        return static fn (iterable $data): Generator => append_gen($data, $vals);
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    $data = $data_or_value;
+    $vals = array_values($moreValues);
+
+    return append_gen($data, $vals);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param list<mixed> $values
+ * @return Generator<int, mixed>
+ */
+function append_gen(iterable $data, array $values): Generator
+{
+    // yield original values (keys discarded)
+    if (\is_array($data)) {
+        foreach ($data as $v) {
+            yield $v;
+        }
+    } elseif ($data instanceof Iterator) {
+        for ($data->rewind(); $data->valid(); $data->next()) {
+            yield $data->current();
+        }
+    } else {
+        $iter = new IteratorIterator($data);
+        for ($iter->rewind(); $iter->valid(); $iter->next()) {
+            yield $iter->current();
+        }
+    }
+
+    // then appended values
+    foreach ($values as $value) {
+        yield $value;
+    }
+}
+
+/**
+ * Prepend one or more values to the beginning (lazy). Keys discarded.
+ * Dual-mode:
+ * - prepend($data, ...$values): Generator
+ * - prepend(...$values): callable(iterable): Generator
+ *
+ * @param iterable<mixed, mixed>|mixed $data_or_value
+ * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
+ */
+function prepend(mixed $data_or_value, mixed ...$moreValues): Generator|callable
+{
+    if (!is_iterable($data_or_value)) {
+        $vals = array_values([$data_or_value, ...$moreValues]);
+
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int, mixed>
+         */
+        return static fn (iterable $data): Generator => prepend_gen($data, $vals);
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    $data = $data_or_value;
+    $vals = array_values($moreValues);
+
+    return prepend_gen($data, $vals);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param list<mixed> $values
+ * @return Generator<int, mixed>
+ */
+function prepend_gen(iterable $data, array $values): Generator
+{
+    // first the prepended values
+    foreach ($values as $v) {
+        yield $v;
+    }
+
+    // then original values (keys discarded)
+    if (\is_array($data)) {
+        foreach ($data as $v) {
+            yield $v;
+        }
+    } elseif ($data instanceof Iterator) {
+        for ($data->rewind(); $data->valid(); $data->next()) {
+            yield $data->current();
+        }
+    } else {
+        $iter = new IteratorIterator($data);
+        for ($iter->rewind(); $iter->valid(); $iter->next()) {
+            yield $iter->current();
+        }
+    }
+}
+
+/**
+ * Pipe-friendly interleave: returns a callable that interleaves with the provided iterables.
+ * Example: [1,2,3] |> interleaveWith(['a','b']) |> toList() // [1,'a',2,'b']
+ *
+ * Stops at the shortest iterable. Keys discarded. Iterators are rewound.
+ *
+ * @param iterable<mixed, mixed> ...$others
+ * @return callable(iterable<mixed, mixed>): Generator<int, mixed>
+ */
+function interleaveWith(iterable ...$others): callable
+{
+    return static fn (iterable $data): Generator => interleave($data, ...$others);
+}
+
+/**
+ * Interleave multiple iterables round-robin. Stops at the shortest. Lazy. Keys discarded.
+ *
+ * @param iterable<mixed, mixed> $data
+ * @param iterable<mixed, mixed> ...$others
+ * @return Generator<int, mixed>
+ */
+function interleave(iterable $data, iterable ...$others): Generator
+{
+    $iterables = [$data, ...$others];
+
+    $iters = [];
+    foreach ($iterables as $it) {
+        if (\is_array($it)) {
+            $iters[] = new ArrayIterator($it);
+        } elseif ($it instanceof Iterator) {
+            $iters[] = $it;
+        } else {
+            $iters[] = new IteratorIterator($it);
+        }
+    }
+
+    // Rewind all
+    foreach ($iters as $it) {
+        $it->rewind();
+    }
+
+    while (true) {
+        // Stop if any iterator is exhausted
+        foreach ($iters as $it) {
+            if (!$it->valid()) {
+                return;
+            }
+        }
+        // Emit one element from each in order
+        foreach ($iters as $iter) {
+            yield $iter->current();
+            $iter->next();
+        }
+    }
+}
+
+/**
+ * Pipe-friendly zipLongest: returns a callable that zips with provided iterables using a fill value.
+ * Example: [1,2] |> zipLongestWith('X', ['a']) |> toList() // [[1,'a'], [2,'X']]
+ *
+ * @param mixed $fill Fill value for missing elements
+ * @param iterable<mixed, mixed> ...$others
+ * @return callable(iterable<mixed, mixed>): Generator<int, array<int, mixed>>
+ */
+function zipLongestWith(mixed $fill, iterable ...$others): callable
+{
+    return static fn (iterable $data): Generator => zipLongest($data, $fill, ...$others);
+}
+
+/**
+ * Zip to the longest iterable, filling missing positions with $fill. Lazy; keys discarded.
+ * Iterators are rewound.
+ *
+ * @param iterable<mixed, mixed> $data
+ * @param iterable<mixed, mixed> ...$others
+ * @return Generator<int, array<int, mixed>>
+ */
+function zipLongest(iterable $data, mixed $fill = null, iterable ...$others): Generator
+{
+    $iterables = [$data, ...$others];
+    $iters     = [];
+    foreach ($iterables as $it) {
+        if (\is_array($it)) {
+            $iters[] = new ArrayIterator($it);
+        } elseif ($it instanceof Iterator) {
+            $iters[] = $it;
+        } else {
+            $iters[] = new IteratorIterator($it);
+        }
+    }
+
+    // Rewind all
+    foreach ($iters as $it) {
+        $it->rewind();
+    }
+
+    while (true) {
+        $anyValid = false;
+        $row      = [];
+        $valids   = [];
+        foreach ($iters as $idx => $it) {
+            $isValid      = $it->valid();
+            $valids[$idx] = $isValid;
+            if ($isValid) {
+                $anyValid = true;
+                $row[]    = $it->current();
+            } else {
+                $row[] = $fill;
+            }
+        }
+
+        if (!$anyValid) {
+            return;
+        }
+
+        yield $row;
+
+        // advance only those that were valid
+        foreach ($iters as $idx => $it) {
+            if ($valids[$idx]) {
+                $it->next();
+            }
+        }
+    }
 }
 
 /**
