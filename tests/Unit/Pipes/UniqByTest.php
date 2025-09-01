@@ -105,4 +105,50 @@ describe('uniqBy function', function (): void {
         expect($result)->toHaveCount(3);
         expect($iterations)->toBe(\count($sourceData));
     });
+
+    it('supports flexible argument order and currying', function (): void {
+        $data = [
+            'u1' => ['id' => 1, 'name' => 'A'],
+            'u2' => ['id' => 1, 'name' => 'B'],
+            'u3' => ['id' => 2, 'name' => 'C'],
+        ];
+
+        // Flexible order: uniqBy($identifier, $data)
+        $out1 = toArray(uniqBy(fn (array $row): int => $row['id'], $data));
+        expect($out1)->toBe([
+            'u1' => ['id' => 1, 'name' => 'A'],
+            'u3' => ['id' => 2, 'name' => 'C'],
+        ]);
+
+        // Curried form: uniqBy($identifier)($data)
+        $fn   = uniqBy(fn (array $row): int => $row['id']);
+        $out2 = toArray($fn($data));
+        expect($out2)->toBe($out1);
+    });
+
+    it('skips items whose identifiers are unhashable (e.g., resources)', function (): void {
+        $data = [
+            'a' => ['id' => 1, 'v' => 'x'],
+            'b' => ['id' => 1, 'v' => 'y'],
+            'c' => ['id' => 2, 'v' => 'z'],
+        ];
+
+        // Return a resource for id=1 (unhashable) and a scalar for id=2 (hashable)
+        $handle     = fopen('php://temp', 'r');
+        $identifier = function (array $row) use ($handle): mixed {
+            if ($row['id'] === 1) {
+                return $handle; // resources are unhashable and should be skipped
+            }
+
+            return $row['id'];
+        };
+
+        $out = toArray(uniqBy($data, $identifier));
+        // Both 'a' and 'b' are skipped due to unhashable identifiers; only 'c' remains
+        expect($out)->toBe([
+            'c' => ['id' => 2, 'v' => 'z'],
+        ]);
+
+        fclose($handle);
+    });
 });

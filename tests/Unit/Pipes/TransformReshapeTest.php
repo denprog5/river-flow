@@ -18,6 +18,8 @@ use function Denprog\RiverFlow\Pipes\toArray;
 use function Denprog\RiverFlow\Pipes\toList;
 use function Denprog\RiverFlow\Pipes\values;
 
+use InvalidArgumentException;
+
 describe('transform and reshaping (filter, reject, map, pluck, toList/toArray, values/keys, sortBy/sort, groupBy/keyBy, take)', function (): void {
     it('filter yields items where predicate true; preserves keys', function (): void {
         $in  = ['a' => 1, 'b' => 2, 'c' => 3];
@@ -106,5 +108,86 @@ describe('transform and reshaping (filter, reject, map, pluck, toList/toArray, v
         expect(toArray(take($assoc, 2)))->toBe(['x' => 10, 'y' => 20]);
         expect(toArray(take($assoc, 0)))->toBe([]);
         expect(toArray(take($assoc, -5)))->toBe([]);
+    });
+
+    it('groupBy supports flexible order and currying', function (): void {
+        $data    = ['k1' => 'ant', 'k2' => 'apple', 'k3' => 'bee'];
+        $grouper = fn (string $s): string => $s[0];
+
+        // Flexible order: groupBy($grouper, $data)
+        $out1 = groupBy($grouper, $data);
+        expect($out1)->toBe([
+            'a' => ['k1' => 'ant', 'k2' => 'apple'],
+            'b' => ['k3' => 'bee'],
+        ]);
+
+        // Curried: groupBy($grouper)($data)
+        $fn   = groupBy($grouper);
+        $out2 = $fn($data);
+        expect($out2)->toBe($out1);
+    });
+
+    it('groupBy throws if grouper does not return array-key', function (): void {
+        $data = ['a' => 'ant', 'b' => 'bee'];
+        expect(fn (): callable|array => groupBy($data, fn (string $s): array => []))
+            ->toThrow(InvalidArgumentException::class);
+    });
+
+    it('keyBy supports flexible order and currying', function (): void {
+        $rows = [
+            ['id' => 'x', 'v' => 1],
+            ['id' => 'y', 'v' => 2],
+        ];
+        $keyer = fn (array $r): string => $r['id'];
+
+        // Flexible order: keyBy($keyer, $data)
+        $out1 = keyBy($keyer, $rows);
+        expect($out1)->toBe([
+            'x' => ['id' => 'x', 'v' => 1],
+            'y' => ['id' => 'y', 'v' => 2],
+        ]);
+
+        // Curried: keyBy($keyer)($data)
+        $fn   = keyBy($keyer);
+        $out2 = $fn($rows);
+        expect($out2)->toBe($out1);
+    });
+
+    it('keyBy throws if keyer does not return array-key', function (): void {
+        $rows = [
+            ['id' => 'x', 'v' => 1],
+        ];
+        expect(fn (): callable|array => keyBy($rows, fn (array $r): array => []))
+            ->toThrow(InvalidArgumentException::class);
+    });
+
+    it('take is lazy and pulls only needed items', function (): void {
+        $iterations = 0;
+        $source     = (function () use (&$iterations) {
+            foreach ([10, 20, 30] as $v) {
+                $iterations++;
+                yield $v;
+            }
+        })();
+
+        $stream = take($source, 2);
+        expect($iterations)->toBe(0);
+
+        // Start iteration but stop after first item
+        $stream->valid(); // advances to first yield
+        expect($iterations)->toBe(1);
+        expect($stream->key())->toBe(0);
+        expect($stream->current())->toBe(10);
+
+        // Advance to the next item and verify it
+        $stream->next();
+        expect($stream->valid())->toBeTrue();
+        expect($stream->key())->toBe(1);
+        expect($stream->current())->toBe(20);
+
+        // Move past the last allowed item and ensure stream ends
+        $stream->next();
+        expect($stream->valid())->toBeFalse();
+        expect($iterations)->toBe(2);
     });
 });

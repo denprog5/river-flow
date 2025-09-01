@@ -96,4 +96,10 @@ describe('aggregation and misc (reduce, sum, average, first, last, find, count, 
         expect(some($arr, fn (int $v): bool => $v > 5))->toBeTrue();
         expect(some($arr, fn (int $v): bool => $v > 10))->toBeFalse();
     });
+
+    it('contains supports currying form', function (): void {
+        $fn = contains('x');
+        expect($fn(['a', 'x', 'b']))->toBeTrue();
+        expect($fn(['a', 'b']))->toBeFalse();
+    });
 });

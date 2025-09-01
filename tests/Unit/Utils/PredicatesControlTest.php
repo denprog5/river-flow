@@ -127,8 +127,8 @@ describe('Utils predicates and control/combinators', function (): void {
         expect($fn(true))->toBe('1');
         expect($fn(false))->toBe('');
         expect($fn(null))->toBe('');
-        $keyObj = new class ('k') implements Stringable {
-            public function __construct(private readonly string $v)
+        $keyObj = new readonly class ('k') implements Stringable {
+            public function __construct(private string $v)
             {
             }
             public function __toString(): string

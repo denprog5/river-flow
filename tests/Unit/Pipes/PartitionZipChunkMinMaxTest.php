@@ -61,7 +61,7 @@ describe('partition, zip, chunk, min, max', function (): void {
     it('zip supports IteratorAggregate and rewinds its inner iterator', function (): void {
         $inner = new ArrayIterator([100, 200]);
         $inner->next(); // advance
-        $agg = new class ($inner) implements IteratorAggregate {
+        $agg = new readonly class ($inner) implements IteratorAggregate {
             public function __construct(private ArrayIterator $inner)
             {
             }
@@ -158,5 +158,23 @@ describe('partition, zip, chunk, min, max', function (): void {
         $data = ['pear', 'apple', 'banana'];
         expect(min($data))->toBe('apple');
         expect(max($data))->toBe('pear');
+    });
+
+    it('min and max work with floats and mixed numeric strings (return original types)', function (): void {
+        $data = [1, 2.5, '3.5', 0.5];
+        expect(min($data))->toBe(0.5);
+        // max should be the original '3.5' string because comparison coerces numerically but returns the original item
+        expect(max($data))->toBe('3.5');
+
+        $mixed = ['10', 2];
+        expect(min($mixed))->toBe(2);
+        expect(max($mixed))->toBe('10');
+    });
+
+    it('min and max support currying form', function (): void {
+        $minFn = min();
+        $maxFn = max();
+        expect($minFn([5, 1, 7]))->toBe(1);
+        expect($maxFn([5, 1, 7]))->toBe(7);
     });
 });

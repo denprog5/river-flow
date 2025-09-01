@@ -44,9 +44,9 @@ Dual-mode usage
 
 ## Reshaping / Ordering
 - `groupBy(iterable $data, callable(TValue, TKey): array-key $grouper): array<array-key, array<TKey, TValue>>`
-  - Eager; preserves original keys inside each group
+  - Eager; preserves original keys inside each group. Supports flexible order and currying: `groupBy($grouper, $data)` or `groupBy($grouper)($data)`.
 - `keyBy(iterable $data, callable(TValue, TKey): array-key $keySelector): array<array-key, TValue>`
-  - Eager; later keys overwrite earlier ones
+  - Eager; later keys overwrite earlier ones. Supports flexible order and currying: `keyBy($keySelector, $data)` or `keyBy($keySelector)($data)`.
 - `sortBy(iterable $data, callable(TValue, TKey): int|float|string $getComparable): array<TKey, TValue>`
   - Eager; stable key preservation
 - `sort(iterable<int|float|string> $data): array<array-key, int|float|string>`
@@ -56,7 +56,7 @@ Dual-mode usage
 - `uniq(iterable $data): Generator<TKey, TValue>`
   - Lazy; first-occurrence keys preserved; objects by identity; arrays via serialize(); unhashable items (e.g., arrays with closures) are skipped
 - `uniqBy(iterable $data, callable(TValue, TKey): mixed $identifier): Generator<TKey, TValue>`
-  - Lazy; hashing rules like `uniq`
+  - Lazy; first-occurrence keys preserved; hashing rules like `uniq`. Supports flexible order and currying: `uniqBy($identifier, $data)` or `uniqBy($identifier)($data)`. Items with unhashable identifiers are skipped.
 
 ## Combining / Windowing
 - `zip(iterable $data, iterable ...$others): Generator<int, array<int, mixed>>`
