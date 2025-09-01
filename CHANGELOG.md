@@ -6,6 +6,21 @@ All notable changes to this project will be documented in this file.
 
 _Nothing yet._
 
+## [0.2.4] - 2025-09-01
+
+### Added
+- Pipes: add lazy dual-mode `distinctUntilChanged()`, `intersperse()`, and `pairwise()`
+
+### Tests
+- Add comprehensive tests for the new functions covering arrays and generators, currying, laziness, empty/single-element inputs, and selector-based distinctness
+
+### Docs
+- `docs/pipes.md`: document `distinctUntilChanged`, `intersperse`, and `pairwise` with semantics and examples
+- `README.md`: add functions to the Pipes snapshot imports and examples
+
+### QA
+- All checks green: Pest, PHPStan, Rector (dry-run), PHP-CS-Fixer (dry-run)
+
 ## [0.2.3] - 2025-09-01
 
 ### Added
@@ -86,7 +101,8 @@ _Nothing yet._
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/denprog5/river-flow/releases/tag/v0.2.4
 [0.2.3]: https://github.com/denprog5/river-flow/releases/tag/v0.2.3
 [0.2.2]: https://github.com/denprog5/river-flow/releases/tag/v0.2.2
 [0.2.1]: https://github.com/denprog5/river-flow/releases/tag/v0.2.1

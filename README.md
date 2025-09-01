@@ -80,7 +80,7 @@ assert($out === '16');
 
 ### Pipes
 ```php
-use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init, scan, scanRight, partitionBy};
+use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init, scan, scanRight, partitionBy, distinctUntilChanged, intersperse, pairwise};
 
 // Transform → filter → take → materialize
 $topSquares = [1,2,3,4,5,6,7,8,9]
@@ -133,6 +133,21 @@ $groups = ['ant', 'apple', 'bear', 'bob', 'cat']
     |> partitionBy(fn (string $s) => $s[0])
     |> toList();
 // [[0=>'ant',1=>'apple'], [2=>'bear',3=>'bob'], [4=>'cat']]
+
+// Skip consecutive duplicates (preserves first keys of runs)
+$d = ['ant', 'apple', 'bear', 'bob', 'cat']
+    |> distinctUntilChanged(fn (string $s) => $s[0])
+    |> toArray(); // [0=>'ant', 2=>'bear', 4=>'cat']
+
+// Intersperse a separator (keys discarded)
+$withPipes = ['a','b','c']
+    |> intersperse('|')
+    |> toList(); // ['a','|','b','|','c']
+
+// Pairwise (consecutive pairs)
+$pairs = [1,2,3]
+    |> pairwise()
+    |> toList(); // [[1,2],[2,3]]
 ```
 
 ### Strings

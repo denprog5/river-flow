@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Denprog\RiverFlow\Pipes;
 
 use ArrayIterator;
+use Closure;
 use Generator;
 use InvalidArgumentException;
 use Iterator;
@@ -2232,6 +2233,146 @@ function aperture_gen(iterable $data, int $size): Generator
             }
             yield $window;
         }
+    }
+}
+
+/**
+ * Skip consecutive duplicates based on an optional selector (lazy).
+ * Preserves the key of the first element in each run of equal selector values.
+ *
+ * Dual-mode:
+ * - distinctUntilChanged($data, $selector = null): Generator
+ * - distinctUntilChanged($selector = null): callable(iterable): Generator
+ *
+ * @param iterable<mixed, mixed>|callable(mixed, mixed): mixed|null $data_or_selector
+ * @param (callable(mixed, mixed): mixed)|null $selector
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
+ */
+function distinctUntilChanged(iterable|callable|null $data_or_selector = null, ?callable $selector = null): Generator|callable
+{
+    // Currying form detected when first arg is not iterable (callable|null)
+    if (!is_iterable($data_or_selector)) {
+        /** @var (callable(mixed, mixed): mixed)|null $sel */
+        $sel = $data_or_selector instanceof Closure || \is_callable($data_or_selector) ? $data_or_selector : $selector;
+
+        /**
+         * @param iterable<int|string, mixed> $data
+         * @return Generator<int|string, mixed>
+         */
+        return static fn (iterable $data): Generator => distinctUntilChanged_gen($data, $sel);
+    }
+
+    // Direct form
+    /** @var iterable<int|string, mixed> $data_or_selector */
+    return distinctUntilChanged_gen($data_or_selector, $selector);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param (callable(mixed, mixed): mixed)|null $selector
+ * @return Generator<mixed, mixed>
+ */
+function distinctUntilChanged_gen(iterable $data, ?callable $selector): Generator
+{
+    $havePrev = false;
+    $prevKey  = null;
+    $prevId   = null;
+
+    foreach ($data as $key => $value) {
+        $curId = $selector !== null ? ($selector)($value, $key) : $value;
+        if ($havePrev && $curId === $prevId) {
+            // skip consecutive duplicate by selector
+            continue;
+        }
+        $havePrev = true;
+        $prevKey  = $key;
+        $prevId   = $curId;
+        yield $prevKey => $value;
+    }
+}
+
+/**
+ * Insert a separator value between elements (lazy). Keys are discarded (numeric reindexing).
+ *
+ * Dual-mode:
+ * - intersperse($data, $separator): Generator<int, mixed>
+ * - intersperse($separator): callable(iterable): Generator<int, mixed>
+ *
+ * @param iterable<mixed, mixed>|int|float|string|bool|object|null $data_or_separator
+ * @return Generator<int, mixed>|callable(iterable<mixed, mixed>): Generator<int, mixed>
+ */
+function intersperse(iterable|int|float|string|bool|object|null $data_or_separator, mixed $separator = null): Generator|callable
+{
+    if (!is_iterable($data_or_separator)) {
+        $sep = $data_or_separator;
+
+        /**
+         * @param iterable<mixed, mixed> $data
+         * @return Generator<int, mixed>
+         */
+        return static fn (iterable $data): Generator => intersperse_gen($data, $sep);
+    }
+
+    $data = $data_or_separator;
+    $sep  = $separator;
+
+    return intersperse_gen($data, $sep);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<int, mixed>
+ */
+function intersperse_gen(iterable $data, mixed $separator): Generator
+{
+    $first = true;
+    foreach ($data as $value) {
+        if ($first) {
+            $first = false;
+        } else {
+            yield $separator;
+        }
+        yield $value;
+    }
+}
+
+/**
+ * Yield pairs of consecutive elements as 2-length arrays [prev, curr] (lazy). Keys discarded.
+ *
+ * Dual-mode:
+ * - pairwise($data): Generator<int, array{0: mixed, 1: mixed}>
+ * - pairwise(): callable(iterable): Generator<int, array{0: mixed, 1: mixed}>
+ *
+ * @param iterable<mixed, mixed>|null $data
+ * @return Generator<int, array{0: mixed, 1: mixed}>|callable(iterable<mixed, mixed>): Generator<int, array{0: mixed, 1: mixed}>
+ */
+function pairwise(?iterable $data = null): Generator|callable
+{
+    if ($data === null) {
+        /**
+         * @param iterable<mixed, mixed> $d
+         * @return Generator<int, array{0: mixed, 1: mixed}>
+         */
+        return static fn (iterable $d): Generator => pairwise_gen($d);
+    }
+
+    return pairwise_gen($data);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<int, array{0: mixed, 1: mixed}>
+ */
+function pairwise_gen(iterable $data): Generator
+{
+    $havePrev = false;
+    $prev     = null;
+    foreach ($data as $value) {
+        if ($havePrev) {
+            yield [$prev, $value];
+        }
+        $prev     = $value;
+        $havePrev = true;
     }
 }
 

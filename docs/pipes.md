@@ -98,6 +98,13 @@ Dual-mode usage
   - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0. Supports currying: `chunk($size)($data)`. For `$size = 1` yields singleton chunks; empty input yields no chunks.
 - `aperture(iterable $data, int $size): Generator<int, array<int, mixed>>`
   - Lazy; keys discarded; sliding windows of exact length `$size`; throws if size <= 0
+- `distinctUntilChanged(iterable $data, callable(TValue, TKey): mixed $selector = null): Generator<TKey, TValue>`
+  - Lazy; skips consecutive duplicates according to optional selector (default: identity)
+  - Preserves the key of the first element in each run of equal selector values
+- `intersperse(iterable $data, mixed $separator): Generator<int, mixed>`
+  - Lazy; inserts `$separator` between elements; keys discarded (numeric reindexing)
+- `pairwise(iterable $data): Generator<int, array{0: mixed, 1: mixed}>`
+  - Lazy; yields consecutive pairs `[prev, curr]`; keys discarded; empty or single-element input yields nothing
 - `partitionBy(iterable $data, callable(TValue, TKey): array-key $discriminator): Generator<int, array<TKey, TValue>>`
   - Lazy; splits the sequence into contiguous chunks where the discriminator value stays the same. Preserves original keys inside chunks; outer result is numerically indexed. Supports currying: `partitionBy($discriminator)($data)` or direct-call.
 - `partition(iterable $data, callable(TValue, TKey): bool $predicate): array{0: array<TKey, TValue>, 1: array<TKey, TValue>}`
@@ -197,6 +204,21 @@ $i = ['x'=>10,'y'=>20,'z'=>30]
 $wins = ['x'=>1,'y'=>2,'z'=>3,'w'=>4]
     |> aperture(2)
     |> toList(); // [[1,2],[2,3],[3,4]]
+
+// Distinct until changed by selector (lazy, preserves first keys of runs)
+$d = ['ant', 'apple', 'bear', 'bob', 'cat']
+    |> distinctUntilChanged(fn (string $s) => $s[0])
+    |> toArray(); // [0=>'ant', 2=>'bear', 4=>'cat']
+
+// Intersperse a separator (lazy, keys discarded)
+$withDots = [1,2,3]
+    |> intersperse('.')
+    |> toList(); // [1,'.',2,'.',3]
+
+// Pairwise (lazy, keys discarded)
+$pairs = [1,2,3]
+    |> pairwise()
+    |> toList(); // [[1,2],[2,3]]
 
 // Drop last and take last
 $dropped = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
