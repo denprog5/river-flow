@@ -80,7 +80,7 @@ assert($out === '16');
 
 ### Pipes
 ```php
-use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, flatten, uniq, groupBy, values, sortBy, zipWith};
+use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init};
 
 // Transform → filter → take → materialize
 $topSquares = [1,2,3,4,5,6,7,8,9]
@@ -107,6 +107,17 @@ $byFirstLetter = ['apple','apricot','banana','blueberry','avocado']
 $zipped = [1, 2, 3]
     |> zipWith(['a','b'], ['X','Y','Z'])
     |> toList(); // [[1,'a','X'], [2,'b','Y']]
+
+// Numeric ranges and slicing
+$nums = range(0, 5) |> toList(); // [0,1,2,3,4]
+
+$rest = ['a'=>1,'b'=>2,'c'=>3]
+    |> tail()
+    |> toArray(); // ['b'=>2,'c'=>3]
+
+$allButLast = ['x'=>10,'y'=>20,'z'=>30]
+    |> init()
+    |> toArray(); // ['x'=>10,'y'=>20]
 ```
 
 ### Strings

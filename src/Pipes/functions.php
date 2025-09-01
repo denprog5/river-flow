@@ -304,9 +304,6 @@ function toList_impl(iterable $data): array
  * - range(5, 0, -2) => 5,3,1
  * - range(3, 3) => (empty)
  *
- * @param int|float $start
- * @param int|float $end
- * @param int|float $step
  * @return Generator<int, int|float>
  */
 function range(int|float $start, int|float $end, int|float $step = 1): Generator
@@ -328,9 +325,6 @@ function range(int|float $start, int|float $end, int|float $step = 1): Generator
 }
 
 /** @internal
- * @param int|float $start
- * @param int|float $end
- * @param int|float $step
  * @return Generator<int, int|float>
  */
 function range_gen(int|float $start, int|float $end, int|float $step): Generator
@@ -2198,8 +2192,7 @@ function union(?iterable $data_or_other = null, ?iterable $other = null): array|
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static fn(iterable $data): array =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
             union_impl($data, $o);
     }
@@ -2270,8 +2263,7 @@ function intersection(?iterable $data_or_other = null, ?iterable $other = null):
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static fn(iterable $data): array =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
             intersection_impl($data, $o);
     }
@@ -2338,8 +2330,7 @@ function difference(?iterable $data_or_other = null, ?iterable $other = null): a
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static fn(iterable $data): array =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
             difference_impl($data, $o);
     }
@@ -2406,8 +2397,7 @@ function symmetricDifference(?iterable $data_or_other = null, ?iterable $other =
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static fn(iterable $data): array =>
-            /** @var iterable<mixed, mixed> $data */
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
             symmetricDifference_impl($data, $o);
     }

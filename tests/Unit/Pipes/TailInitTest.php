@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 
 use function Denprog\RiverFlow\Pipes\init;
@@ -9,23 +11,26 @@ use Generator;
 
 describe('tail and init (lazy)', function (): void {
     it('tail returns all but the first, preserving keys (array)', function (): void {
-        $arr  = ['a' => 10, 'b' => 20, 'c' => 30];
-        $out  = iterator_to_array(tail($arr));
+        $arr = ['a' => 10, 'b' => 20, 'c' => 30];
+        $out = iterator_to_array(tail($arr));
         expect($out)->toBe(['b' => 20, 'c' => 30]);
     });
 
     it('init returns all but the last, preserving keys (array)', function (): void {
-        $arr  = [5 => 'x', 7 => 'y', 2 => 'z'];
-        $out  = iterator_to_array(init($arr));
+        $arr = [5 => 'x', 7 => 'y', 2 => 'z'];
+        $out = iterator_to_array(init($arr));
         expect($out)->toBe([5 => 'x', 7 => 'y']);
     });
 
     it('tail works with generators and is lazy', function (): void {
         $count = 0;
         $gen   = (function () use (&$count): Generator {
-            $count++; yield 'k1' => 1;
-            $count++; yield 'k2' => 2;
-            $count++; yield 'k3' => 3;
+            $count++;
+            yield 'k1' => 1;
+            $count++;
+            yield 'k2' => 2;
+            $count++;
+            yield 'k3' => 3;
         })();
 
         $tailGen = tail($gen);
@@ -40,9 +45,12 @@ describe('tail and init (lazy)', function (): void {
     it('init works with generators and is lazy', function (): void {
         $count = 0;
         $gen   = (function () use (&$count): Generator {
-            $count++; yield 'k1' => 1;
-            $count++; yield 'k2' => 2;
-            $count++; yield 'k3' => 3;
+            $count++;
+            yield 'k1' => 1;
+            $count++;
+            yield 'k2' => 2;
+            $count++;
+            yield 'k3' => 3;
         })();
 
         $initGen = init($gen);

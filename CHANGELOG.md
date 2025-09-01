@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.2.2] - 2025-09-01
+
+### Added
+- Pipes: add lazy dual-mode `range()` (end-exclusive; supports positive/negative steps with eager validation)
+- Pipes: add lazy dual-mode `tail()` (drops first element; preserves keys)
+- Pipes: add lazy dual-mode `init()` (drops last element; preserves keys)
+
+### Tests
+- Add comprehensive tests for `range()` (positive/negative steps, floats, empty ranges, invalid step errors)
+- Add comprehensive tests for `tail()` and `init()` (arrays, generators, laziness, edge cases, currying)
+
+### Docs
+- `docs/pipes.md`: document `range()`, `tail()`, `init()`; add Sequence/Generation section; expand examples and imports
+
 ## [0.2.1] - 2025-09-01
 
 ### Tests
@@ -55,7 +71,8 @@ All notable changes to this project will be documented in this file.
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/denprog5/river-flow/releases/tag/v0.2.2
 [0.2.1]: https://github.com/denprog5/river-flow/releases/tag/v0.2.1
 [0.2.0]: https://github.com/denprog5/river-flow/releases/tag/v0.2.0
 [0.1.2]: https://github.com/denprog5/river-flow/releases/tag/v0.1.2

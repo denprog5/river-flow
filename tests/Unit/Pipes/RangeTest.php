@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 
 use function Denprog\RiverFlow\Pipes\range;
 
 use Generator;
+use InvalidArgumentException;
 
 describe('range (lazy)', function (): void {
     it('produces ascending integers end-exclusive', function (): void {
@@ -32,15 +35,15 @@ describe('range (lazy)', function (): void {
     });
 
     it('throws when step is 0', function (): void {
-        expect(fn (): Generator => range(0, 5, 0))->toThrow(\InvalidArgumentException::class);
+        expect(fn (): Generator => range(0, 5, 0))->toThrow(InvalidArgumentException::class);
     });
 
     it('throws when positive step but start > end', function (): void {
-        expect(fn (): Generator => range(5, 0, 1))->toThrow(\InvalidArgumentException::class);
+        expect(fn (): Generator => range(5, 0, 1))->toThrow(InvalidArgumentException::class);
     });
 
     it('throws when negative step but start < end', function (): void {
-        expect(fn (): Generator => range(0, 5, -1))->toThrow(\InvalidArgumentException::class);
+        expect(fn (): Generator => range(0, 5, -1))->toThrow(InvalidArgumentException::class);
     });
 
     it('works with floats', function (): void {
