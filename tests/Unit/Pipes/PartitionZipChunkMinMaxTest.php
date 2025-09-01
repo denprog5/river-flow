@@ -71,6 +71,40 @@ describe('partition, zip, chunk, min, max', function (): void {
         expect($rows)->toBe([[7, 70], [8, 80]]);
     });
 
+    it('zipWith with no other iterables behaves like zip(data) producing 1-length rows', function (): void {
+        $rows = toArray(zipWith()([9, 10]));
+        expect($rows)->toBe([[9], [10]]);
+    });
+
+    it('zip is lazy relative to the longest iterable (does not over-consume beyond shortest)', function (): void {
+        $count = 0;
+        $long  = (function () use (&$count): Generator {
+            foreach (['L1', 'L2', 'L3', 'L4'] as $v) {
+                $count++;
+                yield $v;
+            }
+        })();
+        $short = [10, 20];
+        $rows  = toArray(zip($short, $long));
+        expect($rows)->toBe([[10, 'L1'], [20, 'L2']]);
+        // Generator is prefetched on rewind and then advanced per row, so count should be 3 here
+        expect($count)->toBe(3);
+    });
+
+    it('zipWith is lazy relative to the longest other iterable', function (): void {
+        $count = 0;
+        $other = (function () use (&$count): Generator {
+            foreach (['X', 'Y', 'Z'] as $v) {
+                $count++;
+                yield $v;
+            }
+        })();
+        $data = [1, 2];
+        $rows = toArray(zipWith($other)($data));
+        expect($rows)->toBe([[1, 'X'], [2, 'Y']]);
+        expect($count)->toBe(3);
+    });
+
     it('chunks into fixed sizes, last chunk may be smaller; keys discarded', function (): void {
         $input  = ['x' => 1, 'y' => 2, 'z' => 3, 'w' => 4, 'v' => 5];
         $chunks = toArray(chunk($input, 2));
