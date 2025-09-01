@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Pipes;
 
+use SplDoublyLinkedList;
 use ArrayIterator;
 use Generator;
 use InvalidArgumentException;
@@ -1326,6 +1327,118 @@ function dropWhile_gen(iterable $data, callable $predicate): Generator
 }
 
 /**
+ * Drop the last $count elements (lazy with lookahead). Preserves keys.
+ *
+ * Dual-mode:
+ * - dropLast($data, $count): Generator
+ * - dropLast($count): callable(iterable): Generator
+ *
+ * @param  iterable<mixed, mixed>|int                                                        $data_or_count
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
+ */
+function dropLast(iterable|int $data_or_count, ?int $count = null): Generator|callable
+{
+    if (!is_iterable($data_or_count)) {
+        $n = $data_or_count;
+
+        /**
+         * @param  iterable<int|string, mixed>  $data
+         * @return Generator<int|string, mixed>
+         */
+        return static fn (iterable $data): Generator => dropLast_gen($data, $n);
+    }
+
+    $data = $data_or_count;
+    $n    = (int) $count;
+
+    /** @var iterable<mixed, mixed> $data */
+    return dropLast_gen($data, $n);
+}
+
+/** @internal
+ * @param  iterable<mixed, mixed>  $data
+ * @return Generator<mixed, mixed>
+ */
+function dropLast_gen(iterable $data, int $count): Generator
+{
+    if ($count <= 0) {
+        // Nothing to drop
+        yield from $data;
+
+        return;
+    }
+
+    $q = new SplDoublyLinkedList();
+    $q->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
+
+    foreach ($data as $key => $value) {
+        $q->push([$key, $value]);
+        if ($q->count() > $count) {
+            /** @var array{0: int|string, 1: mixed} $pair */
+            $pair = $q->shift();
+            yield $pair[0] => $pair[1];
+        }
+    }
+}
+
+/**
+ * Take the last $count elements. Preserves keys. Buffers at most $count items.
+ * Yields only after consuming the input (generator-safe, single pass).
+ *
+ * Dual-mode:
+ * - takeLast($data, $count): Generator
+ * - takeLast($count): callable(iterable): Generator
+ *
+ * @param  iterable<mixed, mixed>|int                                                        $data_or_count
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
+ */
+function takeLast(iterable|int $data_or_count, ?int $count = null): Generator|callable
+{
+    if (!is_iterable($data_or_count)) {
+        $n = $data_or_count;
+
+        /**
+         * @param  iterable<int|string, mixed>  $data
+         * @return Generator<int|string, mixed>
+         */
+        return static fn (iterable $data): Generator => takeLast_gen($data, $n);
+    }
+
+    $data = $data_or_count;
+    $n    = (int) $count;
+
+    /** @var iterable<mixed, mixed> $data */
+    return takeLast_gen($data, $n);
+}
+
+/** @internal
+ * @param  iterable<mixed, mixed>  $data
+ * @return Generator<mixed, mixed>
+ */
+function takeLast_gen(iterable $data, int $count): Generator
+{
+    if ($count <= 0) {
+        // Take nothing
+        return;
+    }
+
+    $q = new SplDoublyLinkedList();
+    $q->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
+
+    foreach ($data as $key => $value) {
+        $q->push([$key, $value]);
+        if ($q->count() > $count) {
+            $q->shift();
+        }
+    }
+
+    foreach ($q as $pair) {
+        /** @var array{0: int|string, 1: mixed} $pair */
+        yield $pair[0] => $pair[1];
+    }
+}
+
+/**
  * Partition into two arrays: [pass, fail] according to predicate. Eager. Keys preserved.
  *
  * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                                                                                           $data_or_predicate
@@ -1375,6 +1488,126 @@ function partition_impl(iterable $data, callable $predicate): array
     }
 
     return [$pass, $fail];
+}
+
+/**
+ * Split into two lists at index $index. Eager. Keys discarded.
+ *
+ * Dual-mode:
+ * - splitAt($data, $index): array{0: list, 1: list}
+ * - splitAt($index): callable(iterable): array{0: list, 1: list}
+ *
+ * @param  iterable<mixed, mixed>|int                                                                                                            $data_or_index
+ * @return array{0: array<int, mixed>, 1: array<int, mixed>}|callable(iterable<mixed, mixed>): array{0: array<int, mixed>, 1: array<int, mixed>}
+ */
+function splitAt(iterable|int $data_or_index, ?int $index = null): array|callable
+{
+    if (!is_iterable($data_or_index)) {
+        $i = $data_or_index;
+
+        /**
+         * @param  iterable<mixed, mixed>                            $data
+         * @return array{0: array<int, mixed>, 1: array<int, mixed>}
+         */
+        return static fn (iterable $data): array => splitAt_impl($data, $i);
+    }
+
+    $data = $data_or_index;
+    $i    = (int) $index;
+
+    return splitAt_impl($data, $i);
+}
+
+/** @internal
+ * @param  iterable<mixed, mixed>                            $data
+ * @return array{0: array<int, mixed>, 1: array<int, mixed>}
+ */
+function splitAt_impl(iterable $data, int $index): array
+{
+    if ($index <= 0) {
+        /** @var array<int, mixed> $right */
+        $right = toList_impl($data);
+
+        return [[], $right];
+    }
+
+    /** @var array<int, mixed> $left */
+    $left = [];
+    /** @var array<int, mixed> $right */
+    $right = [];
+    $pos   = 0;
+    foreach ($data as $value) {
+        if ($pos < $index) {
+            $left[] = $value;
+        } else {
+            $right[] = $value;
+        }
+        $pos++;
+    }
+
+    return [$left, $right];
+}
+
+/**
+ * Split into two lists at the first element where predicate($value, $key) is true. Eager. Keys discarded.
+ *
+ * Dual-mode:
+ * - splitWhen($data, $predicate): array{0: list, 1: list}
+ * - splitWhen($predicate): callable(iterable): array{0: list, 1: list}
+ *
+ * @param  iterable<mixed, mixed>|callable(mixed, mixed): bool                                                                                   $data_or_predicate
+ * @param  (callable(mixed, mixed): bool)|null                                                                                                   $predicate
+ * @return array{0: array<int, mixed>, 1: array<int, mixed>}|callable(iterable<mixed, mixed>): array{0: array<int, mixed>, 1: array<int, mixed>}
+ */
+function splitWhen(iterable|callable $data_or_predicate, ?callable $predicate = null): array|callable
+{
+    if (\is_callable($data_or_predicate) && $predicate === null) {
+        $pred = $data_or_predicate;
+
+        /**
+         * @param  iterable<mixed, mixed>                            $data
+         * @return array{0: array<int, mixed>, 1: array<int, mixed>}
+         */
+        return static fn (iterable $data): array => splitWhen_impl($data, $pred);
+    }
+
+    if (!is_iterable($data_or_predicate)) {
+        throw new InvalidArgumentException('splitWhen(): first argument must be iterable in direct invocation');
+    }
+    if (!\is_callable($predicate)) {
+        throw new InvalidArgumentException('splitWhen(): predicate must be callable');
+    }
+
+    return splitWhen_impl($data_or_predicate, $predicate);
+}
+
+/** @internal
+ * @param  iterable<mixed, mixed>                            $data
+ * @param  callable(mixed, mixed): bool                      $predicate
+ * @return array{0: array<int, mixed>, 1: array<int, mixed>}
+ */
+function splitWhen_impl(iterable $data, callable $predicate): array
+{
+    /** @var array<int, mixed> $before */
+    $before = [];
+    /** @var array<int, mixed> $after */
+    $after   = [];
+    $matched = false;
+
+    foreach ($data as $key => $value) {
+        if (!$matched && $predicate($value, $key) === true) {
+            $matched = true;
+            $after[] = $value;
+            continue;
+        }
+        if ($matched) {
+            $after[] = $value;
+        } else {
+            $before[] = $value;
+        }
+    }
+
+    return [$before, $after];
 }
 
 /**
@@ -1475,6 +1708,59 @@ function chunk_gen(iterable $data, int $size): Generator
     }
     if ($buf !== []) {
         yield $buf;
+    }
+}
+
+/**
+ * Sliding window (aperture) of size $size. Windows are contiguous and of exact length $size.
+ * Lazy; keys discarded; yields numeric-indexed arrays.
+ *
+ * Dual-mode:
+ * - aperture($data, $size): Generator<int, array<int, mixed>>
+ * - aperture($size): callable(iterable): Generator<int, array<int, mixed>>
+ *
+ * @param  iterable<array-key, mixed>|int                                                                            $data_or_size
+ * @return Generator<int, array<int, mixed>>|callable(iterable<array-key, mixed>): Generator<int, array<int, mixed>>
+ */
+function aperture(iterable|int $data_or_size, ?int $size = null): Generator|callable
+{
+    if (!is_iterable($data_or_size)) {
+        $sz = $data_or_size;
+
+        return static fn (iterable $data): Generator => aperture_gen($data, $sz);
+    }
+
+    $data = $data_or_size;
+    $sz   = (int) $size;
+
+    return aperture_gen($data, $sz);
+}
+
+/** @internal
+ * @param  iterable<mixed, mixed>            $data
+ * @return Generator<int, array<int, mixed>>
+ */
+function aperture_gen(iterable $data, int $size): Generator
+{
+    if ($size <= 0) {
+        throw new InvalidArgumentException('aperture() size must be >= 1');
+    }
+
+    $buf = new SplDoublyLinkedList();
+    $buf->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
+
+    foreach ($data as $value) {
+        $buf->push($value);
+        if ($buf->count() > $size) {
+            $buf->shift();
+        }
+        if ($buf->count() === $size) {
+            $window = [];
+            foreach ($buf as $v) {
+                $window[] = $v;
+            }
+            yield $window;
+        }
     }
 }
 

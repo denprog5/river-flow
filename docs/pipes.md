@@ -65,14 +65,24 @@ Dual-mode usage
   - Pipe-friendly curried form of `zip`. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
 - `chunk(iterable $data, int $size): Generator<int, array<int, mixed>>`
   - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0
+- `aperture(iterable $data, int $size): Generator<int, array<int, mixed>>`
+  - Lazy; keys discarded; sliding windows of exact length `$size`; throws if size <= 0
 - `partition(iterable $data, callable(TValue, TKey): bool $predicate): array{0: array<TKey, TValue>, 1: array<TKey, TValue>}`
   - Eager; keys preserved; returns [pass, fail]
+- `splitAt(iterable $data, int $index): array{0: list<mixed>, 1: list<mixed>}`
+  - Eager; keys discarded; returns `[left, right]` where `left` has the first `$index` items, `right` the remainder.
+  - Edge cases: `$index <= 0` -> `[[], all]`; `$index >= count(data)` -> `[all, []]`.
+- `splitWhen(iterable $data, callable(TValue, TKey): bool $predicate): array{0: list<TValue>, 1: list<TValue>}`
+  - Eager; keys discarded; splits before the first element where predicate is true.
+  - The matching element is the first of the right part. No match -> `[all, []]`.
 
 ## Control flow
 - `take(iterable $data, int $count): Generator<TKey, TValue>` — lazy; preserves keys; yields up to $count
 - `takeWhile(iterable $data, callable(TValue, TKey): bool $predicate): Generator<TKey, TValue>` — lazy; preserves keys
 - `drop(iterable $data, int $count): Generator<TKey, TValue>` — lazy; preserves keys; skips first $count
 - `dropWhile(iterable $data, callable(TValue, TKey): bool $predicate): Generator<TKey, TValue>` — lazy; preserves keys
+- `dropLast(iterable $data, int $count): Generator<TKey, TValue>` — lazy with lookahead; preserves keys; skips last $count
+- `takeLast(iterable $data, int $count): Generator<TKey, TValue>` — lazy (buffers at most `$count`); preserves keys; yields only the final `$count`
 
 ## Flattening / Mapping
 - `flatten(iterable $data, int $depth = 1): Generator<int, mixed>`
@@ -82,7 +92,7 @@ Dual-mode usage
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, uniq, partition};
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, uniq, partition, aperture, dropLast, takeLast};
 
 $evens = [1,2,3,4,5,6]
     |> filter(fn(int $n) => $n % 2 === 0)
@@ -102,6 +112,29 @@ $uniq = [1,1,'1',2]
 
 [$pass, $fail] = partition(['a'=>1,'b'=>2,'c'=>3], fn(int $v) => $v > 1);
 // $pass = ['b'=>2,'c'=>3], $fail = ['a'=>1]
+
+// Sliding window of size 2 (keys discarded)
+$wins = ['x'=>1,'y'=>2,'z'=>3,'w'=>4]
+    |> aperture(2)
+    |> toList(); // [[1,2],[2,3],[3,4]]
+
+// Drop last and take last
+$dropped = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
+    |> dropLast(2)
+    |> toList(); // [1,2]
+
+$last2 = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
+    |> takeLast(2)
+    |> toList(); // [3,4]
+
+// splitAt and splitWhen (keys discarded)
+[$l, $r] = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
+    |> splitAt(2);
+// $l = [1,2], $r = [3,4]
+
+[$before, $after] = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
+    |> splitWhen(fn (int $v) => $v >= 3);
+// $before = [1,2], $after = [3,4]
 ```
 
 ### Direct (non-pipe) usage
