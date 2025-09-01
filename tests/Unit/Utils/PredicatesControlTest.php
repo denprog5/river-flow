@@ -23,20 +23,6 @@ use function Denprog\RiverFlow\Utils\when;
 
 use Stringable;
 
-/**
- * @internal simple Stringable key for memoizeWith test
- */
-final class Key implements Stringable
-{
-    public function __construct(private readonly string $v)
-    {
-    }
-    public function __toString(): string
-    {
-        return $this->v;
-    }
-}
-
 describe('Utils predicates and control/combinators', function (): void {
     it('complement negates predicate', function (): void {
         $even = fn (int $x): bool => $x % 2 === 0;
@@ -141,7 +127,16 @@ describe('Utils predicates and control/combinators', function (): void {
         expect($fn(true))->toBe('1');
         expect($fn(false))->toBe('');
         expect($fn(null))->toBe('');
-        expect($fn(new Key('k')))->toBe('k');
+        $keyObj = new class ('k') implements Stringable {
+            public function __construct(private readonly string $v)
+            {
+            }
+            public function __toString(): string
+            {
+                return $this->v;
+            }
+        };
+        expect($fn($keyObj))->toBe('k');
         // calls: 1 (for 1), 1 (true normalized), 1 (false), 1 (null), 1 (Stringable) => 5
         expect($calls)->toBe(5);
     });
