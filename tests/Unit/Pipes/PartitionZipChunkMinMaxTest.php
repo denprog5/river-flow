@@ -12,6 +12,7 @@ use function Denprog\RiverFlow\Pipes\min;
 use function Denprog\RiverFlow\Pipes\partition;
 use function Denprog\RiverFlow\Pipes\toArray;
 use function Denprog\RiverFlow\Pipes\zip;
+use function Denprog\RiverFlow\Pipes\zipWith;
 
 use Generator;
 use InvalidArgumentException;
@@ -45,6 +46,29 @@ describe('partition, zip, chunk, min, max', function (): void {
     it('zips a single iterable producing 1-length rows', function (): void {
         $rows = toArray(zip([7, 8]));
         expect($rows)->toBe([[7], [8]]);
+    });
+
+    it('zipWith returns a callable and zips in pipelines; stops at shortest; keys discarded', function (): void {
+        $a = [1, 2, 3];
+        $b = ['a', 'b'];
+        $c = (function (): Generator {
+            yield 'X';
+            yield 'Y';
+            yield 'Z';
+        })();
+        $fn   = zipWith($b, $c);
+        $rows = toArray($fn($a));
+        expect($rows)->toBe([
+            [1, 'a', 'X'],
+            [2, 'b', 'Y'],
+        ]);
+    });
+
+    it('zipWith works with Traversable and arrays; pairing with single other iterable', function (): void {
+        $data  = ['x' => 7, 'y' => 8];
+        $other = new ArrayIterator([70, 80, 90]);
+        $rows  = toArray(zipWith($other)($data));
+        expect($rows)->toBe([[7, 70], [8, 80]]);
     });
 
     it('chunks into fixed sizes, last chunk may be smaller; keys discarded', function (): void {
