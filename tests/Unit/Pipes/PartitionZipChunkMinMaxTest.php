@@ -143,6 +143,27 @@ describe('partition, zip, chunk, min, max', function (): void {
         expect(fn (): array => toArray(chunk([1, 2, 3], -5)))->toThrow(InvalidArgumentException::class);
     });
 
+    it('chunk supports currying form', function (): void {
+        $fn     = chunk(2);
+        $chunks = toArray($fn(['a' => 1, 'b' => 2, 'c' => 3]));
+        expect($chunks)->toBe([[1, 2], [3]]);
+    });
+
+    it('chunk with size 1 yields singleton chunks', function (): void {
+        $chunks = toArray(chunk([1, 2, 3], 1));
+        expect($chunks)->toBe([[1], [2], [3]]);
+    });
+
+    it('chunk on empty input yields no chunks', function (): void {
+        $chunks = toArray(chunk([], 3));
+        expect($chunks)->toBe([]);
+    });
+
+    it('chunk currying throws on invalid size', function (): void {
+        expect(fn (): array => toArray(chunk(0)([1, 2, 3])))->toThrow(InvalidArgumentException::class);
+        expect(fn (): array => toArray(chunk(-2)([1, 2])))->toThrow(InvalidArgumentException::class);
+    });
+
     it('min and max return null for empty input', function (): void {
         expect(min([]))->toBeNull();
         expect(max([]))->toBeNull();

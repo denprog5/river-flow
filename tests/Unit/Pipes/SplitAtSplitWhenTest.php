@@ -7,6 +7,9 @@ namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 use function Denprog\RiverFlow\Pipes\splitAt;
 use function Denprog\RiverFlow\Pipes\splitWhen;
 
+use InvalidArgumentException;
+use TypeError;
+
 describe('splitAt and splitWhen', function (): void {
     it('splitAt splits at index and discards keys', function (): void {
         $input          = ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4];
@@ -63,5 +66,13 @@ describe('splitAt and splitWhen', function (): void {
         [$pre, $post] = $fn([1, 2, 3]);
         expect($pre)->toBe([1]);
         expect($post)->toBe([2, 3]);
+    });
+
+    it('splitWhen throws on invalid direct-call arguments', function (): void {
+        // first arg is callable (not iterable) in direct invocation => invalid
+        expect(fn (): array => splitWhen('strlen', fn (): bool => true))->toThrow(InvalidArgumentException::class);
+        // predicate not callable in direct invocation -> TypeError due to parameter type (?callable)
+        /** @phpstan-ignore-next-line intentionally passing invalid predicate */
+        expect(fn (): array => splitWhen([1, 2, 3], 'not_callable'))->toThrow(TypeError::class);
     });
 });
