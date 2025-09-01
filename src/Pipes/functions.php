@@ -435,6 +435,73 @@ function sortBy_impl(iterable $data, callable $getComparable): array
 }
 
 /**
+ * Sort values using one or more comparator callables, preserving original keys. Eager.
+ *
+ * Usage:
+ *  - sortWith($data, $cmp1, $cmp2, ...): array
+ *  - sortWith($cmp1, $cmp2, ...)($data): array   (curried)
+ *
+ * Comparators must be callables of the form fn($a, $b): int and return <0, 0, >0.
+ * See Utils\ascend and Utils\descend for convenient comparator builders.
+ *
+ * @param iterable<mixed, mixed>|callable|null $data_or_comparator
+ * @param callable(mixed, mixed): int ...$comparators
+ * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
+ */
+function sortWith(iterable|callable|null $data_or_comparator = null, callable ...$comparators): array|callable
+{
+    // Curried: comparators provided, returns fn(iterable $data): array
+    if ($data_or_comparator !== null && !is_iterable($data_or_comparator) && \is_callable($data_or_comparator)) {
+        $first = $data_or_comparator;
+        $cmps  = [$first, ...$comparators];
+        if ($cmps === []) {
+            throw new InvalidArgumentException('sortWith(): at least one comparator is required');
+        }
+
+        return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
+            sortWith_impl($data, ...$cmps);
+    }
+
+    // Direct: data first
+    if ($data_or_comparator === null || !is_iterable($data_or_comparator)) {
+        throw new InvalidArgumentException('sortWith(): in direct invocation, first argument must be iterable');
+    }
+    if ($comparators === []) {
+        throw new InvalidArgumentException('sortWith(): at least one comparator is required');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    $data = $data_or_comparator;
+
+    return sortWith_impl($data, ...$comparators);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @param callable(mixed, mixed): int ...$comparators
+ * @return array<int|string, mixed>
+ */
+function sortWith_impl(iterable $data, callable ...$comparators): array
+{
+    $arr = toArray($data);
+    /** @var array<int|string, mixed> $arr */
+
+    uasort($arr, static function (mixed $a, mixed $b) use ($comparators): int {
+        foreach ($comparators as $cmp) {
+            $res = $cmp($a, $b);
+            if ($res !== 0) {
+                return $res;
+            }
+        }
+
+        return 0;
+    });
+
+    /** @var array<int|string, mixed> $arr */
+    return $arr;
+}
+
+/**
  * Yield values (discard keys) lazily.
  *
  * @param iterable<mixed, mixed>|null $data

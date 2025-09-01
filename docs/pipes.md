@@ -51,6 +51,8 @@ Dual-mode usage
   - Eager; later keys overwrite earlier ones. Supports flexible order and currying: `keyBy($keySelector, $data)` or `keyBy($keySelector)($data)`.
 - `sortBy(iterable $data, callable(TValue, TKey): int|float|string $getComparable): array<TKey, TValue>`
   - Eager; stable key preservation
+- `sortWith(iterable $data, callable(TValue, TKey): int ...$comparators): array<TKey, TValue>`
+  - Eager; preserves keys; accepts one or more comparator callables of the form `fn($a, $b): int` and applies them in order (later ones are tie-breakers). Supports currying: `sortWith($cmp1, $cmp2, ...)($data)`. See `Utils\ascend`/`Utils\descend` for building comparators.
 - `sort(iterable<int|float|string> $data): array<array-key, int|float|string>`
   - Eager; natural ascending order; keys preserved
 
@@ -112,7 +114,8 @@ Dual-mode usage
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, transpose, unzip, uniq, partition, aperture, dropLast, takeLast, chunk, union, intersection, difference, symmetricDifference};
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, transpose, unzip, uniq, partition, aperture, dropLast, takeLast, chunk, union, intersection, difference, symmetricDifference, sortWith};
+use function Denprog\RiverFlow\Utils\{ascend, descend};
 
 $evens = [1,2,3,4,5,6]
     |> filter(fn(int $n) => $n % 2 === 0)
@@ -140,6 +143,17 @@ $unz = unzip([[1, 'a'], [2, 'b'], [3, 'c']]);
 $uniq = [1,1,'1',2]
     |> uniq()
     |> toList(); // [1,'1',2]
+
+// sortWith using Utils comparators (eager, keys preserved)
+$people = [
+    'u3' => ['name' => 'Cara',  'age' => 40],
+    'u1' => ['name' => 'Alice', 'age' => 30],
+    'u2' => ['name' => 'Bob',   'age' => 35],
+];
+$byAgeAsc   = ascend(fn (array $p) => $p['age']);
+$byNameDesc = descend(fn (array $p) => $p['name']);
+$sorted = sortWith($people, $byAgeAsc, $byNameDesc);
+// $sorted keeps keys and sorts by age ascending; ties broken by name descending
 
 // Set operations (eager) — keys preserved
 $a = ['a' => 1, 'b' => 2, 'c' => '2', 'd' => 3, 'e' => 4];
