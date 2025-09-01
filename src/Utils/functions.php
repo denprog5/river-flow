@@ -128,6 +128,23 @@ function either(callable $a, callable $b): callable
 }
 
 /**
+ * @internal
+ * @template T
+ * @param iterable<mixed, T> $iterable
+ * @param callable(T): bool $pred
+ */
+function array_any(iterable $iterable, callable $pred): bool
+{
+    foreach ($iterable as $item) {
+        if ($pred($item) === true) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * allPass([p1, p2, ...]) returns a predicate that is true if all predicates are true.
  *
  * @param array<int, callable> $predicates
