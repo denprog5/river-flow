@@ -60,6 +60,16 @@ Dual-mode usage
 - `uniqBy(iterable $data, callable(TValue, TKey): mixed $identifier): Generator<TKey, TValue>`
   - Lazy; first-occurrence keys preserved; hashing rules like `uniq`. Supports flexible order and currying: `uniqBy($identifier, $data)` or `uniqBy($identifier)($data)`. Items with unhashable identifiers are skipped.
 
+## Set operations (eager)
+- `union(iterable $data, iterable $other): array<TKey, TValue>`
+  - Eager; strict set union; preserves keys from the first occurrence across inputs; unhashable items skipped (see `uniq` hashing rules)
+- `intersection(iterable $data, iterable $other): array<TKey, TValue>`
+  - Eager; strict set intersection; preserves keys from the left iterable; unhashable items skipped
+- `difference(iterable $data, iterable $other): array<TKey, TValue>`
+  - Eager; strict set difference (left minus right); preserves keys from the left and collapses duplicates to the first occurrence; unhashable items skipped
+- `symmetricDifference(iterable $data, iterable $other): array<TKey, TValue>`
+  - Eager; strict symmetric difference (values present in exactly one of the inputs); left-only values first then right-only; preserves original keys; unhashable items skipped
+
 ## Combining / Windowing
 - `zip(iterable $data, iterable ...$others): Generator<int, array<int, mixed>>`
   - Lazy; stops at shortest; keys discarded; yields numeric-indexed tuples
@@ -67,6 +77,10 @@ Dual-mode usage
   - If only one iterable is provided, yields 1-length rows. If any iterable is empty, the result is empty.
 - `zipWith(iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
   - Pipe-friendly curried form of `zip`. Same semantics as `zip` (keys discarded, stops at shortest, iterator inputs are rewound). If no other iterables are provided, behaves like `zip($data)` producing 1-length rows. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
+- `transpose(iterable<int, iterable> $rows): array<int, array<int, mixed>>`
+  - Eager; keys discarded; aligns to the shortest row (extra elements in longer rows are ignored)
+- `unzip(iterable<int, iterable> $rows): array<int, array<int, mixed>>`
+  - Eager; keys discarded; equivalent to `transpose`; useful for splitting pairs into two lists
 - `chunk(iterable $data, int $size): Generator<int, array<int, mixed>>`
   - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0. Supports currying: `chunk($size)($data)`. For `$size = 1` yields singleton chunks; empty input yields no chunks.
 - `aperture(iterable $data, int $size): Generator<int, array<int, mixed>>`
@@ -98,7 +112,7 @@ Dual-mode usage
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, uniq, partition, aperture, dropLast, takeLast, chunk};
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, transpose, unzip, uniq, partition, aperture, dropLast, takeLast, chunk, union, intersection, difference, symmetricDifference};
 
 $evens = [1,2,3,4,5,6]
     |> filter(fn(int $n) => $n % 2 === 0)
@@ -112,9 +126,28 @@ $z = [1,2]
     |> zipWith(['a','b','c'])
     |> toList(); // [[1,'a'], [2,'b']]
 
+// Transpose (eager, keys discarded, aligns to shortest)
+$cols = transpose([
+    ['r1c1', 'r1c2', 'r1c3'],
+    ['r2c1', 'r2c2'],
+]);
+// $cols === [['r1c1','r2c1'], ['r1c2','r2c2']]
+
+// Unzip pairs (eager)
+$unz = unzip([[1, 'a'], [2, 'b'], [3, 'c']]);
+// $unz === [[1,2,3], ['a','b','c']]
+
 $uniq = [1,1,'1',2]
     |> uniq()
     |> toList(); // [1,'1',2]
+
+// Set operations (eager) — keys preserved
+$a = ['a' => 1, 'b' => 2, 'c' => '2', 'd' => 3, 'e' => 4];
+$b = ['x' => 2, 'y' => 5, 'z' => '2', 'w' => 6];
+$u = union($a, $b);                // ['a'=>1,'b'=>2,'c'=>'2','d'=>3,'e'=>4,'y'=>5,'w'=>6]
+$i = intersection($a, $b);          // ['b'=>2,'c'=>'2'] (keys from left)
+$d = difference($a, $b);            // ['a'=>1,'d'=>3,'e'=>4]
+$s = symmetricDifference($a, $b);   // ['a'=>1,'d'=>3,'e'=>4,'y'=>5,'w'=>6]
 
 [$pass, $fail] = partition(['a'=>1,'b'=>2,'c'=>3], fn(int $v) => $v > 1);
 // $pass = ['b'=>2,'c'=>3], $fail = ['a'=>1]

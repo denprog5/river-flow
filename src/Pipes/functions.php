@@ -30,7 +30,6 @@ function filter(iterable|callable $data_or_predicate, ?callable $predicate = nul
         return static fn (iterable $data): Generator => /** @var iterable<mixed, mixed> $data */
             filter_gen($data, $pred);
     }
-
     if (!is_iterable($data_or_predicate)) {
         throw new InvalidArgumentException('filter(): first argument must be iterable in direct invocation');
     }
@@ -1669,6 +1668,91 @@ function zip(iterable $data, iterable ...$others): Generator
 }
 
 /**
+ * Transpose a matrix-like iterable of rows into columns. Eager; keys discarded.
+ * Aligns to the shortest row: extra elements in longer rows are ignored.
+ *
+ * @param iterable<int, iterable<mixed, mixed>> $rows
+ * @return array<int, array<int, mixed>>
+ */
+function transpose(iterable $rows): array
+{
+    return transpose_impl($rows);
+}
+
+/**
+ * Unzip rows of tuples into columns. Eager; keys discarded.
+ * Equivalent to transpose; typically used to split pairs into two lists.
+ * Aligns to the shortest row.
+ *
+ * @param iterable<int, iterable<mixed, mixed>> $rows
+ * @return array<int, array<int, mixed>>
+ */
+function unzip(iterable $rows): array
+{
+    return transpose_impl($rows);
+}
+
+/** @internal
+ * @param iterable<int, iterable<mixed, mixed>> $rows
+ * @return array<int, array<int, mixed>>
+ */
+function transpose_impl(iterable $rows): array
+{
+    // Buffer rows as lists and track minimum length
+    $buffered = [];
+    $minLen   = null;
+
+    foreach ($rows as $row) {
+        // Materialize row to a list (discard keys)
+        if (\is_array($row)) {
+            $list = array_values($row);
+        } elseif ($row instanceof Iterator) {
+            $list = [];
+            for ($row->rewind(); $row->valid(); $row->next()) {
+                $list[] = $row->current();
+            }
+        } else {
+            // Traversable/iterable case
+            $iter = $row instanceof Traversable ? new IteratorIterator($row) : null;
+            if ($iter !== null) {
+                $list = [];
+                $iter->rewind();
+                while ($iter->valid()) {
+                    $list[] = $iter->current();
+                    $iter->next();
+                }
+            } else {
+                // Generic iterable (e.g., Generator)
+                $list = [];
+                foreach ($row as $v) {
+                    $list[] = $v;
+                }
+            }
+        }
+
+        $buffered[] = $list;
+        $len        = \count($list);
+        $minLen     = $minLen === null ? $len : \min($minLen, $len);
+    }
+
+    if ($minLen === null || $minLen === 0) {
+        return [];
+    }
+
+    // Initialize columns
+    $cols = array_fill(0, $minLen, []);
+
+    // Fill columns preserving row order
+    foreach ($buffered as $list) {
+        for ($i = 0; $i < $minLen; $i++) {
+            $cols[$i][] = $list[$i];
+        }
+    }
+
+    return $cols;
+}
+
+/**
  * Chunk values into arrays of size $size (last chunk may be smaller). Lazy. Keys discarded.
  *
  * @param iterable<array-key, mixed>|int $data_or_size
@@ -1887,4 +1971,302 @@ function __hash_identifier(mixed $value): array
 
     // Resources, etc.
     return [false, ''];
+}
+
+/**
+ * Set union (strict) of two iterables. Eager. Keys preserved from the first occurrence.
+ *
+ * Dual-mode:
+ * - union($data, $other): array
+ * - union($other): callable(iterable $data): array
+ *
+ * Strictness matches uniq()/uniqBy() hashing rules via __hash_identifier().
+ * Unhashable items are skipped.
+ *
+ * @param iterable<mixed, mixed>|null $data_or_other
+ * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
+ */
+function union(?iterable $data_or_other = null, ?iterable $other = null): array|callable
+{
+    if ($other === null) {
+        $o = $data_or_other ?? [];
+
+        return static function (iterable $data) use ($o): array {
+            /** @var iterable<mixed, mixed> $data */
+            /** @var iterable<mixed, mixed> $o */
+            return union_impl($data, $o);
+        };
+    }
+
+    if ($data_or_other === null) {
+        throw new InvalidArgumentException('union(): data must be provided in direct invocation');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    $data = $data_or_other;
+    /** @var iterable<mixed, mixed> $other */
+    $o = $other;
+
+    return union_impl($data, $o);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $a
+ * @param iterable<mixed, mixed> $b
+ * @return array<int|string, mixed>
+ */
+function union_impl(iterable $a, iterable $b): array
+{
+    $seen = [];
+    /** @var array<int|string, mixed> $out */
+    $out = [];
+
+    foreach ($a as $ka => $va) {
+        [$ok, $h] = __hash_identifier($va);
+        if (!$ok) {
+            continue;
+        }
+        if (!isset($seen[$h])) {
+            $seen[$h] = true;
+            $out[$ka] = $va;
+        }
+    }
+
+    foreach ($b as $kb => $vb) {
+        [$ok, $h] = __hash_identifier($vb);
+        if (!$ok) {
+            continue;
+        }
+        if (!isset($seen[$h])) {
+            $seen[$h] = true;
+            $out[$kb] = $vb;
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * Set intersection (strict) of two iterables. Eager. Keys preserved from the left iterable.
+ *
+ * Dual-mode:
+ * - intersection($data, $other): array
+ * - intersection($other): callable(iterable $data): array
+ *
+ * Uses __hash_identifier() for strict equality; unhashable items are skipped.
+ *
+ * @param iterable<mixed, mixed>|null $data_or_other
+ * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
+ */
+function intersection(?iterable $data_or_other = null, ?iterable $other = null): array|callable
+{
+    if ($other === null) {
+        $o = $data_or_other ?? [];
+
+        return static function (iterable $data) use ($o): array {
+            /** @var iterable<mixed, mixed> $data */
+            /** @var iterable<mixed, mixed> $o */
+            return intersection_impl($data, $o);
+        };
+    }
+
+    if ($data_or_other === null) {
+        throw new InvalidArgumentException('intersection(): data must be provided in direct invocation');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    $data = $data_or_other;
+    /** @var iterable<mixed, mixed> $other */
+    $o = $other;
+
+    return intersection_impl($data, $o);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $a
+ * @param iterable<mixed, mixed> $b
+ * @return array<int|string, mixed>
+ */
+function intersection_impl(iterable $a, iterable $b): array
+{
+    // Build hash set of B
+    $setB = [];
+    foreach ($b as $vb) {
+        [$ok, $h] = __hash_identifier($vb);
+        if ($ok) {
+            $setB[$h] = true;
+        }
+    }
+
+    $out  = [];
+    $seen = [];
+    foreach ($a as $ka => $va) {
+        [$ok, $h] = __hash_identifier($va);
+        if (!$ok) {
+            continue;
+        }
+        if (isset($setB[$h]) && !isset($seen[$h])) {
+            $seen[$h] = true;
+            $out[$ka] = $va;
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * Set difference (strict): elements of $data not present in $other. Eager. Keys preserved from $data.
+ *
+ * Dual-mode:
+ * - difference($data, $other): array
+ * - difference($other): callable(iterable $data): array
+ *
+ * Uses __hash_identifier() for strict equality; unhashable items are skipped.
+ *
+ * @param iterable<mixed, mixed>|null $data_or_other
+ * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
+ */
+function difference(?iterable $data_or_other = null, ?iterable $other = null): array|callable
+{
+    if ($other === null) {
+        $o = $data_or_other ?? [];
+
+        return static function (iterable $data) use ($o): array {
+            /** @var iterable<mixed, mixed> $data */
+            /** @var iterable<mixed, mixed> $o */
+            return difference_impl($data, $o);
+        };
+    }
+
+    if ($data_or_other === null) {
+        throw new InvalidArgumentException('difference(): data must be provided in direct invocation');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    $data = $data_or_other;
+    /** @var iterable<mixed, mixed> $other */
+    $o = $other;
+
+    return difference_impl($data, $o);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $a
+ * @param iterable<mixed, mixed> $b
+ * @return array<int|string, mixed>
+ */
+function difference_impl(iterable $a, iterable $b): array
+{
+    $setB = [];
+    foreach ($b as $vb) {
+        [$ok, $h] = __hash_identifier($vb);
+        if ($ok) {
+            $setB[$h] = true;
+        }
+    }
+
+    $out  = [];
+    $seen = [];
+    foreach ($a as $ka => $va) {
+        [$ok, $h] = __hash_identifier($va);
+        if (!$ok) {
+            continue;
+        }
+        if (!isset($setB[$h]) && !isset($seen[$h])) {
+            $seen[$h] = true;
+            $out[$ka] = $va;
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * Symmetric difference (strict): elements present in exactly one of the inputs. Eager.
+ *
+ * Dual-mode:
+ * - symmetricDifference($data, $other): array
+ * - symmetricDifference($other): callable(iterable $data): array
+ *
+ * Order: items from $data first (that are not in $other), then items from $other not in $data.
+ * Keys preserved from their source. Unhashable items are skipped.
+ *
+ * @param iterable<mixed, mixed>|null $data_or_other
+ * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
+ */
+function symmetricDifference(?iterable $data_or_other = null, ?iterable $other = null): array|callable
+{
+    if ($other === null) {
+        $o = $data_or_other ?? [];
+
+        return static function (iterable $data) use ($o): array {
+            /** @var iterable<mixed, mixed> $data */
+            /** @var iterable<mixed, mixed> $o */
+            return symmetricDifference_impl($data, $o);
+        };
+    }
+
+    if ($data_or_other === null) {
+        throw new InvalidArgumentException('symmetricDifference(): data must be provided in direct invocation');
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    $data = $data_or_other;
+    /** @var iterable<mixed, mixed> $other */
+    $o = $other;
+
+    return symmetricDifference_impl($data, $o);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $a
+ * @param iterable<mixed, mixed> $b
+ * @return array<int|string, mixed>
+ */
+function symmetricDifference_impl(iterable $a, iterable $b): array
+{
+    // Buffer unique entries and sets for A (single pass)
+    $setA     = [];
+    $entriesA = [];
+    foreach ($a as $ka => $va) {
+        [$ok, $h] = __hash_identifier($va);
+        if (!$ok) {
+            continue;
+        }
+        if (!isset($setA[$h])) {
+            $setA[$h]     = true;
+            $entriesA[$h] = [$ka, $va]; // preserve first key and value for this hash
+        }
+    }
+
+    // Buffer unique entries and sets for B (single pass)
+    $setB     = [];
+    $entriesB = [];
+    foreach ($b as $kb => $vb) {
+        [$ok, $h] = __hash_identifier($vb);
+        if (!$ok) {
+            continue;
+        }
+        if (!isset($setB[$h])) {
+            $setB[$h]     = true;
+            $entriesB[$h] = [$kb, $vb];
+        }
+    }
+
+    // Emit left-only first, preserving insertion order from A
+    $out = [];
+    foreach ($entriesA as $h => [$ka, $va]) {
+        if (!isset($setB[$h])) {
+            $out[$ka] = $va;
+        }
+    }
+
+    // Then right-only, preserving insertion order from B
+    foreach ($entriesB as $h => [$kb, $vb]) {
+        if (!isset($setA[$h])) {
+            $out[$kb] = $vb;
+        }
+    }
+
+    return $out;
 }
