@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 
 use ArrayIterator;
-use Generator;
 
 use function Denprog\RiverFlow\Pipes\transpose;
 use function Denprog\RiverFlow\Pipes\unzip;
+
+use Generator;
 
 describe('transpose and unzip', function (): void {
     it('transposes a square matrix', function (): void {
@@ -43,7 +44,9 @@ describe('transpose and unzip', function (): void {
 
     it('supports rows from Generators and Traversable; aligns to shortest', function (): void {
         $gen = (function (): Generator {
-            yield 10; yield 20; yield 30;
+            yield 10;
+            yield 20;
+            yield 30;
         })();
         $iter = new ArrayIterator([100, 200]);
         $rows = [

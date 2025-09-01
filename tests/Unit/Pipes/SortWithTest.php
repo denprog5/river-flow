@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 
-use Generator;
-use InvalidArgumentException;
-
 use function Denprog\RiverFlow\Pipes\sortWith;
-use function Denprog\RiverFlow\Pipes\toArray;
 use function Denprog\RiverFlow\Utils\ascend;
 use function Denprog\RiverFlow\Utils\descend;
+
+use Generator;
+use InvalidArgumentException;
 
 describe('sortWith', function (): void {
     it('sorts by a single comparator (ascend by age); preserves keys', function (): void {
@@ -20,7 +19,7 @@ describe('sortWith', function (): void {
             'u2' => ['name' => 'Bob',   'age' => 35],
         ];
 
-        $byAge = ascend(fn (array $p) => $p['age']);
+        $byAge  = ascend(fn (array $p) => $p['age']);
         $sorted = sortWith($people, $byAge);
 
         expect($sorted)->toBe([
@@ -38,7 +37,7 @@ describe('sortWith', function (): void {
             'k4' => ['name' => 'Bo'],
         ];
 
-        $byLen  = ascend(fn (array $r) => \strlen($r['name']));
+        $byLen  = ascend(fn (array $r): int => \strlen((string) $r['name']));
         $byName = ascend(fn (array $r) => $r['name']);
 
         $sorted = sortWith($rows, $byLen, $byName);
@@ -58,8 +57,8 @@ describe('sortWith', function (): void {
             'u2' => ['name' => 'Bob',   'age' => 35],
         ];
 
-        $byAge = ascend(fn (array $p) => $p['age']);
-        $fn    = sortWith($byAge);
+        $byAge  = ascend(fn (array $p) => $p['age']);
+        $fn     = sortWith($byAge);
         $sorted = $fn($people);
 
         expect($sorted)->toBe([
@@ -76,20 +75,20 @@ describe('sortWith', function (): void {
             yield 'a' => 1;
         })();
 
-        $byVal = ascend(fn (int $v) => $v);
+        $byVal  = ascend(fn (int $v): int => $v);
         $sorted = sortWith($gen, $byVal);
         expect($sorted)->toBe(['a' => 1, 'b' => 2, 'c' => 3]);
     });
 
     it('throws in direct invocation when no comparator provided', function (): void {
         $data = ['b' => 2, 'a' => 1];
-        expect(fn () => sortWith($data))->toThrow(InvalidArgumentException::class);
+        expect(fn (): callable|array => sortWith($data))->toThrow(InvalidArgumentException::class);
     });
 
     it('can use descend for reverse order', function (): void {
-        $assoc = ['a' => 1, 'b' => 3, 'c' => 2];
-        $byValDesc = descend(fn (int $v) => $v);
-        $sorted = sortWith($assoc, $byValDesc);
+        $assoc     = ['a' => 1, 'b' => 3, 'c' => 2];
+        $byValDesc = descend(fn (int $v): int => $v);
+        $sorted    = sortWith($assoc, $byValDesc);
         expect($sorted)->toBe(['b' => 3, 'c' => 2, 'a' => 1]);
     });
 });

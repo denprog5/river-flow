@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 
+use function Denprog\RiverFlow\Pipes\difference;
 use function Denprog\RiverFlow\Pipes\intersection;
 use function Denprog\RiverFlow\Pipes\symmetricDifference;
 use function Denprog\RiverFlow\Pipes\union;
-use function Denprog\RiverFlow\Pipes\difference;
 
 use Generator;
 
@@ -17,10 +17,10 @@ describe('Set operations (union, intersection, difference, symmetricDifference)'
         $b = ['a' => 2, 'b' => 5, 'c' => '2', 'd' => 6, 'e' => '4.0', 'f' => 4];
 
         $expected = [
-            0 => 1,
-            1 => 2,
-            2 => '2',
-            3 => 3,
+            0   => 1,
+            1   => 2,
+            2   => '2',
+            3   => 3,
             'k' => 4,
             'm' => '4.0',
             'b' => 5,

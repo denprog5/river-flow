@@ -451,19 +451,17 @@ function sortBy_impl(iterable $data, callable $getComparable): array
 function sortWith(iterable|callable|null $data_or_comparator = null, callable ...$comparators): array|callable
 {
     // Curried: comparators provided, returns fn(iterable $data): array
-    if ($data_or_comparator !== null && !is_iterable($data_or_comparator) && \is_callable($data_or_comparator)) {
+    if (\is_callable($data_or_comparator)) {
+        /** @var callable(mixed, mixed): int $first */
         $first = $data_or_comparator;
         $cmps  = [$first, ...$comparators];
-        if ($cmps === []) {
-            throw new InvalidArgumentException('sortWith(): at least one comparator is required');
-        }
 
         return static fn (iterable $data): array => /** @var iterable<mixed, mixed> $data */
             sortWith_impl($data, ...$cmps);
     }
 
     // Direct: data first
-    if ($data_or_comparator === null || !is_iterable($data_or_comparator)) {
+    if ($data_or_comparator === null) {
         throw new InvalidArgumentException('sortWith(): in direct invocation, first argument must be iterable');
     }
     if ($comparators === []) {
@@ -487,8 +485,8 @@ function sortWith_impl(iterable $data, callable ...$comparators): array
     /** @var array<int|string, mixed> $arr */
 
     uasort($arr, static function (mixed $a, mixed $b) use ($comparators): int {
-        foreach ($comparators as $cmp) {
-            $res = $cmp($a, $b);
+        foreach ($comparators as $comparator) {
+            $res = $comparator($a, $b);
             if ($res !== 0) {
                 return $res;
             }
@@ -1779,27 +1777,20 @@ function transpose_impl(iterable $rows): array
                 $list[] = $row->current();
             }
         } else {
-            // Traversable/iterable case
-            $iter = $row instanceof Traversable ? new IteratorIterator($row) : null;
-            if ($iter !== null) {
-                $list = [];
-                $iter->rewind();
-                while ($iter->valid()) {
-                    $list[] = $iter->current();
-                    $iter->next();
-                }
-            } else {
-                // Generic iterable (e.g., Generator)
-                $list = [];
-                foreach ($row as $v) {
-                    $list[] = $v;
-                }
+            // Other Traversable (e.g., IteratorAggregate)
+            /** @var Traversable<mixed, mixed> $row */
+            $iter = new IteratorIterator($row);
+            $list = [];
+            $iter->rewind();
+            while ($iter->valid()) {
+                $list[] = $iter->current();
+                $iter->next();
             }
         }
 
         $buffered[] = $list;
         $len        = \count($list);
-        $minLen     = $minLen === null ? $len : \min($minLen, $len);
+        $minLen     = $minLen === null ? $len : ($minLen < $len ? $minLen : $len);
     }
 
     if ($minLen === null || $minLen === 0) {
@@ -2051,6 +2042,7 @@ function __hash_identifier(mixed $value): array
  * Unhashable items are skipped.
  *
  * @param iterable<mixed, mixed>|null $data_or_other
+ * @param iterable<mixed, mixed>|null $other
  * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function union(?iterable $data_or_other = null, ?iterable $other = null): array|callable
@@ -2058,11 +2050,10 @@ function union(?iterable $data_or_other = null, ?iterable $other = null): array|
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static function (iterable $data) use ($o): array {
+        return static fn(iterable $data): array =>
             /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
-            return union_impl($data, $o);
-        };
+            union_impl($data, $o);
     }
 
     if ($data_or_other === null) {
@@ -2123,6 +2114,7 @@ function union_impl(iterable $a, iterable $b): array
  * Uses __hash_identifier() for strict equality; unhashable items are skipped.
  *
  * @param iterable<mixed, mixed>|null $data_or_other
+ * @param iterable<mixed, mixed>|null $other
  * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function intersection(?iterable $data_or_other = null, ?iterable $other = null): array|callable
@@ -2130,11 +2122,10 @@ function intersection(?iterable $data_or_other = null, ?iterable $other = null):
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static function (iterable $data) use ($o): array {
+        return static fn(iterable $data): array =>
             /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
-            return intersection_impl($data, $o);
-        };
+            intersection_impl($data, $o);
     }
 
     if ($data_or_other === null) {
@@ -2191,6 +2182,7 @@ function intersection_impl(iterable $a, iterable $b): array
  * Uses __hash_identifier() for strict equality; unhashable items are skipped.
  *
  * @param iterable<mixed, mixed>|null $data_or_other
+ * @param iterable<mixed, mixed>|null $other
  * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function difference(?iterable $data_or_other = null, ?iterable $other = null): array|callable
@@ -2198,11 +2190,10 @@ function difference(?iterable $data_or_other = null, ?iterable $other = null): a
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static function (iterable $data) use ($o): array {
+        return static fn(iterable $data): array =>
             /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
-            return difference_impl($data, $o);
-        };
+            difference_impl($data, $o);
     }
 
     if ($data_or_other === null) {
@@ -2259,6 +2250,7 @@ function difference_impl(iterable $a, iterable $b): array
  * Keys preserved from their source. Unhashable items are skipped.
  *
  * @param iterable<mixed, mixed>|null $data_or_other
+ * @param iterable<mixed, mixed>|null $other
  * @return array<int|string, mixed>|callable(iterable<mixed, mixed>): array<int|string, mixed>
  */
 function symmetricDifference(?iterable $data_or_other = null, ?iterable $other = null): array|callable
@@ -2266,11 +2258,10 @@ function symmetricDifference(?iterable $data_or_other = null, ?iterable $other =
     if ($other === null) {
         $o = $data_or_other ?? [];
 
-        return static function (iterable $data) use ($o): array {
+        return static fn(iterable $data): array =>
             /** @var iterable<mixed, mixed> $data */
             /** @var iterable<mixed, mixed> $o */
-            return symmetricDifference_impl($data, $o);
-        };
+            symmetricDifference_impl($data, $o);
     }
 
     if ($data_or_other === null) {
