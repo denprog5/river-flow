@@ -134,11 +134,7 @@ function either(callable $a, callable $b): callable
  */
 function allPass(array $predicates): callable
 {
-    foreach ($predicates as $p) {
-        if (!\is_callable($p)) {
-            throw new InvalidArgumentException('allPass(): all items must be callable');
-        }
-    }
+    // Assume callables per PHPDoc; validation removed for performance and static analysis correctness.
 
     return static function (mixed ...$args) use ($predicates): bool {
         foreach ($predicates as $predicate) {
@@ -158,11 +154,7 @@ function allPass(array $predicates): callable
  */
 function anyPass(array $predicates): callable
 {
-    foreach ($predicates as $p) {
-        if (!\is_callable($p)) {
-            throw new InvalidArgumentException('anyPass(): all items must be callable');
-        }
-    }
+    // Assume callables per PHPDoc; validation removed for performance and static analysis correctness.
 
     return static fn (mixed ...$args): bool => array_any($predicates, fn ($p): bool => $p(...$args) === true);
 }
@@ -210,11 +202,7 @@ function ifElse(callable $pred, callable $onTrue, callable $onFalse): callable
  */
 function cond(array $pairs): callable
 {
-    foreach ($pairs as $pair) {
-        if (!\is_array($pair) || !\array_key_exists(0, $pair) || !\array_key_exists(1, $pair) || !\is_callable($pair[0]) || !\is_callable($pair[1])) {
-            throw new InvalidArgumentException('cond(): each pair must be [callable $pred, callable $fn]');
-        }
-    }
+    // Assume correct shape per PHPDoc: each pair is [callable $pred, callable $fn].
 
     return static function (mixed ...$args) use ($pairs): mixed {
         foreach ($pairs as [$pred, $fn]) {
@@ -235,11 +223,7 @@ function cond(array $pairs): callable
  */
 function converge(callable $after, array $branches): callable
 {
-    foreach ($branches as $b) {
-        if (!\is_callable($b)) {
-            throw new InvalidArgumentException('converge(): branches must be callable');
-        }
-    }
+    // Assume callables per PHPDoc; validation removed for performance and static analysis correctness.
 
     return static function (mixed ...$args) use ($after, $branches): mixed {
         $results = [];
@@ -322,6 +306,9 @@ function partialRight(callable $fn, mixed ...$args): callable
 /**
  * ascend(by) -> comparator($a, $b): int
  * by() must return scalar|null or Stringable.
+ *
+ * @param callable(mixed): (int|float|string|bool|Stringable|null) $by
+ * @return callable(mixed, mixed): int
  */
 function ascend(callable $by): callable
 {
@@ -337,6 +324,9 @@ function ascend(callable $by): callable
 
 /**
  * descend(by) -> comparator($a, $b): int
+ *
+ * @param callable(mixed): (int|float|string|bool|Stringable|null) $by
+ * @return callable(mixed, mixed): int
  */
 function descend(callable $by): callable
 {

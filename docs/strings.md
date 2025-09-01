@@ -33,10 +33,14 @@ All functions are UTF-8 aware when mbstring is available.
   - Returns true if `$data` starts with `$prefix`; empty prefix is true. Curried: `startsWith($prefix): callable(string $data): bool`
 - `endsWith(string $data, string $suffix): bool`
   - Returns true if `$data` ends with `$suffix`; empty suffix is true. Curried: `endsWith($suffix): callable(string $data): bool`
+- `replace(string $data, string $search, string $replacement): string`
+  - Replaces all occurrences of `$search` with `$replacement` using `str_replace`. If `$search` is empty, returns original string unchanged. Curried: `replace($search, $replacement): callable(string $data): string`
+- `slice(string $data, int $start, ?int $end = null): string`
+  - Returns substring from `$start` (inclusive) to `$end` (exclusive). Supports negative indices from the end. Uses `mb_substr` when available. Curried: `slice($start, ?$end = null): callable(string $data): string`
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, includes, startsWith, endsWith};
+use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, includes, startsWith, endsWith, replace, slice};
 
 $clean = " -- Hello -- " |> trim(); // "-- Hello --" (only spaces removed)
 $cleanCustom = " -- Hello -- " |> trim(characters: " -"); // "Hello"
@@ -54,6 +58,10 @@ $parts2 = 'a|b|c|d' |> split('|', -1); // ['a','b','c']
 
 $list = [2024, '01', 15] |> join('-');  // '2024-01-15'
 
+// replace and slice
+$rep = 'hello' |> replace('l', 'x');   // 'hexxo'
+$mid = 'Привет' |> slice(1, -1);       // 'риве' (if mbstring)
+
 // membership and boundary checks
 $has = 'hello' |> includes('ell');        // true
 $sw  = 'hello' |> startsWith('he');       // true
@@ -62,7 +70,7 @@ $ew  = 'hello' |> endsWith('lo');         // true
 
 ### Direct (non-pipe) usage
 ```php
-use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join};
+use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, replace, slice};
 
 $clean = trim("  Hello  ");                          // "Hello"
 $cleanCustom = trim(" -- Hi -- ", characters: " -"); // "Hi"
@@ -73,11 +81,13 @@ $upper = toUpperCase('Привет');                       // 'ПРИВЕТ'
 $len   = length('😀');                                 // 1 (if mbstring)
 $parts = split('a|b|c|d', '|', 2);                     // ['a','b|c|d']
 $list  = join([2024, '01', 15], '-');                  // '2024-01-15'
+$repl  = replace('hello', 'l', 'x');                   // 'hexxo'
+$mid   = slice('Привет', 1, -1);                       // 'риве' (if mbstring)
 ```
 
 ### Pipeline chaining (one-liners)
 ```php
-use function Denprog\RiverFlow\Strings\{trim, replacePrefix, toLowerCase, toUpperCase, split, join, length};
+use function Denprog\RiverFlow\Strings\{trim, replacePrefix, toLowerCase, toUpperCase, split, join, length, slice, replace};
 
 // Normalize a title: trim, lowercase, unify prefix
 $title = "  River FLOW: Intro  "
