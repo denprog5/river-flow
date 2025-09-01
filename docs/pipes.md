@@ -44,6 +44,11 @@ Dual-mode usage
 - `values(iterable $data): Generator<int, mixed>` — lazy; discards keys
 - `keys(iterable $data): Generator<int, array-key>` — lazy; yields keys
 
+## Sequence / Generation
+- `range(int|float $start, int|float $end, int|float $step = 1): Generator<int, int|float>`
+  - Lazy; end-exclusive; supports positive and negative steps; validates parameters eagerly
+  - Examples: `range(0, 5)` yields 0,1,2,3,4; `range(5, 0, -2)` yields 5,3,1
+
 ## Reshaping / Ordering
 - `groupBy(iterable $data, callable(TValue, TKey): array-key $grouper): array<array-key, array<TKey, TValue>>`
   - Eager; preserves original keys inside each group. Supports flexible order and currying: `groupBy($grouper, $data)` or `groupBy($grouper)($data)`.
@@ -105,6 +110,8 @@ Dual-mode usage
 - `dropWhile(iterable $data, callable(TValue, TKey): bool $predicate): Generator<TKey, TValue>` — lazy; preserves keys
 - `dropLast(iterable $data, int $count): Generator<TKey, TValue>` — lazy with lookahead; preserves keys; skips last $count
 - `takeLast(iterable $data, int $count): Generator<TKey, TValue>` — lazy (buffers at most `$count`); preserves keys; yields only the final `$count`
+- `tail(iterable $data): Generator<TKey, TValue>` — lazy; preserves keys; drops the first element
+- `init(iterable $data): Generator<TKey, TValue>` — lazy; preserves keys; drops the last element
 
 ## Flattening / Mapping
 - `flatten(iterable $data, int $depth = 1): Generator<int, mixed>`
@@ -114,7 +121,7 @@ Dual-mode usage
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, transpose, unzip, uniq, partition, aperture, dropLast, takeLast, chunk, union, intersection, difference, symmetricDifference, sortWith};
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, toArray, flatten, zip, zipWith, transpose, unzip, uniq, partition, aperture, dropLast, takeLast, tail, init, range, chunk, union, intersection, difference, symmetricDifference, sortWith};
 use function Denprog\RiverFlow\Utils\{ascend, descend};
 
 $evens = [1,2,3,4,5,6]
@@ -162,6 +169,18 @@ $u = union($a, $b);                // ['a'=>1,'b'=>2,'c'=>'2','d'=>3,'e'=>4,'y'=
 $i = intersection($a, $b);          // ['b'=>2,'c'=>'2'] (keys from left)
 $d = difference($a, $b);            // ['a'=>1,'d'=>3,'e'=>4]
 $s = symmetricDifference($a, $b);   // ['a'=>1,'d'=>3,'e'=>4,'y'=>5,'w'=>6]
+
+// Sequence generation: range (lazy, end-exclusive)
+$nums = range(0, 5) |> toList(); // [0,1,2,3,4]
+
+// Tail and init (lazy, keys preserved)
+$t = ['a'=>1,'b'=>2,'c'=>3]
+    |> tail()
+    |> toArray(); // ['b'=>2,'c'=>3]
+
+$i = ['x'=>10,'y'=>20,'z'=>30]
+    |> init()
+    |> toArray(); // ['x'=>10,'y'=>20]
 
 [$pass, $fail] = partition(['a'=>1,'b'=>2,'c'=>3], fn(int $v) => $v > 1);
 // $pass = ['b'=>2,'c'=>3], $fail = ['a'=>1]

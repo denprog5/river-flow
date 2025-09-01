@@ -293,6 +293,76 @@ function toList_impl(iterable $data): array
 }
 
 /**
+ * Create a numeric range as a lazy sequence. End-exclusive.
+ *
+ * Supports positive and negative steps. Throws when step is 0 or when the
+ * step's sign does not move from start toward end (except when start == end).
+ *
+ * Examples:
+ * - range(0, 5) => 0,1,2,3,4
+ * - range(0, 5, 2) => 0,2,4
+ * - range(5, 0, -2) => 5,3,1
+ * - range(3, 3) => (empty)
+ *
+ * @param int|float $start
+ * @param int|float $end
+ * @param int|float $step
+ * @return Generator<int, int|float>
+ */
+function range(int|float $start, int|float $end, int|float $step = 1): Generator
+{
+    // Eager validation so errors surface at call time
+    if ($step === 0 || $step === 0.0) {
+        throw new InvalidArgumentException('range(): step must not be 0');
+    }
+    if ($start !== $end) {
+        if ($step > 0 && $start > $end) {
+            throw new InvalidArgumentException('range(): positive step but start > end');
+        }
+        if ($step < 0 && $start < $end) {
+            throw new InvalidArgumentException('range(): negative step but start < end');
+        }
+    }
+
+    return range_gen($start, $end, $step);
+}
+
+/** @internal
+ * @param int|float $start
+ * @param int|float $end
+ * @param int|float $step
+ * @return Generator<int, int|float>
+ */
+function range_gen(int|float $start, int|float $end, int|float $step): Generator
+{
+    if ($step === 0 || $step === 0.0) {
+        throw new InvalidArgumentException('range(): step must not be 0');
+    }
+
+    if ($start === $end) {
+        return; // empty
+    }
+
+    // Validate direction: step must move from start toward end
+    if ($step > 0 && $start > $end) {
+        throw new InvalidArgumentException('range(): positive step but start > end');
+    }
+    if ($step < 0 && $start < $end) {
+        throw new InvalidArgumentException('range(): negative step but start < end');
+    }
+
+    if ($step > 0) {
+        for ($x = $start; $x < $end; $x += $step) {
+            yield $x;
+        }
+    } else {
+        for ($x = $start; $x > $end; $x += $step) {
+            yield $x;
+        }
+    }
+}
+
+/**
  * toArray($data): array, or toArray(): callable
  *
  * @param iterable<mixed, mixed>|null $data
@@ -603,6 +673,84 @@ function last(mixed $data_or_default = null, mixed $default = null): mixed
     }
 
     return $found ? $last : $default;
+}
+
+/**
+ * Drop the first element lazily (return the tail). Preserves keys.
+ *
+ * Dual-mode:
+ *  - tail($data): Generator
+ *  - tail(): callable(iterable $data): Generator
+ *
+ * @param iterable<mixed, mixed>|null $data
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
+ */
+function tail(?iterable $data = null): Generator|callable
+{
+    if ($data === null) {
+        return static fn (iterable $d): Generator => /** @var iterable<mixed, mixed> $d */
+            tail_gen($d);
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return tail_gen($data);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<mixed, mixed>
+ */
+function tail_gen(iterable $data): Generator
+{
+    $skipped = false;
+    foreach ($data as $key => $value) {
+        if (!$skipped) {
+            $skipped = true;
+            continue;
+        }
+        yield $key => $value;
+    }
+}
+
+/**
+ * All but the last element, lazily. Preserves keys using a 1-item buffer.
+ *
+ * Dual-mode:
+ *  - init($data): Generator
+ *  - init(): callable(iterable $data): Generator
+ *
+ * @param iterable<mixed, mixed>|null $data
+ * @return Generator<mixed, mixed>|callable(iterable<mixed, mixed>): Generator<mixed, mixed>
+ */
+function init(?iterable $data = null): Generator|callable
+{
+    if ($data === null) {
+        return static fn (iterable $d): Generator => /** @var iterable<mixed, mixed> $d */
+            init_gen($d);
+    }
+
+    /** @var iterable<mixed, mixed> $data */
+    return init_gen($data);
+}
+
+/** @internal
+ * @param iterable<mixed, mixed> $data
+ * @return Generator<mixed, mixed>
+ */
+function init_gen(iterable $data): Generator
+{
+    $havePrev = false;
+    $prevKey  = null;
+    $prevVal  = null;
+
+    foreach ($data as $key => $value) {
+        if ($havePrev) {
+            yield $prevKey => $prevVal;
+        }
+        $prevKey  = $key;
+        $prevVal  = $value;
+        $havePrev = true;
+    }
 }
 
 /**
