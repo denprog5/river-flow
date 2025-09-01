@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-09-01
+
+### Tests
+- Pipes: add edge-case tests for `splitWhen()` invalid direct-call arguments (non-iterable first arg, non-callable predicate) and expand `chunk()` tests (currying form, size 1, empty input, invalid size in currying).
+- Pipes: add tests for `zip()` confirming keys are discarded and that zipping with an empty iterable yields an empty result.
+- Pipes: add tests for `partition()` invalid direct-call arguments (non-iterable first arg throws `InvalidArgumentException`; non-callable predicate results in PHP `TypeError`).
+
+### Docs
+- `docs/pipes.md`: clarify currying and error behaviors for `splitAt()`, `splitWhen()`, and `chunk()`; add a `chunk()` example in the Examples section.
+- `docs/pipes.md`: document that `zip()` yields 1-length rows when only one iterable is provided and returns empty when any iterable is empty; `zipWith()` with no additional iterables behaves likewise; both continue to discard keys and rewind iterators, supporting arrays, `Iterator`, and `Traversable`/`IteratorAggregate`.
+- `docs/pipes.md`: document `partition()` direct-call error handling: non-iterable first argument throws `InvalidArgumentException`; non-callable predicate in direct invocation results in PHP `TypeError`.
+
+### QA
+- Ran Composer scripts: php-cs-fixer (dry-run), PHPStan, Rector (dry-run). All OK. Import ordering adjusted in tests to satisfy fixer.
+
 ## [0.2.0] - 2025-08-15
 
 ### Breaking
@@ -40,7 +55,8 @@ All notable changes to this project will be documented in this file.
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/denprog5/river-flow/releases/tag/v0.2.1
 [0.2.0]: https://github.com/denprog5/river-flow/releases/tag/v0.2.0
 [0.1.2]: https://github.com/denprog5/river-flow/releases/tag/v0.1.2
 [0.1.1]: https://github.com/denprog5/river-flow/releases/tag/v0.1.1

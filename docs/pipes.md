@@ -62,20 +62,23 @@ Dual-mode usage
 - `zip(iterable $data, iterable ...$others): Generator<int, array<int, mixed>>`
   - Lazy; stops at shortest; keys discarded; yields numeric-indexed tuples
   - Accepts arrays, Iterator, and any Traversable (IteratorAggregate supported). All iterators are rewound before zipping.
+  - If only one iterable is provided, yields 1-length rows. If any iterable is empty, the result is empty.
 - `zipWith(iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
-  - Pipe-friendly curried form of `zip`. Same semantics as `zip` (keys discarded, stops at shortest, iterator inputs are rewound). Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
+  - Pipe-friendly curried form of `zip`. Same semantics as `zip` (keys discarded, stops at shortest, iterator inputs are rewound). If no other iterables are provided, behaves like `zip($data)` producing 1-length rows. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
 - `chunk(iterable $data, int $size): Generator<int, array<int, mixed>>`
-  - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0
+  - Lazy; keys discarded; last chunk may be smaller; throws if size <= 0. Supports currying: `chunk($size)($data)`. For `$size = 1` yields singleton chunks; empty input yields no chunks.
 - `aperture(iterable $data, int $size): Generator<int, array<int, mixed>>`
   - Lazy; keys discarded; sliding windows of exact length `$size`; throws if size <= 0
 - `partition(iterable $data, callable(TValue, TKey): bool $predicate): array{0: array<TKey, TValue>, 1: array<TKey, TValue>}`
   - Eager; keys preserved; returns [pass, fail]
+  - Direct-call requires an iterable first argument and a callable predicate. A non-iterable first argument will throw `InvalidArgumentException`. A non-callable predicate in direct invocation will result in a PHP `TypeError` due to parameter typing.
 - `splitAt(iterable $data, int $index): array{0: list<mixed>, 1: list<mixed>}`
-  - Eager; keys discarded; returns `[left, right]` where `left` has the first `$index` items, `right` the remainder.
+  - Eager; keys discarded; returns `[left, right]` where `left` has the first `$index` items, `right` the remainder. Supports currying: `splitAt($index)($data)`.
   - Edge cases: `$index <= 0` -> `[[], all]`; `$index >= count(data)` -> `[all, []]`.
 - `splitWhen(iterable $data, callable(TValue, TKey): bool $predicate): array{0: list<TValue>, 1: list<TValue>}`
   - Eager; keys discarded; splits before the first element where predicate is true.
   - The matching element is the first of the right part. No match -> `[all, []]`.
+  - Supports currying: `splitWhen($predicate)($data)`. Direct-call requires an iterable first argument and a callable predicate; non-callable predicate will result in a PHP `TypeError` due to parameter typing, and a non-iterable first argument will throw `InvalidArgumentException`.
 
 ## Control flow
 - `take(iterable $data, int $count): Generator<TKey, TValue>` — lazy; preserves keys; yields up to $count
@@ -93,7 +96,7 @@ Dual-mode usage
 
 ## Examples
 ```php
-use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, uniq, partition, aperture, dropLast, takeLast};
+use function Denprog\RiverFlow\Pipes\{map, filter, toList, flatten, zip, zipWith, uniq, partition, aperture, dropLast, takeLast, chunk};
 
 $evens = [1,2,3,4,5,6]
     |> filter(fn(int $n) => $n % 2 === 0)
@@ -127,6 +130,11 @@ $dropped = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
 $last2 = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]
     |> takeLast(2)
     |> toList(); // [3,4]
+
+// Chunk into size 2 (keys discarded)
+$chunks = ['x'=>1,'y'=>2,'z'=>3]
+    |> chunk(2)
+    |> toList(); // [[1,2],[3]]
 
 // splitAt and splitWhen (keys discarded)
 [$l, $r] = ['a'=>1,'b'=>2,'c'=>3,'d'=>4]

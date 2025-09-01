@@ -18,6 +18,7 @@ use Generator;
 use InvalidArgumentException;
 use IteratorAggregate;
 use Traversable;
+use TypeError;
 
 describe('partition, zip, chunk, min, max', function (): void {
     it('partitions with keys preserved and returns [pass, fail]', function (): void {
@@ -48,6 +49,18 @@ describe('partition, zip, chunk, min, max', function (): void {
     it('zips a single iterable producing 1-length rows', function (): void {
         $rows = toArray(zip([7, 8]));
         expect($rows)->toBe([[7], [8]]);
+    });
+
+    it('zip discards keys from input iterables', function (): void {
+        $a    = ['ka' => 1, 'kb' => 2];
+        $b    = ['kx' => 'x', 'ky' => 'y'];
+        $rows = toArray(zip($a, $b));
+        expect($rows)->toBe([[1, 'x'], [2, 'y']]);
+    });
+
+    it('zip with an empty iterable yields empty result', function (): void {
+        expect(toArray(zip([], [1, 2])))->toBe([]);
+        expect(toArray(zip([1, 2], [])))->toBe([]);
     });
 
     it('zip rewinds Iterators before zipping (ArrayIterator advanced)', function (): void {
@@ -162,6 +175,14 @@ describe('partition, zip, chunk, min, max', function (): void {
     it('chunk currying throws on invalid size', function (): void {
         expect(fn (): array => toArray(chunk(0)([1, 2, 3])))->toThrow(InvalidArgumentException::class);
         expect(fn (): array => toArray(chunk(-2)([1, 2])))->toThrow(InvalidArgumentException::class);
+    });
+
+    it('partition throws on invalid direct-call arguments', function (): void {
+        // first arg is callable (not iterable) in direct invocation => invalid
+        expect(fn (): array => partition('strlen', fn (): bool => true))->toThrow(InvalidArgumentException::class);
+        // predicate not callable in direct invocation -> TypeError due to parameter type (?callable)
+        /** @phpstan-ignore-next-line intentionally passing invalid predicate */
+        expect(fn (): array => partition([1, 2, 3], 'not_callable'))->toThrow(TypeError::class);
     });
 
     it('min and max return null for empty input', function (): void {
