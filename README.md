@@ -80,7 +80,7 @@ assert($out === '16');
 
 ### Pipes
 ```php
-use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init};
+use function Denprog\RiverFlow\Pipes\{filter, map, take, toList, toArray, flatten, uniq, groupBy, values, sortBy, zipWith, range, tail, init, scan, scanRight, partitionBy};
 
 // Transform → filter → take → materialize
 $topSquares = [1,2,3,4,5,6,7,8,9]
@@ -118,6 +118,21 @@ $rest = ['a'=>1,'b'=>2,'c'=>3]
 $allButLast = ['x'=>10,'y'=>20,'z'=>30]
     |> init()
     |> toArray(); // ['x'=>10,'y'=>20]
+
+// Inclusive prefix and suffix scans (lazy, keys preserved)
+$prefix = [1, 2, 3, 4]
+    |> scan(fn (?int $c, int $v) => ($c ?? 0) + $v, 0)
+    |> toList(); // [1, 3, 6, 10]
+
+$suffix = [1, 2, 3]
+    |> scanRight(fn (?int $c, int $v) => ($c ?? 0) + $v, 0)
+    |> toList(); // [6, 5, 3]
+
+// Partition into contiguous groups by discriminator (lazy)
+$groups = ['ant', 'apple', 'bear', 'bob', 'cat']
+    |> partitionBy(fn (string $s) => $s[0])
+    |> toList();
+// [[0=>'ant',1=>'apple'], [2=>'bear',3=>'bob'], [4=>'cat']]
 ```
 
 ### Strings

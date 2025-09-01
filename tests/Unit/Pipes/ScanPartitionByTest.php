@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Denprog\RiverFlow\Tests\Unit\Pipes;
 
-use TypeError;
 use function Denprog\RiverFlow\Pipes\partitionBy;
 use function Denprog\RiverFlow\Pipes\scan;
 use function Denprog\RiverFlow\Pipes\scanRight;
@@ -13,6 +12,7 @@ use function Denprog\RiverFlow\Pipes\toList;
 
 use Generator;
 use InvalidArgumentException;
+use TypeError;
 
 describe('scan, scanRight, partitionBy', function (): void {
     it('scan accumulates left-to-right and preserves keys', function (): void {

@@ -6,6 +6,21 @@ All notable changes to this project will be documented in this file.
 
 _Nothing yet._
 
+## [0.2.3] - 2025-09-01
+
+### Added
+- Pipes: add lazy dual-mode `scan()`, `scanRight()`, and `partitionBy()`
+
+### Tests
+- Add comprehensive tests for `scan`, `scanRight`, and `partitionBy` covering associative/numeric keys, currying, generators, empty input, and invalid argument handling
+
+### Docs
+- `docs/pipes.md`: add Accumulation section (`scan`, `scanRight`) and document `partitionBy` under Combining/Windowing with examples
+
+### QA
+- All checks green: Pest, PHPStan, Rector, PHP-CS-Fixer
+- Test suite: 183 tests, 392 assertions
+
 ## [0.2.2] - 2025-09-01
 
 ### Added
@@ -71,7 +86,8 @@ _Nothing yet._
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/denprog5/river-flow/releases/tag/v0.2.3
 [0.2.2]: https://github.com/denprog5/river-flow/releases/tag/v0.2.2
 [0.2.1]: https://github.com/denprog5/river-flow/releases/tag/v0.2.1
 [0.2.0]: https://github.com/denprog5/river-flow/releases/tag/v0.2.0
