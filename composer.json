@@ -1,6 +1,6 @@
 {
     "require-dev": {
-        "pestphp/pest": "^3.8",
+        "pestphp/pest": "^4.0",
         "phpstan/phpstan": "^2.1.22",
         "friendsofphp/php-cs-fixer": "^3.85.1",
         "phpstan/phpstan-strict-rules": "^2.0",
