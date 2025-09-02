@@ -429,3 +429,190 @@ function split_impl(string $data, string $delimiter, int $lim = PHP_INT_MAX): ar
 
     return \array_slice($parts, 0, $count - $drop);
 }
+
+/**
+ * Test a string against a PCRE pattern. Safe wrapper over preg_match.
+ * Adds 'u' (UTF-8) modifier when missing.
+ * Direct:  testRegex($data, $pattern, $flags = 0): bool
+ * Curried: testRegex($pattern, $flags = 0): callable(string $data): bool
+ *
+ * @phpstan-param 0|256|512|768 $flags
+ */
+function testRegex(string $data_or_pattern, ?string $pattern = null, int $flags = 0): bool|callable
+{
+    if ($pattern === null) {
+        $pat = $data_or_pattern;
+
+        return static fn (string $data): bool => testRegex_impl($data, $pat, $flags);
+    }
+
+    $data = $data_or_pattern;
+
+    return testRegex_impl($data, $pattern, $flags);
+}
+
+/** @internal
+ * @phpstan-param 0|256|512|768 $flags
+ */
+function testRegex_impl(string $data, string $pattern, int $flags = 0): bool
+{
+    $pat = ensure_unicode_modifier($pattern);
+    $err = null;
+    set_error_handler(static function (int $severity, string $message) use (&$err): bool {
+        $err = $message;
+
+        return true; // swallow warning
+    });
+
+    try {
+        $res = preg_match($pat, $data, $m, $flags);
+    } finally {
+        restore_error_handler();
+    }
+
+    if ($res === false || $err !== null) {
+        $msg = $err ?? (\function_exists('preg_last_error_msg') ? preg_last_error_msg() : 'PCRE error');
+        throw new InvalidArgumentException('testRegex(): ' . $msg);
+    }
+
+    return $res === 1;
+}
+
+/**
+ * Match all occurrences of a PCRE pattern. Safe wrapper over preg_match_all.
+ * Adds 'u' (UTF-8) modifier when missing.
+ * Direct:  matchRegex($data, $pattern, $flags = 0): array
+ * Curried: matchRegex($pattern, $flags = 0): callable(string $data): array
+ *
+ * @phpstan-param 0|256|512|768 $flags
+ * @return array<int|string, mixed>|callable(string): array<int|string, mixed>
+ */
+function matchRegex(string $data_or_pattern, ?string $pattern = null, int $flags = 0): array|callable
+{
+    if ($pattern === null) {
+        $pat = $data_or_pattern;
+
+        return static fn (string $data): array => matchRegex_impl($data, $pat, $flags);
+    }
+
+    $data = $data_or_pattern;
+
+    return matchRegex_impl($data, $pattern, $flags);
+}
+
+/** @internal
+ * @phpstan-param 0|256|512|768 $flags
+ * @return array<int|string, mixed>
+ */
+function matchRegex_impl(string $data, string $pattern, int $flags = 0): array
+{
+    $pat     = ensure_unicode_modifier($pattern);
+    $matches = [];
+    $err     = null;
+    set_error_handler(static function (int $severity, string $message) use (&$err): bool {
+        $err = $message;
+
+        return true; // swallow warning
+    });
+
+    try {
+        $res = preg_match_all($pat, $data, $matches, $flags);
+    } finally {
+        restore_error_handler();
+    }
+
+    if ($res === false || $err !== null) {
+        $msg = $err ?? (\function_exists('preg_last_error_msg') ? preg_last_error_msg() : 'PCRE error');
+        throw new InvalidArgumentException('matchRegex(): ' . $msg);
+    }
+
+    return $matches;
+}
+
+/**
+ * Left pad a string to a target length.
+ * Direct:  padStart($data, $len, $padChar = ' '): string
+ * Curried: padStart($len, $padChar = ' '): callable(string $data): string
+ */
+function padStart(string|int $data_or_len, int|string|null $len_or_padChar = null, ?string $padChar = ' '): string|callable
+{
+    if (!\is_string($data_or_len)) {
+        // Curried form: padStart($len, $padChar)
+        $l  = $data_or_len;
+        $pc = \is_string($len_or_padChar) ? $len_or_padChar : ($padChar ?? ' ');
+
+        return static fn (string $data): string => padStart_impl($data, $l, $pc);
+    }
+
+    // Direct form: padStart($data, $len, $padChar)
+    $data = $data_or_len;
+    $l    = (($len_or_padChar !== null && !\is_string($len_or_padChar)) ? $len_or_padChar : 0);
+
+    return padStart_impl($data, $l, $padChar ?? ' ');
+}
+
+/** @internal */
+function padStart_impl(string $data, int $len, string $padChar = ' '): string
+{
+    if ($len <= 0) {
+        return $data;
+    }
+    if ($padChar === '') {
+        throw new InvalidArgumentException('padStart(): padChar cannot be empty');
+    }
+
+    return str_pad($data, $len, $padChar, STR_PAD_LEFT);
+}
+
+/**
+ * Right pad a string to a target length.
+ * Direct:  padEnd($data, $len, $padChar = ' '): string
+ * Curried: padEnd($len, $padChar = ' '): callable(string $data): string
+ */
+function padEnd(string|int $data_or_len, int|string|null $len_or_padChar = null, ?string $padChar = ' '): string|callable
+{
+    if (!\is_string($data_or_len)) {
+        // Curried form: padEnd($len, $padChar)
+        $l  = $data_or_len;
+        $pc = \is_string($len_or_padChar) ? $len_or_padChar : ($padChar ?? ' ');
+
+        return static fn (string $data): string => padEnd_impl($data, $l, $pc);
+    }
+
+    // Direct form: padEnd($data, $len, $padChar)
+    $data = $data_or_len;
+    $l    = (($len_or_padChar !== null && !\is_string($len_or_padChar)) ? $len_or_padChar : 0);
+
+    return padEnd_impl($data, $l, $padChar ?? ' ');
+}
+
+/** @internal */
+function padEnd_impl(string $data, int $len, string $padChar = ' '): string
+{
+    if ($len <= 0) {
+        return $data;
+    }
+    if ($padChar === '') {
+        throw new InvalidArgumentException('padEnd(): padChar cannot be empty');
+    }
+
+    return str_pad($data, $len, $padChar, STR_PAD_RIGHT);
+}
+
+/** @internal */
+function ensure_unicode_modifier(string $pattern): string
+{
+    if ($pattern === '') {
+        return $pattern;
+    }
+    $delim = $pattern[0];
+    $last  = strrpos($pattern, $delim);
+    if ($last !== false && $last > 0) {
+        $mods = substr($pattern, $last + 1);
+        if (!str_contains($mods, 'u')) {
+            return $pattern . 'u';
+        }
+    }
+
+    return $pattern;
+}

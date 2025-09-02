@@ -6,6 +6,24 @@ All notable changes to this project will be documented in this file.
 
 _Nothing yet._
 
+## [0.3.0] - 2025-09-02
+
+### Added
+- Playground: complete coverage across Pipes, Strings, and Utils modules with concise examples demonstrating both direct and curried usage.
+  - Pipes playground now includes examples for: `reduce`, `sum`, `pluck`, `reject`, `toArray`, `sortWith`, `keys`, `first`, `last`, `tail`, `init`, `find`, `count`, `isEmpty`, `contains`, `sort`, `keyBy`, `zip`, `uniqBy`, `min`, `max`, `scan`, `scanRight`, `partitionBy`, `countBy`, `aperture`, `drop`, `takeWhile`, `dropWhile`, `flatMap`, `chunk`, `range`, `repeat`, `times`, `distinctUntilChanged`, `intersperse`, and `pairwise`.
+  - Strings playground expanded to cover: `includes`, `startsWith`, `endsWith`, `replace`, `slice`, `lines`, `testRegex`, `matchRegex`, `padStart`, `padEnd`.
+  - Utils playground expanded to cover predicates, control/combinators, partial application and memoization, and comparators: `complement`, `both`, `either`, `allPass`, `anyPass`, `when`, `unless`, `ifElse`, `cond`, `converge`, `once`, `memoizeWith`, `partial`, `partialRight`, `ascend`, `descend`.
+
+### Docs
+- Playgrounds serve as live documentation for all exported APIs in Pipes, Strings, and Utils.
+
+### QA
+- Full suite green: Pest tests (220 tests, 462 assertions), PHPStan analyse OK, PHP-CS-Fixer dry-run OK, Rector dry-run OK.
+- Verified all three playground scripts execute successfully.
+
+### Notes
+- Target PHP 8.5+. Some PHP 8.5-dev warnings (e.g., opcache already loaded) observed locally but not affecting library behavior.
+
 ## [0.2.6] - 2025-09-02
 
 ### Added
@@ -133,7 +151,8 @@ _Nothing yet._
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/denprog5/river-flow/releases/tag/v0.3.0
 [0.2.6]: https://github.com/denprog5/river-flow/releases/tag/v0.2.6
 [0.2.5]: https://github.com/denprog5/river-flow/releases/tag/v0.2.5
 [0.2.4]: https://github.com/denprog5/river-flow/releases/tag/v0.2.4

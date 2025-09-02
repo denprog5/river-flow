@@ -72,6 +72,7 @@ assert($out === '16');
 ## Module Guides
 - Pipes: see [pipes.md](./pipes.md)
 - Strings: see [strings.md](./strings.md)
+- Structs: see [structs.md](./structs.md)
 - Utils: see [utils.md](./utils.md)
 
 ## Conventions

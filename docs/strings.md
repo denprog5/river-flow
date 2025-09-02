@@ -38,9 +38,18 @@ All functions are UTF-8 aware when mbstring is available.
 - `slice(string $data, int $start, ?int $end = null): string`
   - Returns substring from `$start` (inclusive) to `$end` (exclusive). Supports negative indices from the end. Uses `mb_substr` when available. Curried: `slice($start, ?$end = null): callable(string $data): string`
 
+- `testRegex(string $data, string $pattern): bool`
+  - Safe wrapper over `preg_match`. Automatically appends Unicode modifier `u` if missing. Curried: `testRegex($pattern): callable(string $data): bool`
+- `matchRegex(string $data, string $pattern): array<int, array<int, string>>`
+  - Safe wrapper over `preg_match_all`. Auto-adds `u` modifier when missing; returns the standard matches matrix. Curried: `matchRegex($pattern): callable(string $data): array`
+- `padStart(string $data, int $len, string $padChar = ' '): string`
+  - Left pads to length using `str_pad`. Empty `$padChar` throws `InvalidArgumentException`. Curried: `padStart($len, $padChar = ' '): callable(string $data): string`
+- `padEnd(string $data, int $len, string $padChar = ' '): string`
+  - Right pads to length using `str_pad`. Empty `$padChar` throws `InvalidArgumentException`. Curried: `padEnd($len, $padChar = ' '): callable(string $data): string`
+
 ## Examples
 ```php
-use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, includes, startsWith, endsWith, replace, slice};
+use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, includes, startsWith, endsWith, replace, slice, testRegex, matchRegex, padStart, padEnd};
 
 $clean = " -- Hello -- " |> trim(); // "-- Hello --" (only spaces removed)
 $cleanCustom = " -- Hello -- " |> trim(characters: " -"); // "Hello"
@@ -66,11 +75,19 @@ $mid = 'Привет' |> slice(1, -1);       // 'риве' (if mbstring)
 $has = 'hello' |> includes('ell');        // true
 $sw  = 'hello' |> startsWith('he');       // true
 $ew  = 'hello' |> endsWith('lo');         // true
+
+// regex helpers
+$ok   = 'abc123' |> testRegex('/\d+/');      // true
+$nums = 'a1b22c' |> matchRegex('/\d+/');     // $nums[0] === ['1','22']
+
+// padding
+$s = '7'   |> padStart(3, '0'); // '007'
+$t = 'cat' |> padEnd(5, '_');   // 'cat__'
 ```
 
 ### Direct (non-pipe) usage
 ```php
-use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, replace, slice};
+use function Denprog\RiverFlow\Strings\{trim, lines, replacePrefix, toLowerCase, toUpperCase, length, split, join, replace, slice, testRegex, matchRegex, padStart, padEnd};
 
 $clean = trim("  Hello  ");                          // "Hello"
 $cleanCustom = trim(" -- Hi -- ", characters: " -"); // "Hi"
@@ -83,6 +100,11 @@ $parts = split('a|b|c|d', '|', 2);                     // ['a','b|c|d']
 $list  = join([2024, '01', 15], '-');                  // '2024-01-15'
 $repl  = replace('hello', 'l', 'x');                   // 'hexxo'
 $mid   = slice('Привет', 1, -1);                       // 'риве' (if mbstring)
+
+$b1 = testRegex('abc', '/[a-z]+/i');                   // true
+$ms = matchRegex('a1b22c', '/\d+/');                   // $ms[0] === ['1','22']
+$p1 = padStart('x', 3, '0');                            // '00x'
+$p2 = padEnd('x', 3, '0');                              // 'x00'
 ```
 
 ### Pipeline chaining (one-liners)
