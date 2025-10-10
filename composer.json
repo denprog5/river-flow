@@ -5,7 +5,7 @@
         "friendsofphp/php-cs-fixer": "^3.87.1",
         "phpstan/phpstan-strict-rules": "^2.0",
         "spaze/phpstan-disallowed-calls": "^4.6.0",
-        "rector/rector": "^2.1.6"
+        "rector/rector": "^2.2.2"
     },
     "config": {
         "allow-plugins": {
