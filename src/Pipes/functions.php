@@ -6,6 +6,7 @@ namespace Denprog\RiverFlow\Pipes;
 
 use ArrayIterator;
 use Closure;
+use Countable;
 use Generator;
 use InvalidArgumentException;
 use Iterator;
@@ -909,7 +910,7 @@ function count_impl(iterable $data): int
     }
 
     // PHP 8.5 optimization: use Countable interface when available
-    if ($data instanceof \Countable) {
+    if ($data instanceof Countable) {
         return $data->count();
     }
 
