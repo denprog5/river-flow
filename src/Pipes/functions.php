@@ -458,6 +458,7 @@ function toArray(?iterable $data = null): array|callable
 function toArray_impl(iterable $data): array
 {
     $out = [];
+    /** @var int|string $k */
     foreach ($data as $k => $v) {
         $out[$k] = $v;
     }
@@ -562,6 +563,7 @@ function sortBy(iterable|callable $data_or_getComparable, iterable|callable|null
 function sortBy_impl(iterable $data, callable $getComparable): array
 {
     $pairs = [];
+    /** @var int|string $key */
     foreach ($data as $key => $value) {
         $pairs[$key] = [$value, $getComparable($value, $key)];
     }
@@ -1083,6 +1085,7 @@ function groupBy_impl(iterable $data, callable $grouper): array
         if (!\array_key_exists($group, $out)) {
             $out[$group] = [];
         }
+        /** @var int|string $key */
         $out[$group][$key] = $value;
     }
 
@@ -1972,6 +1975,7 @@ function partitionBy_gen(iterable $data, callable $discriminator): Generator
     /** @var array<int|string, mixed> $chunk */
     $chunk = [];
 
+    /** @var int|string $key */
     foreach ($data as $key => $value) {
         $id = $discriminator($value, $key);
         if ($started === false) {
@@ -2036,6 +2040,7 @@ function partition_impl(iterable $data, callable $predicate): array
     $pass = [];
     /** @var array<int|string, mixed> $fail */
     $fail = [];
+    /** @var int|string $key */
     foreach ($data as $key => $value) {
         if ($predicate($value, $key) === true) {
             $pass[$key] = $value;
@@ -2992,6 +2997,7 @@ function union_impl(iterable $a, iterable $b): array
     /** @var array<int|string, mixed> $out */
     $out = [];
 
+    /** @var int|string $ka */
     foreach ($a as $ka => $va) {
         [$ok, $h] = __hash_identifier($va);
         if (!$ok) {
@@ -3003,6 +3009,7 @@ function union_impl(iterable $a, iterable $b): array
         }
     }
 
+    /** @var int|string $kb */
     foreach ($b as $kb => $vb) {
         [$ok, $h] = __hash_identifier($vb);
         if (!$ok) {
@@ -3070,6 +3077,7 @@ function intersection_impl(iterable $a, iterable $b): array
 
     $out  = [];
     $seen = [];
+    /** @var int|string $ka */
     foreach ($a as $ka => $va) {
         [$ok, $h] = __hash_identifier($va);
         if (!$ok) {
@@ -3136,6 +3144,7 @@ function difference_impl(iterable $a, iterable $b): array
 
     $out  = [];
     $seen = [];
+    /** @var int|string $ka */
     foreach ($a as $ka => $va) {
         [$ok, $h] = __hash_identifier($va);
         if (!$ok) {
@@ -3223,14 +3232,18 @@ function symmetricDifference_impl(iterable $a, iterable $b): array
 
     // Emit left-only first, preserving insertion order from A
     $out = [];
-    foreach ($entriesA as $h => [$ka, $va]) {
+    /** @var array{0: int|string, 1: mixed} $entry */
+    foreach ($entriesA as $h => $entry) {
+        [$ka, $va] = $entry;
         if (!isset($setB[$h])) {
             $out[$ka] = $va;
         }
     }
 
     // Then right-only, preserving insertion order from B
-    foreach ($entriesB as $h => [$kb, $vb]) {
+    /** @var array{0: int|string, 1: mixed} $entry */
+    foreach ($entriesB as $h => $entry) {
+        [$kb, $vb] = $entry;
         if (!isset($setA[$h])) {
             $out[$kb] = $vb;
         }
