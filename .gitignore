@@ -7,6 +7,7 @@
 /.cache/
 /.php-cs-fixer.cache
 /.phpunit.result.cache
+/.phpunit.cache/
 composer.lock
 .DS_Store
 Thumbs.db
