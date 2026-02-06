@@ -26,14 +26,17 @@ describe('Utils tap', function (): void {
         $obj      = new stdClass();
         $obj->n   = 1;
         $received = null;
-        $out      = tap($obj, function ($x) use (&$received): void { $received = $x; });
+        $out      = tap($obj, function ($x) use (&$received): void {
+            $received = $x;
+        });
         expect($out)->toBe($obj);           // identical instance
         expect($received)->toBe($obj);      // callback saw the same instance
     });
 
     it('does not modify arrays unless callback mutates them explicitly', function (): void {
         $arr = [1, 2, 3];
-        $out = tap($arr, function ($x): void { /* no-op */ });
+        $out = tap($arr, function ($x): void { /* no-op */
+        });
         expect($out)->toBe($arr);
     });
 });

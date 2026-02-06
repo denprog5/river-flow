@@ -79,7 +79,9 @@ describe('aggregation and misc (reduce, sum, average, first, last, find, count, 
 
     it('isEmpty and contains behave as documented', function (): void {
         expect(isEmpty([]))->toBeTrue();
-        $gen = (function (): Generator { yield from []; })(); // empty generator
+        $gen = (function (): Generator {
+            yield from [];
+        })(); // empty generator
         expect(isEmpty($gen))->toBeTrue();
 
         expect(contains([1, '1', 2], '1'))->toBeTrue();
