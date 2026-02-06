@@ -51,7 +51,7 @@ jobs:
         run: composer analyse -c phpstan.neon.dist
 
       - name: Run tests
-        run: composer test
+        run: vendor/bin/pest
 
       - name: Prepare coverage directory
         if: matrix.os == 'ubuntu-latest'
@@ -59,7 +59,7 @@ jobs:
 
       - name: Run tests with coverage (Clover)
         if: matrix.os == 'ubuntu-latest'
-        run: composer test:coverage
+        run: vendor/bin/pest --coverage --coverage-clover=build/logs/clover.xml
 
       - name: Upload Clover coverage artifact
         if: matrix.os == 'ubuntu-latest'
