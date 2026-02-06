@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-02-06
+
+### Security
+- **CVE-2026-24765**: Updated `phpunit/phpunit` to 12.5.8 (fixes Unsafe Deserialization in PHPT Code Coverage Handling)
+- **CVE-2026-24739**: Updated `symfony/process` to 8.0.5 (fixes incorrect argument escaping on Windows under MSYS2/Git Bash)
+
+### Changed
+- Updated all dev dependencies to latest secure versions
+
 ## [1.0.0] - 2026-02-06
 
 ### 🎉 First Stable Release for PHP 8.5 GA
