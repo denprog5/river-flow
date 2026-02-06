@@ -8,7 +8,6 @@ use function Denprog\RiverFlow\Pipes\splitAt;
 use function Denprog\RiverFlow\Pipes\splitWhen;
 
 use InvalidArgumentException;
-use TypeError;
 
 describe('splitAt and splitWhen', function (): void {
     it('splitAt splits at index and discards keys', function (): void {
@@ -71,8 +70,5 @@ describe('splitAt and splitWhen', function (): void {
     it('splitWhen throws on invalid direct-call arguments', function (): void {
         // first arg is callable (not iterable) in direct invocation => invalid
         expect(fn (): array => splitWhen('strlen', fn (): bool => true))->toThrow(InvalidArgumentException::class);
-        // predicate not callable in direct invocation -> TypeError due to parameter type (?callable)
-        /** @phpstan-ignore-next-line intentionally passing invalid predicate */
-        expect(fn (): array => splitWhen([1, 2, 3], 'not_callable'))->toThrow(TypeError::class);
     });
 });

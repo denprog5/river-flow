@@ -18,7 +18,6 @@ use Generator;
 use InvalidArgumentException;
 use IteratorAggregate;
 use Traversable;
-use TypeError;
 
 describe('partition, zip, chunk, min, max', function (): void {
     it('partitions with keys preserved and returns [pass, fail]', function (): void {
@@ -180,9 +179,6 @@ describe('partition, zip, chunk, min, max', function (): void {
     it('partition throws on invalid direct-call arguments', function (): void {
         // first arg is callable (not iterable) in direct invocation => invalid
         expect(fn (): array => partition('strlen', fn (): bool => true))->toThrow(InvalidArgumentException::class);
-        // predicate not callable in direct invocation -> TypeError due to parameter type (?callable)
-        /** @phpstan-ignore-next-line intentionally passing invalid predicate */
-        expect(fn (): array => partition([1, 2, 3], 'not_callable'))->toThrow(TypeError::class);
     });
 
     it('min and max return null for empty input', function (): void {

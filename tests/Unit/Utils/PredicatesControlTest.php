@@ -94,7 +94,7 @@ describe('Utils predicates and control/combinators', function (): void {
     it('converge collects branch results and applies after', function (): void {
         $after    = fn (int $a, int $b): int => $a + $b;
         $branches = [
-            fn (string $s): int => \strlen($s),
+            \strlen(...),
             fn (string $s): int => \ord($s[0]),
         ];
         $fn = converge($after, $branches);

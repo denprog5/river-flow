@@ -94,7 +94,7 @@ describe('Structs: evolve', function (): void {
         $data = ['count' => 1, 'name' => 'Ann'];
         $spec = [
             'count' => fn (int $n): int => $n + 1,
-            'name'  => fn (string $s) => strtoupper($s),
+            'name'  => strtoupper(...),
             'skip'  => fn ($x): string => 'no',
         ];
 

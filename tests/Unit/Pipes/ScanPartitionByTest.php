@@ -24,7 +24,7 @@ describe('scan, scanRight, partitionBy', function (): void {
         expect($list)->toBe([1, 3, 6]);
 
         // empty input yields nothing
-        expect(toList(scan([], fn ($c, $v) => $c, null)))->toBe([]);
+        expect(toList(scan([], fn ($c, $v) => $c)))->toBe([]);
     });
 
     it('scanRight accumulates from the right but yields in original order; preserves keys', function (): void {
@@ -39,7 +39,7 @@ describe('scan, scanRight, partitionBy', function (): void {
         expect($out)->toBe(['x' => 12, 'y' => 7]);
 
         // empty input yields nothing
-        expect(toList(scanRight([], fn ($c, $v) => $c, null)))->toBe([]);
+        expect(toList(scanRight([], fn ($c, $v) => $c)))->toBe([]);
     });
 
     it('partitionBy groups contiguous items by discriminator value; inner keys preserved', function (): void {
@@ -78,9 +78,9 @@ describe('scan, scanRight, partitionBy', function (): void {
 
     it('throws on invalid direct-call arguments for scan/scanRight/partitionBy', function (): void {
         // scan: first arg not matching (iterable|callable) triggers TypeError at signature level
-        expect(fn (): array => toList(scan('not_iterable', fn ($c, $v) => $c, null)))->toThrow(TypeError::class);
+        expect(fn (): array => toList(scan('not_iterable', fn ($c, $v) => $c)))->toThrow(TypeError::class);
         // scanRight: same behavior
-        expect(fn (): array => toList(scanRight('not_iterable', fn ($c, $v) => $c, null)))->toThrow(TypeError::class);
+        expect(fn (): array => toList(scanRight('not_iterable', fn ($c, $v) => $c)))->toThrow(TypeError::class);
         // partitionBy: first not iterable in direct invocation -> InvalidArgumentException by our runtime check
         expect(fn (): array => toList(partitionBy('strlen', fn (): null => null)))->toThrow(InvalidArgumentException::class);
     });

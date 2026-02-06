@@ -23,7 +23,7 @@ describe('repeat (lazy)', function (): void {
     });
 
     it('supports infinite repetition when count is null (use take to limit)', function (): void {
-        $gen     = repeat(7, null);
+        $gen     = repeat(7);
         $limited = take($gen, 5);
         $array   = iterator_to_array($limited, false);
         expect($array)->toBe([7, 7, 7, 7, 7]);
