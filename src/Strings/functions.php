@@ -458,6 +458,11 @@ function testRegex_impl(string $data, string $pattern, int $flags = 0): bool
 {
     $pat = ensure_unicode_modifier($pattern);
     $err = null;
+
+    // ReDoS protection: temporarily limit backtracking
+    $prevBacktrackLimit = \ini_get('pcre.backtrack_limit');
+    ini_set('pcre.backtrack_limit', '100000');
+
     set_error_handler(static function (int $severity, string $message) use (&$err): bool {
         $err = $message;
 
@@ -468,6 +473,7 @@ function testRegex_impl(string $data, string $pattern, int $flags = 0): bool
         $res = preg_match($pat, $data, $m, $flags);
     } finally {
         restore_error_handler();
+        ini_set('pcre.backtrack_limit', $prevBacktrackLimit !== false ? $prevBacktrackLimit : '1000000');
     }
 
     if ($res === false || $err !== null) {
@@ -509,6 +515,11 @@ function matchRegex_impl(string $data, string $pattern, int $flags = 0): array
     $pat     = ensure_unicode_modifier($pattern);
     $matches = [];
     $err     = null;
+
+    // ReDoS protection: temporarily limit backtracking
+    $prevBacktrackLimit = \ini_get('pcre.backtrack_limit');
+    ini_set('pcre.backtrack_limit', '100000');
+
     set_error_handler(static function (int $severity, string $message) use (&$err): bool {
         $err = $message;
 
@@ -519,6 +530,7 @@ function matchRegex_impl(string $data, string $pattern, int $flags = 0): array
         $res = preg_match_all($pat, $data, $matches, $flags);
     } finally {
         restore_error_handler();
+        ini_set('pcre.backtrack_limit', $prevBacktrackLimit !== false ? $prevBacktrackLimit : '1000000');
     }
 
     if ($res === false || $err !== null) {

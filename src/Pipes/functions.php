@@ -712,6 +712,12 @@ function first(mixed $data_or_default = null, mixed $default = null): mixed
     }
 
     $data = $data_or_default;
+
+    // PHP 8.5 optimization: use native array_first() for arrays
+    if (\is_array($data)) {
+        return array_first($data) ?? $default;
+    }
+
     foreach ($data as $value) {
         return $value;
     }
@@ -735,7 +741,13 @@ function last(mixed $data_or_default = null, mixed $default = null): mixed
         return static fn (iterable $data): mixed => last($data, $def);
     }
 
-    $data  = $data_or_default;
+    $data = $data_or_default;
+
+    // PHP 8.5 optimization: use native array_last() for arrays
+    if (\is_array($data)) {
+        return array_last($data) ?? $default;
+    }
+
     $found = false;
     $last  = null;
     foreach ($data as $value) {
@@ -895,6 +907,12 @@ function count_impl(iterable $data): int
     if (\is_array($data)) {
         return \count($data);
     }
+
+    // PHP 8.5 optimization: use Countable interface when available
+    if ($data instanceof \Countable) {
+        return $data->count();
+    }
+
     $n = 0;
     foreach ($data as $_) {
         $n++;

@@ -197,9 +197,44 @@ $val = 10
     |> (fn (int $x) => $x * 2); // 30
 ```
 
+### Structs
+```php
+use function Denprog\RiverFlow\Structs\{pick, omit, getPath, setPath, evolve, zipAssoc};
+
+$user = ['name' => 'Alice', 'email' => 'alice@example.com', 'age' => 30, 'password' => 'secret'];
+
+// Pick specific keys
+$partial = pick(['name', 'email'], $user);
+// ['name' => 'Alice', 'email' => 'alice@example.com']
+
+// Omit sensitive keys
+$safe = omit(['password'], $user);
+// ['name' => 'Alice', 'email' => 'alice@example.com', 'age' => 30]
+
+// Safe deep access (returns null when path missing)
+$data = ['user' => ['profile' => ['bio' => 'Hello world']]];
+$bio = getPath(['user', 'profile', 'bio'], $data); // 'Hello world'
+$missing = getPath(['user', 'settings', 'theme'], $data); // null
+
+// Immutable deep set (creates nested arrays as needed)
+$updated = setPath(['user', 'profile', 'bio'], 'Updated bio', $data);
+// $data remains unchanged, $updated has new bio
+
+// Transform with spec — apply functions to specific keys
+$evolved = evolve([
+    'age' => fn($a) => $a + 1,
+    'name' => fn($n) => strtoupper($n),
+], $user);
+// ['name' => 'ALICE', 'email' => '...', 'age' => 31, 'password' => 'secret']
+
+// Zip keys with values
+$result = zipAssoc(['a', 'b', 'c'], [1, 2, 3]);
+// ['a' => 1, 'b' => 2, 'c' => 3]
+```
+
 ## Documentation
 - Start here: `docs/index.md`
-- Module references: [Pipes](docs/pipes.md), [Strings](docs/strings.md), [Utils](docs/utils.md)
+- Module references: [Pipes](docs/pipes.md), [Strings](docs/strings.md), [Utils](docs/utils.md), [Structs](docs/structs.md)
 
 ## Development
 ```bash

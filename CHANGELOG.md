@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-02-06
+
+### 🎉 First Stable Release for PHP 8.5 GA
+
+This is the first stable release of RiverFlow, fully compatible with PHP 8.5 GA (released November 2025).
+
+### Added
+- **PHP 8.5 Optimization**: `first()` and `last()` now use native `array_first()`/`array_last()` for arrays, providing significant performance improvements
+- **Countable Optimization**: `count()` now uses the `Countable` interface when available, avoiding full iteration for collections that support it
+- **Documentation**: Added comprehensive Structs module documentation to README with examples for `pick`, `omit`, `getPath`, `setPath`, `evolve`, and `zipAssoc`
+- **Documentation**: Added "Memory Considerations" section to `docs/pipes.md` explaining lazy vs eager functions and best practices
+- **Documentation**: Added Structs module link to documentation references
+
+### Security
+- **ReDoS Protection**: Added PCRE backtrack limit protection in `testRegex()` and `matchRegex()` functions to mitigate Regular Expression Denial of Service attacks
+
+### Changed
+- Minimum PHP version: `>=8.5` (PHP 8.5 GA release)
+- All PHP 8.5 deprecation warnings addressed
+
+### Internal
+- Updated to use PHP 8.5 GA features (`array_first`, `array_last`)
+- PHPStan continues at max level with bleeding edge rules
+- Full test suite: 220+ tests, 460+ assertions
+- CI green on Linux/macOS/Windows
+
+### Migration from 0.x
+No breaking changes. Simply update your `composer.json`:
+```json
+"require": {
+    "denprog/river-flow": "^1.0"
+}
+```
+
 ## [Unreleased]
 
 _Nothing yet._
@@ -151,7 +185,8 @@ _Nothing yet._
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/denprog5/river-flow/releases/tag/v1.0.0
 [0.3.0]: https://github.com/denprog5/river-flow/releases/tag/v0.3.0
 [0.2.6]: https://github.com/denprog5/river-flow/releases/tag/v0.2.6
 [0.2.5]: https://github.com/denprog5/river-flow/releases/tag/v0.2.5

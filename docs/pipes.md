@@ -353,3 +353,70 @@ $zipped = [1, 2, 3]
     |> zipWith(['a','b'], ['X','Y','Z'])
     |> toList(); // [[1,'a','X'], [2,'b','Y']]
 ```
+
+## Memory Considerations
+
+Understanding memory usage is important when working with large datasets. RiverFlow functions are designed with memory efficiency in mind.
+
+### Lazy Functions (O(1) memory)
+These functions use generators and process elements one at a time:
+
+| Function | Notes |
+|----------|-------|
+| `filter()`, `map()`, `reject()` | Process elements on-demand |
+| `take()`, `drop()`, `takeWhile()`, `dropWhile()` | Stop early when possible |
+| `flatten()`, `flatMap()` | Recursive lazy traversal |
+| `values()`, `keys()`, `pluck()` | Single-pass iteration |
+| `range()`, `repeat()`, `times()` | Generate values lazily |
+| `tail()`, `init()` | Buffer at most 1 element |
+| `distinctUntilChanged()`, `intersperse()`, `pairwise()` | Minimal state |
+
+### Buffered Lazy Functions (O(k) memory)
+These functions buffer a fixed number of elements:
+
+| Function | Memory Usage | Notes |
+|----------|-------------|-------|
+| `takeLast(k)` | O(k) | Buffers last k elements |
+| `dropLast(k)` | O(k) | Lookahead buffer of k elements |
+| `chunk(k)` | O(k) | Buffers k elements per chunk |
+| `aperture(k)` | O(k) | Sliding window of k elements |
+
+### Eager Functions (O(n) memory)
+These functions load all elements into memory:
+
+| Function | Notes |
+|----------|-------|
+| `toList()`, `toArray()` | Materializes entire collection |
+| `sortBy()`, `sort()`, `sortWith()` | Must load all for sorting |
+| `groupBy()`, `keyBy()`, `countBy()` | Builds associative arrays |
+| `partition()`, `splitAt()`, `splitWhen()` | Returns two arrays |
+| `scanRight()` | Buffers input before processing right-to-left |
+| `union()`, `intersection()`, `difference()` | Set operations require full traversal |
+| `min()`, `max()`, `average()`, `sum()` | Must see all elements |
+| `transpose()`, `unzip()` | Materializes row/column structure |
+
+### Best Practices
+
+1. **Chain lazy operations** before materializing:
+   ```php
+   // Good: filter and map are lazy, toList() only at the end
+   $result = $largeData |> filter(...) |> map(...) |> take(100) |> toList();
+   ```
+
+2. **Use `take()` early** to limit processing:
+   ```php
+   // Processes only first 10 matching elements
+   $result = $hugeDataset |> filter($pred) |> take(10) |> toList();
+   ```
+
+3. **Avoid `scanRight()` on large datasets** — it buffers the entire input.
+
+4. **Use `first()` / `last()` instead of `toList()[0]`**:
+   ```php
+   // Efficient: stops at first element
+   $first = $generator |> first();
+   
+   // Wasteful: materializes entire collection
+   $first = ($generator |> toList())[0];
+   ```
+
