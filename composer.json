@@ -39,8 +39,8 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/pest",
-        "test:coverage": "vendor/bin/pest --coverage --coverage-clover=build/logs/clover.xml",
+        "test": "@php vendor/bin/pest",
+        "test:coverage": "@php vendor/bin/pest --coverage --coverage-clover=build/logs/clover.xml",
         "analyse": "vendor/bin/phpstan analyse -c phpstan.neon.dist",
         "cs:lint": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "cs:fix": "vendor/bin/php-cs-fixer fix",
