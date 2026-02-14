@@ -54,6 +54,14 @@ describe('Structs: getPath/getPathOr', function (): void {
         expect($gp($data))->toBe(30);
     });
 
+    it('getPath with empty path returns original input', function (): void {
+        $arr = ['a' => 1];
+        $obj = (object) ['a' => 1];
+
+        expect(getPath([], $arr))->toBe($arr);
+        expect(getPath([], $obj))->toBe($obj);
+    });
+
     it('getPathOr returns default when missing (direct + curried)', function (): void {
         $data = ['x' => ['y' => 1]];
         expect(getPathOr(['x', 'z'], 99, $data))->toBe(99);
@@ -61,6 +69,12 @@ describe('Structs: getPath/getPathOr', function (): void {
         $gpo = getPathOr(['x', 'y'], 'no');
         expect($gpo($data))->toBe(1);
         expect($gpo(['x' => []]))->toBe('no');
+    });
+
+    it('getPathOr returns default when resolved value is null', function (): void {
+        $data = ['x' => ['y' => null]];
+
+        expect(getPathOr(['x', 'y'], 'fallback', $data))->toBe('fallback');
     });
 });
 

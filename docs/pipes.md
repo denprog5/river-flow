@@ -97,7 +97,7 @@ Dual-mode usage
 
 ## Combining / Windowing
 - `concat(iterable $data, iterable ...$others): Generator<int, mixed>`
-  - Lazy; concatenates multiple iterables; keys discarded; iterators are rewound
+  - Lazy; concatenates multiple iterables; keys discarded; non-generator iterators are rewound
 - `concatWith(iterable ...$others): callable(iterable $data): Generator<int, mixed>`
   - Pipe-friendly curried form of `concat`
 
@@ -110,19 +110,19 @@ Dual-mode usage
   - Dual-mode: direct `prepend($data, ...$values)` or curried `prepend(...$values)($data)`
 
 - `interleave(iterable $data, iterable ...$others): Generator<int, mixed>`
-  - Lazy; round-robin interleaving across inputs; stops at the shortest; keys discarded; iterators are rewound
+  - Lazy; round-robin interleaving across inputs; stops at the shortest; keys discarded; non-generator iterators are rewound
 - `interleaveWith(iterable ...$others): callable(iterable $data): Generator<int, mixed>`
   - Pipe-friendly curried form of `interleave`
 
 - `zip(iterable $data, iterable ...$others): Generator<int, array<int, mixed>>`
   - Lazy; stops at shortest; keys discarded; yields numeric-indexed tuples
-  - Accepts arrays, Iterator, and any Traversable (IteratorAggregate supported). All iterators are rewound before zipping.
+  - Accepts arrays, Iterator, and any Traversable (IteratorAggregate supported). Non-generator iterators are rewound before zipping.
   - If only one iterable is provided, yields 1-length rows. If any iterable is empty, the result is empty.
 - `zipWith(iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
-  - Pipe-friendly curried form of `zip`. Same semantics as `zip` (keys discarded, stops at shortest, iterator inputs are rewound). If no other iterables are provided, behaves like `zip($data)` producing 1-length rows. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
+  - Pipe-friendly curried form of `zip`. Same semantics as `zip` (keys discarded, stops at shortest, non-generator iterator inputs are rewound). If no other iterables are provided, behaves like `zip($data)` producing 1-length rows. Use in pipelines: `[1,2,3] |> zipWith(['a','b'])`
 
 - `zipLongest(iterable $data, mixed $fill = null, iterable ...$others): Generator<int, array<int, mixed>>`
-  - Lazy; continues to the longest iterable; uses `$fill` for missing values; keys discarded; iterators are rewound
+  - Lazy; continues to the longest iterable; uses `$fill` for missing values; keys discarded; non-generator iterators are rewound
 - `zipLongestWith(mixed $fill, iterable ...$others): callable(iterable $data): Generator<int, array<int, mixed>>`
   - Pipe-friendly curried form of `zipLongest`
 - `transpose(iterable<int, iterable> $rows): array<int, array<int, mixed>>`
@@ -419,4 +419,3 @@ These functions load all elements into memory:
    // Wasteful: materializes entire collection
    $first = ($generator |> toList())[0];
    ```
-

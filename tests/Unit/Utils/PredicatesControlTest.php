@@ -21,6 +21,7 @@ use function Denprog\RiverFlow\Utils\partialRight;
 use function Denprog\RiverFlow\Utils\unless;
 use function Denprog\RiverFlow\Utils\when;
 
+use InvalidArgumentException;
 use Stringable;
 
 describe('Utils predicates and control/combinators', function (): void {
@@ -139,6 +140,15 @@ describe('Utils predicates and control/combinators', function (): void {
         expect($fn($keyObj))->toBe('k');
         // calls: 1 (for 1), 1 (true normalized), 1 (false), 1 (null), 1 (Stringable) => 5
         expect($calls)->toBe(5);
+    });
+
+    it('memoizeWith throws on non-normalizable key types', function (): void {
+        $fn = memoizeWith(
+            static fn (mixed $x): mixed => $x,
+            static fn (mixed $x): mixed => $x,
+        );
+
+        expect(static fn (): mixed => $fn(['not-scalar']))->toThrow(InvalidArgumentException::class);
     });
 
     it('partial and partialRight pre-apply arguments', function (): void {

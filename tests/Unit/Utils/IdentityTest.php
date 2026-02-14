@@ -9,6 +9,13 @@ use function Denprog\RiverFlow\Utils\identity;
 use stdClass;
 
 describe('Utils identity', function (): void {
+    it('supports curried usage', function (): void {
+        $id = identity();
+
+        expect($id(123))->toBe(123);
+        expect($id('abc'))->toBe('abc');
+    });
+
     it('returns the same scalar value', function (): void {
         expect(identity(123))->toBe(123);
         expect(identity('abc'))->toBe('abc');

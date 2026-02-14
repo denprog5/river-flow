@@ -9,7 +9,7 @@ namespace Denprog\RiverFlow;
  */
 final class Version
 {
-    public const string STRING = '0.1.0-dev';
+    public const string STRING = '1.0.2-dev';
 
     private function __construct()
     {

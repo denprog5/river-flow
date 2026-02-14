@@ -11,6 +11,7 @@ Modern, strictly-typed functional utilities for PHP 8.5: lazy collection pipelin
 ## Highlights
 - __Pipe operator first__: idiomatic `|>` pipelines, no external wrappers
 - __Lazy + eager__: predictable key behavior, memory‑friendly where it matters
+- __Iterator safety__: rewinds non-generator iterators, preserves started generator cursors
 - __Strong typing__: precise PHPDoc generics, PHPStan at max level
 - __Unicode aware__: `Strings` use mbstring when available
 - __Ergonomics__: `tap`, `identity`, `compose`, `pipe`

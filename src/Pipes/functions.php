@@ -15,6 +15,33 @@ use SplDoublyLinkedList;
 use Throwable;
 use Traversable;
 
+/** @internal
+ * @param iterable<mixed, mixed> $iterable
+ */
+function __to_iterator(iterable $iterable): Iterator
+{
+    if (\is_array($iterable)) {
+        return new ArrayIterator($iterable);
+    }
+
+    if ($iterable instanceof Iterator) {
+        return $iterable;
+    }
+
+    /** @var Traversable<mixed, mixed> $iterable */
+    return new IteratorIterator($iterable);
+}
+
+/** @internal */
+function __rewind_iterator(Iterator $iterator): void
+{
+    if ($iterator instanceof Generator) {
+        return;
+    }
+
+    $iterator->rewind();
+}
+
 /**
  * filter can be used as:
  *  - filter($data, $predicate): Generator
@@ -2176,7 +2203,7 @@ function splitWhen_impl(iterable $data, callable $predicate): array
  * Pipe-friendly concat: returns a callable that concatenates with the provided iterables.
  * Example: [1,2] |> concatWith(['a','b']) |> toList() // [1,2,'a','b']
  *
- * Keys are discarded (numeric reindexing). Iterators are rewound.
+ * Keys are discarded (numeric reindexing). Non-generator iterators are rewound.
  *
  * @param iterable<mixed, mixed> ...$others
  * @return callable(iterable<mixed, mixed>): Generator<int, mixed>
@@ -2187,7 +2214,8 @@ function concatWith(iterable ...$others): callable
 }
 
 /**
- * Concatenate multiple iterables lazily. Keys discarded. Iterators are rewound.
+ * Concatenate multiple iterables lazily. Keys discarded.
+ * Non-generator iterators are rewound; generators continue from current position.
  *
  * @param iterable<mixed, mixed> $data
  * @param iterable<mixed, mixed> ...$others
@@ -2197,15 +2225,9 @@ function concat(iterable $data, iterable ...$others): Generator
 {
     $iterables = [$data, ...$others];
     foreach ($iterables as $iterable) {
-        if (\is_array($iterable)) {
-            $iter = new ArrayIterator($iterable);
-        } elseif ($iterable instanceof Iterator) {
-            $iter = $iterable;
-        } else {
-            $iter = new IteratorIterator($iterable);
-        }
+        $iter = __to_iterator($iterable);
+        __rewind_iterator($iter);
 
-        $iter->rewind();
         while ($iter->valid()) {
             yield $iter->current();
             $iter->next();
@@ -2249,19 +2271,11 @@ function append(mixed $data_or_value, mixed ...$moreValues): Generator|callable
 function append_gen(iterable $data, array $values): Generator
 {
     // yield original values (keys discarded)
-    if (\is_array($data)) {
-        foreach ($data as $v) {
-            yield $v;
-        }
-    } elseif ($data instanceof Iterator) {
-        for ($data->rewind(); $data->valid(); $data->next()) {
-            yield $data->current();
-        }
-    } else {
-        $iter = new IteratorIterator($data);
-        for ($iter->rewind(); $iter->valid(); $iter->next()) {
-            yield $iter->current();
-        }
+    $iter = __to_iterator($data);
+    __rewind_iterator($iter);
+    while ($iter->valid()) {
+        yield $iter->current();
+        $iter->next();
     }
 
     // then appended values
@@ -2306,24 +2320,16 @@ function prepend(mixed $data_or_value, mixed ...$moreValues): Generator|callable
 function prepend_gen(iterable $data, array $values): Generator
 {
     // first the prepended values
-    foreach ($values as $v) {
-        yield $v;
+    foreach ($values as $value) {
+        yield $value;
     }
 
     // then original values (keys discarded)
-    if (\is_array($data)) {
-        foreach ($data as $v) {
-            yield $v;
-        }
-    } elseif ($data instanceof Iterator) {
-        for ($data->rewind(); $data->valid(); $data->next()) {
-            yield $data->current();
-        }
-    } else {
-        $iter = new IteratorIterator($data);
-        for ($iter->rewind(); $iter->valid(); $iter->next()) {
-            yield $iter->current();
-        }
+    $iter = __to_iterator($data);
+    __rewind_iterator($iter);
+    while ($iter->valid()) {
+        yield $iter->current();
+        $iter->next();
     }
 }
 
@@ -2331,7 +2337,8 @@ function prepend_gen(iterable $data, array $values): Generator
  * Pipe-friendly interleave: returns a callable that interleaves with the provided iterables.
  * Example: [1,2,3] |> interleaveWith(['a','b']) |> toList() // [1,'a',2,'b']
  *
- * Stops at the shortest iterable. Keys discarded. Iterators are rewound.
+ * Stops at the shortest iterable. Keys discarded.
+ * Non-generator iterators are rewound; generators continue from current position.
  *
  * @param iterable<mixed, mixed> ...$others
  * @return callable(iterable<mixed, mixed>): Generator<int, mixed>
@@ -2354,18 +2361,12 @@ function interleave(iterable $data, iterable ...$others): Generator
 
     $iters = [];
     foreach ($iterables as $it) {
-        if (\is_array($it)) {
-            $iters[] = new ArrayIterator($it);
-        } elseif ($it instanceof Iterator) {
-            $iters[] = $it;
-        } else {
-            $iters[] = new IteratorIterator($it);
-        }
+        $iters[] = __to_iterator($it);
     }
 
-    // Rewind all
+    // Rewind rewindable iterators
     foreach ($iters as $it) {
-        $it->rewind();
+        __rewind_iterator($it);
     }
 
     while (true) {
@@ -2398,7 +2399,7 @@ function zipLongestWith(mixed $fill, iterable ...$others): callable
 
 /**
  * Zip to the longest iterable, filling missing positions with $fill. Lazy; keys discarded.
- * Iterators are rewound.
+ * Non-generator iterators are rewound; generators continue from current position.
  *
  * @param iterable<mixed, mixed> $data
  * @param iterable<mixed, mixed> ...$others
@@ -2409,18 +2410,12 @@ function zipLongest(iterable $data, mixed $fill = null, iterable ...$others): Ge
     $iterables = [$data, ...$others];
     $iters     = [];
     foreach ($iterables as $it) {
-        if (\is_array($it)) {
-            $iters[] = new ArrayIterator($it);
-        } elseif ($it instanceof Iterator) {
-            $iters[] = $it;
-        } else {
-            $iters[] = new IteratorIterator($it);
-        }
+        $iters[] = __to_iterator($it);
     }
 
-    // Rewind all
+    // Rewind rewindable iterators
     foreach ($iters as $it) {
-        $it->rewind();
+        __rewind_iterator($it);
     }
 
     while (true) {
@@ -2478,19 +2473,12 @@ function zip(iterable $data, iterable ...$others): Generator
     $iterables = [$data, ...$others];
     $iters     = [];
     foreach ($iterables as $it) {
-        if (\is_array($it)) {
-            $iters[] = new ArrayIterator($it);
-        } elseif ($it instanceof Iterator) {
-            $iters[] = $it;
-        } else {
-            // Remaining case: Traversable (e.g., IteratorAggregate)
-            $iters[] = new IteratorIterator($it);
-        }
+        $iters[] = __to_iterator($it);
     }
 
-    // Rewind all
+    // Rewind rewindable iterators
     foreach ($iters as $it) {
-        $it->rewind();
+        __rewind_iterator($it);
     }
 
     while (true) {
@@ -2548,23 +2536,13 @@ function transpose_impl(iterable $rows): array
 
     foreach ($rows as $row) {
         // Materialize row to a list (discard keys)
-        if (\is_array($row)) {
-            $list = array_values($row);
-        } elseif ($row instanceof Iterator) {
-            $list = [];
-            for ($row->rewind(); $row->valid(); $row->next()) {
-                $list[] = $row->current();
-            }
-        } else {
-            // Other Traversable (e.g., IteratorAggregate)
-            /** @var Traversable<mixed, mixed> $row */
-            $iter = new IteratorIterator($row);
-            $list = [];
-            $iter->rewind();
-            while ($iter->valid()) {
-                $list[] = $iter->current();
-                $iter->next();
-            }
+        $iter = __to_iterator($row);
+        __rewind_iterator($iter);
+
+        $list = [];
+        while ($iter->valid()) {
+            $list[] = $iter->current();
+            $iter->next();
         }
 
         $buffered[] = $list;

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-02-14
+
+### Fixed
+- Pipes combining/windowing internals now rewind only non-generator iterators while preserving started generator cursors (`concat`, `append`, `prepend`, `interleave`, `zip`, `zipLongest`, `transpose`).
+
+### Added
+- New coverage for `concatWith`, `concat`, `append`, `prepend`, `interleaveWith`, `interleave`, `zipLongestWith`, and `zipLongest` including iterator/generator cursor semantics.
+- Additional edge-case tests for Structs (`getPath([])`, `getPathOr` with `null`) and Utils (`identity()` curried form, `memoizeWith` invalid-key behavior).
+- String behavior regression tests for stable curried composition and split/join roundtrip scenarios.
+
+### Changed
+- Updated Pipes documentation to clarify iterator rewind behavior for non-generators.
+- README highlights now explicitly document iterator safety semantics.
+
+### QA
+- Full QA suite green: Pest, PHPStan, PHP-CS-Fixer (dry-run), and Rector (dry-run).
+- Verified all exported public functions with a temporary runtime harness (115/115 successful checks), then removed the temporary playground verifier file.
+
 ## [1.0.1] - 2026-02-06
 
 ### Security
@@ -194,7 +212,9 @@ _Nothing yet._
 - Tooling/QA: Pest, PHPStan (max), Rector, PHP-CS-Fixer, CI across Linux/macOS/Windows; Composer scripts added
 - Docs: Canonical documentation in `docs/` (index, pipes, strings, utils); README updated
 
-[Unreleased]: https://github.com/denprog5/river-flow/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/denprog5/river-flow/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/denprog5/river-flow/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/denprog5/river-flow/releases/tag/v1.0.1
 [1.0.0]: https://github.com/denprog5/river-flow/releases/tag/v1.0.0
 [0.3.0]: https://github.com/denprog5/river-flow/releases/tag/v0.3.0
 [0.2.6]: https://github.com/denprog5/river-flow/releases/tag/v0.2.6
